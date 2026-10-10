@@ -26,7 +26,6 @@ from pyprocar.plotter._surface_plot import snap_normal
 from tests.utils.lattices import (
     OBTUSE_RHOMBOHEDRAL,
     STANDARD_CELLS,
-    TURN,
     BasisVariant,
     basis_variants,
     bct_primitive,
@@ -139,12 +138,30 @@ def _grid_mesh(reciprocal_lattice: np.ndarray, kgrid: tuple[int, int, int]):
     )
 
 
-def _assert_same_points(found: np.ndarray, expected: np.ndarray, atol: float) -> None:
+def _same_points(found: np.ndarray, expected: np.ndarray, atol: float) -> bool:
     """The two sets of points match one to one within ``atol``."""
     distance = np.linalg.norm(found[:, None, :] - expected[None, :, :], axis=2)
-    assert len(found) == len(expected)
-    assert distance.min(axis=0).max() <= atol
-    assert distance.min(axis=1).max() <= atol
+    return bool(
+        len(found) == len(expected)
+        and distance.min(axis=0).max() <= atol
+        and distance.min(axis=1).max() <= atol
+    )
+
+
+def _assert_same_points(found: np.ndarray, expected: np.ndarray, atol: float) -> None:
+    assert _same_points(found, expected, atol)
+
+
+def _same_rows(found: np.ndarray, expected: np.ndarray, atol: float) -> bool:
+    """The rows are the same vectors up to order and sign, within ``atol``."""
+    return _same_points(np.vstack([found, -found]), np.vstack([expected, -expected]), atol)
+
+
+def _drawn_steps(reciprocal_lattice: np.ndarray, kgrid: tuple[int, int, int]) -> np.ndarray:
+    """The drawn grid steps, rows of ``lattice / n``, of the full grid ``kgrid``."""
+    found = periodic_grid(_grid_mesh(reciprocal_lattice, kgrid))
+    assert found is not None
+    return found.lattice / np.array(found.n)[:, None]
 
 
 def _drawn_grid_cases() -> list:
@@ -186,31 +203,26 @@ def test_drawn_k_grid_does_not_depend_on_the_order_signs_or_rounding_of_the_rows
     )
 
 
-RELABELLINGS = [
-    *(np.eye(3, dtype=int)[list(order)] for order in itertools.permutations(range(3))),
-    *(np.diag(signs) for signs in [(-1, 1, 1), (1, -1, 1), (1, 1, -1)]),
-]
-"""The row orders and the single negated rows that ``basis_variants`` applies to a cell."""
-
 GIVEN_NO_WORSE_TO = 1.155
-"""Over 671 sheared k-grids with no reduced basis free of the row labels, the largest ratio of
-given to reduced row lengths up to which drawing the given basis put a model band's Fermi
-surface area no further from its 48^3 value than drawing a reduced one (#59)."""
+"""The largest ratio of given to reduced row lengths at which drawing the given basis put a
+model band's Fermi surface area no further from converged than a reduced basis did, on every
+sheared k-grid measured for #59 with no reduced basis free of the row labels."""
 GIVEN_WORSE_FROM = 1.178
-"""Over the same k-grids, the least ratio at which the given basis put the area further off."""
+"""The least ratio at which the given basis put the area further off, on the same k-grids."""
 
 
-def _same_points(found: np.ndarray, expected: np.ndarray, atol: float) -> bool:
-    distance = np.linalg.norm(found[:, None, :] - expected[None, :, :], axis=2)
-    return bool(distance.min(axis=0).max() <= atol and distance.min(axis=1).max() <= atol)
+def _niggli(lattice: np.ndarray) -> np.ndarray:
+    """spglib's Niggli-reduced basis of the lattice with these rows, a reduction the drawn grid
+    does not use."""
+    scale = abs(np.linalg.det(lattice)) ** (1 / 3)
+    return spglib.niggli_reduce(lattice / scale) * scale
 
 
 def _reduced_bases(k_lattice: np.ndarray) -> tuple[np.ndarray, list[np.ndarray]]:
     """The successive minima of the lattice with rows ``k_lattice``, and every basis of it with
-    those sorted row lengths, as Cartesian rows. The candidates are the combinations up to 2 of
-    spglib's Niggli-reduced basis, a reduction the drawn grid does not use."""
-    scale = abs(np.linalg.det(k_lattice)) ** (1 / 3)
-    niggli = spglib.niggli_reduce(k_lattice / scale) * scale
+    those sorted row lengths, as Cartesian rows, from the combinations up to 2 of its Niggli
+    basis."""
+    niggli = _niggli(k_lattice)
     minima = _successive_minima(niggli, reach=2)
     combos = np.array(list(itertools.product(range(-2, 3), repeat=3)))
     leading = np.take_along_axis(combos, (combos != 0).argmax(axis=1)[:, None], axis=1)[:, 0]
@@ -262,60 +274,50 @@ GIVEN_OR_SHEARED = [
 @pytest.mark.parametrize("kgrid", [(6, 6, 6), (12, 12, 6)], ids=["6x6x6", "12x12x6"])
 @pytest.mark.parametrize(("cell_name", "variant"), GIVEN_OR_SHEARED)
 def test_drawn_k_grid_is_free_of_the_row_labels_where_it_can_be(cell_name, variant, kgrid):
-    """The given or sheared rows reordered with their N, with one negated, or turned, give the
-    same k-points. Reciprocal rows that are reduced or an obtuse superbase are drawn as given,
-    on any grid (#302). Elsewhere, where a reduced basis of the k-point lattice is kept by every
-    lattice symmetry that permutes the rows, every labelling draws the same reduced steps. Where
-    none is, every reduced basis depends on the labels. Every labelling then draws the given
-    rows when they are within ``GIVEN_NO_WORSE_TO`` of reduced, and reduced steps from
-    ``GIVEN_WORSE_FROM`` on."""
+    """The given or sheared rows in each relabelling of ``basis_variants``, with N reordered
+    along, give the same k-points. Reciprocal rows that are reduced or an obtuse superbase are
+    drawn as given, on any grid (#302). Elsewhere, where a reduced basis of the k-point lattice
+    is kept by every lattice symmetry that permutes the rows, every labelling draws the same
+    reduced steps. Where none is, every reduced basis depends on the labels. Every labelling
+    then draws the given rows when they are within ``GIVEN_NO_WORSE_TO`` of reduced, and
+    reduced steps from ``GIVEN_WORSE_FROM`` on."""
     n = np.array(kgrid)
     k_lattice = variant.reciprocal / n[:, None]
     minima, reduced = _reduced_bases(k_lattice)
-    maps = _symmetries_permuting_rows(k_lattice)
     atol = 1e-6 * minima[-1]
 
-    drawn = []
-    for change in RELABELLINGS:
-        order = np.abs(change).argmax(axis=1)
-        found = periodic_grid(
-            _grid_mesh(reciprocal(change @ variant.real), tuple(n[order].tolist()))
-        )
-        assert found is not None
-        drawn.append(found.lattice / np.array(found.n)[:, None])
-    turned = periodic_grid(_grid_mesh(reciprocal(variant.real @ TURN.T), kgrid))
-    assert turned is not None
-    drawn.append(turned.lattice / np.array(turned.n)[:, None] @ TURN)
+    drawn = [
+        _drawn_steps(relabelled.reciprocal, tuple((np.abs(relabelled.change) @ n).tolist()))
+        @ relabelled.turn
+        for relabelled in basis_variants(variant.real)
+        if relabelled.is_relabelling
+    ]
 
     for steps in drawn:
         in_k_lattice = steps @ np.linalg.inv(k_lattice)
         np.testing.assert_allclose(in_k_lattice, np.rint(in_k_lattice), rtol=0, atol=1e-6)
         assert abs(np.linalg.det(np.rint(in_k_lattice))) == pytest.approx(1.0)
-    signed = [np.vstack([steps, -steps]) for steps in drawn]
     is_reduced = [
         np.allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-6) for steps in drawn
     ]
-    is_given = [_same_points(rows, np.vstack([k_lattice, -k_lattice]), atol) for rows in signed]
-    label_free = [
-        rows
-        for rows in reduced
-        if all(
-            _same_points(np.vstack([rows, -rows]) @ m, np.vstack([rows, -rows]), atol) for m in maps
-        )
-    ]
-    given_minima, _ = _reduced_bases(variant.reciprocal)
+    is_given = [_same_rows(steps, k_lattice, atol) for steps in drawn]
     given_lengths = np.sort(np.linalg.norm(variant.reciprocal, axis=1))
+    given_minima = _successive_minima(_niggli(variant.reciprocal), reach=2)
+    ratio = (np.sort(np.linalg.norm(k_lattice, axis=1)) / minima).max()
     if (given_lengths <= given_minima * (1 + 1e-4)).all() or _obtuse_superbase(variant.reciprocal):
         assert all(is_given)
-    elif label_free:
+    elif any(
+        all(_same_rows(rows @ m, rows, atol) for m in _symmetries_permuting_rows(k_lattice))
+        for rows in reduced
+    ):
         assert all(is_reduced)
-        assert all(_same_points(rows, signed[0], atol) for rows in signed)
+        assert all(_same_rows(steps, drawn[0], atol) for steps in drawn)
+    elif ratio <= GIVEN_NO_WORSE_TO:
+        assert all(is_given)
+    elif ratio >= GIVEN_WORSE_FROM:
+        assert all(is_reduced)
     else:
-        ratio = (np.sort(np.linalg.norm(k_lattice, axis=1)) / minima).max()
-        if ratio < GIVEN_WORSE_FROM and (ratio <= GIVEN_NO_WORSE_TO or any(is_given)):
-            assert all(is_given)
-        else:
-            assert all(is_reduced)
+        assert all(is_given) or all(is_reduced)
 
 
 def _successive_minima(lattice: np.ndarray, reach: int = 3) -> np.ndarray:
@@ -341,10 +343,8 @@ def test_drawn_k_grid_of_a_sheared_basis_is_reduced(cell_name, variant, kgrid):
     cell's own rows when those are reduced: a shear must not stretch the cells marched on."""
     minima = _successive_minima(reciprocal(STANDARD_CELLS[cell_name]) / np.array(kgrid)[:, None])
 
-    found = periodic_grid(_grid_mesh(variant.reciprocal, kgrid))
+    steps = _drawn_steps(variant.reciprocal, kgrid)
 
-    assert found is not None
-    steps = found.lattice / np.array(found.n)[:, None]
     # The Bi2Se3 rows, rounded to 6 decimals, make lengths equal in the crystal 8e-8 apart.
     np.testing.assert_allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-6)
 
@@ -382,13 +382,11 @@ def test_drawn_k_grid_of_a_basis_far_from_reduced_is_reduced(cell, change, kgrid
     """A given basis far from reduced is never drawn as given, even where no reduced basis is
     free of the row labels: marching cubes on its long thin cells doubles the drawn area (#302).
     The drawn steps are as short as the successive minima of the k-point lattice."""
-    k_lattice = reciprocal(np.array(change) @ cell) / np.array(kgrid)[:, None]
-    minima = _successive_minima(k_lattice, reach=6)
+    given = reciprocal(np.array(change) @ cell)
+    minima = _successive_minima(given / np.array(kgrid)[:, None], reach=6)
 
-    found = periodic_grid(_grid_mesh(reciprocal(np.array(change) @ cell), kgrid))
+    steps = _drawn_steps(given, kgrid)
 
-    assert found is not None
-    steps = found.lattice / np.array(found.n)[:, None]
     np.testing.assert_allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-6)
 
 

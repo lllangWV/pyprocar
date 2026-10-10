@@ -38,7 +38,7 @@ def fcc_primitive(a: float) -> np.ndarray:
 def bcc_primitive(a: float) -> np.ndarray:
     """The primitive rows (-1 1 1) a/2, (1 -1 1) a/2, (1 1 -1) a/2 of the bcc lattice with cubic
     edge a. Its reciprocal lattice is ``fcc_primitive(2 / a)``, up to rounding."""
-    return a / 2 * np.array([[-1.0, 1.0, 1.0], [1.0, -1.0, 1.0], [1.0, 1.0, -1.0]])
+    return bct_primitive(a, a)
 
 
 def bct_primitive(a: float, c: float) -> np.ndarray:

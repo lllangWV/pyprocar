@@ -74,9 +74,8 @@ class PeriodicGrid:
 
     @property
     def is_identity(self) -> bool:
-        """The grid is drawn as stored: the given basis is reduced or an obtuse superbase, or it
-        is within ``NEAR_REDUCED`` of reduced and no reduced basis can be picked without
-        depending on how its rows are labelled (``_nearest_identity``)."""
+        """The grid is drawn as stored: the given basis is reduced or an obtuse superbase, or
+        ``_nearest_identity`` kept it."""
         return bool((self._to_source == np.eye(3, dtype=int)).all())
 
     @property
@@ -212,9 +211,13 @@ def is_reduced_basis(basis: np.ndarray, live: np.ndarray) -> bool:
     """The rows on ``live`` axes are as short as a reduced basis of the lattice they span."""
     if live.sum() < 2:
         return True
-    given = np.sort(np.linalg.norm(basis[live], axis=1))
     reduced = np.sort(np.linalg.norm((_reducing_steps(basis, live) @ basis)[live], axis=1))
-    return bool((given <= reduced * (1 + REDUCED_TOLERANCE)).all())
+    return _as_short_as(basis[live], reduced, REDUCED_TOLERANCE)
+
+
+def _as_short_as(rows: np.ndarray, reduced_lengths: np.ndarray, slack: float) -> bool:
+    """The sorted lengths of ``rows`` are within a factor 1 + ``slack`` of ``reduced_lengths``."""
+    return bool((np.sort(np.linalg.norm(rows, axis=1)) <= reduced_lengths * (1 + slack)).all())
 
 
 def _reducing_steps(lattice: np.ndarray, live: np.ndarray) -> np.ndarray:
@@ -297,8 +300,7 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
             if len({frozenset(map(tuple, np.vstack([b[axes], -b[axes]]))) for b in group}) == 1:
                 return group[0]
         left = left[len(level) :]
-    given_lengths = np.sort(np.linalg.norm(lattice[axes], axis=1))
-    if (given_lengths <= reduced_lengths * (1 + NEAR_REDUCED)).all():
+    if _as_short_as(lattice[axes], reduced_lengths, NEAR_REDUCED):
         return np.eye(3, dtype=int)
     return bases[order[0]]
 
