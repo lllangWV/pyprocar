@@ -204,8 +204,8 @@ def test_drawn_k_grid_of_a_sheared_basis_is_reduced(cell_name, variant, kgrid):
 
     assert found is not None
     steps = found.lattice / np.array(found.n)[:, None]
-    # POSCAR rounding: the Bi2Se3 rows give lengths 8e-8 apart that are equal in the crystal.
-    np.testing.assert_allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-4)
+    # The Bi2Se3 rows, rounded to 6 decimals, make lengths equal in the crystal 8e-8 apart.
+    np.testing.assert_allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-6)
 
 
 @cache
