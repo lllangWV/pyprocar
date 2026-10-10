@@ -68,7 +68,7 @@ def _snap_candidates(real: np.ndarray) -> np.ndarray:
     return candidates[np.gcd.reduce(np.abs(candidates), axis=1) == 1]
 
 
-@functools.lru_cache(maxsize=32)
+@functools.lru_cache(maxsize=4)
 def _snap_directions(reciprocal_bytes: bytes) -> tuple[np.ndarray, np.ndarray]:
     """Read-only snap candidates of the 3x3 float64 reciprocal lattice with these bytes: their
     indices in the given basis and unit directions. Keyed on the values, so a lattice changed

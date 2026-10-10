@@ -52,22 +52,9 @@ LOW_INDICES = [*_primitive_indices(2), (3, 3, -1), (3, 3, 1), (-1, 3, 3), (1, 3,
 rows (on other cells, four more directions of index 3)."""
 GIVEN_INDICES = _primitive_indices(4)
 """The candidates before #302: every direction with indices up to 4 in the given rows."""
-OTHER_RELABELLINGS = 10
-"""Relabellings per cell besides the cell as given. Each probes its own tenth of GIVEN_INDICES,
-together all 578 again."""
-
-
-def _given_index_cases() -> list:
-    cases = []
-    for name, cell in STANDARD_CELLS.items():
-        others = [v for v in basis_variants(cell) if v.is_relabelling and v.name != "given"]
-        assert len(others) == OTHER_RELABELLINGS
-        for share, variant in enumerate(others, start=1):
-            probes = GIVEN_INDICES[share - 1 :: OTHER_RELABELLINGS]
-            cases.append(pytest.param(name, variant, probes, id=f"{name}-{variant.name}"))
-        given = next(basis_variants(cell))
-        cases.append(pytest.param(name, given, GIVEN_INDICES, id=f"{name}-{given.name}"))
-    return cases
+RELABELLED = [
+    case for case, (_, variant) in zip(CASES, VARIANTS, strict=True) if variant.is_relabelling
+]
 
 
 UNSNAPPED = np.random.default_rng(302).normal(size=(3, 3))
@@ -101,17 +88,16 @@ def _snap_misses(
 
 
 @pytest.mark.guards_existing_behaviour(reason=REASON)
-@pytest.mark.parametrize(("cell_name", "variant", "probes"), _given_index_cases())
+@pytest.mark.parametrize(("cell_name", "variant"), RELABELLED)
 def test_snap_normal_snaps_every_direction_with_given_indices_up_to_4_in_any_relabelling(
-    cell_name, variant, probes
+    cell_name, variant
 ):
     """Before #302 the candidates were the directions with indices up to 4 in the given rows. A
     relabelling of the rows has the same directions with indices up to 4, so each snaps, to the
-    exact direction, under integer indices in the rows given. The cell as given probes all 578;
-    each other relabelling probes a tenth of them, together all 578 again."""
+    exact direction, under integer indices in the rows given."""
     cell = STANDARD_CELLS[cell_name]
 
-    missed = _snap_misses(variant, cell, probes)
+    missed = _snap_misses(variant, cell, GIVEN_INDICES)
 
     assert len(GIVEN_INDICES) == 578
     assert missed == []

@@ -400,7 +400,7 @@ def test_snap_normal_answers_for_the_lattice_it_is_given_now():
     changed in place. A normal 1e-4 rad from [1 2 3] snaps to [1 2 3] of the lattice the array
     holds at that call, even after the caller scales the direction returned before."""
     cells = [cubic(3.84652), hexagonal(2.46, 6.7), cubic(3.84652)]
-    lattice = reciprocal(cells[0])
+    lattice = np.empty((3, 3))
 
     for real in cells:
         lattice[:] = reciprocal(real)
