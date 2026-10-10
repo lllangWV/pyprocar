@@ -152,28 +152,14 @@ def _assert_same_points(found: np.ndarray, expected: np.ndarray, atol: float) ->
     assert distance.min(axis=1).max() <= atol
 
 
-ORDER_DEPENDENT = pytest.mark.xfail(
-    strict=True,
-    reason="dev draws the obtuse rhombohedral 6^3 grid in a basis that depends on the order and"
-    + " signs of the rows (_nearest_identity breaks ties on index entries); with a row negated the"
-    + " Fermi surface of one band moves by up to 2.8% at 6^3 and 0.5% at 16^3",
-)
-
-
 def _drawn_grid_cases() -> list:
     cases = []
     for kgrid, grid_id in [((6, 6, 6), "6x6x6"), ((4, 6, 8), "4x6x8")]:
         for name, variant in VARIANTS:
             if not variant.is_relabelling:
                 continue
-            known = (
-                name == "obtuse rhombohedral"
-                and kgrid == (6, 6, 6)
-                and not (variant.change == np.eye(3, dtype=int)).all()
-            )
             case_id = f"{name}-{variant.name}-{grid_id}"
-            marks = [ORDER_DEPENDENT] if known else []
-            cases.append(pytest.param(name, variant, kgrid, id=case_id, marks=marks))
+            cases.append(pytest.param(name, variant, kgrid, id=case_id))
     return cases
 
 
