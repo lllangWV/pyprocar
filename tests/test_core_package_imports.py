@@ -18,7 +18,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "pyprocar"
 CORE_INIT = PACKAGE / "core" / "__init__.py"
-THROUGH_PACKAGE = "imports {name} through pyprocar/core/__init__.py; use `{instead}`"
+THROUGH_PACKAGE = "imports {name} through pyprocar/core/__init__.py; {instead}"
 DEFINING_SUBMODULE = "import the submodule that defines the name"
 WHOLE_PACKAGE = (
     "imports the package pyprocar.core, which loads pyprocar/core/__init__.py; "
@@ -44,8 +44,11 @@ def _absolute(path: Path, node: ast.ImportFrom) -> str:
 
 def _instead(name: str) -> str:
     if name in OWNERS:
-        return f"from {OWNERS[name]} import {name}"
-    return f"import pyprocar.core.{name} as {name}"
+        return f"use `from {OWNERS[name]} import {name}`"
+    core = PACKAGE / "core"
+    if (core / f"{name}.py").exists() or (core / name / "__init__.py").exists():
+        return f"use `import pyprocar.core.{name} as {name}`"
+    return DEFINING_SUBMODULE
 
 
 def core_package_imports(path: Path, source: str) -> list[str]:
