@@ -44,7 +44,13 @@ def bcc_primitive(a: float) -> np.ndarray:
 def bct_primitive(a: float, c: float) -> np.ndarray:
     """The primitive rows (-a a c)/2, (a -a c)/2, (a a -c)/2 of the body-centred tetragonal
     lattice with edges a, a and c; ``bcc_primitive(a)`` when c = a."""
-    return 0.5 * np.array([[-a, a, c], [a, -a, c], [a, a, -c]])
+    return body_centred_primitive(a, a, c)
+
+
+def body_centred_primitive(a: float, b: float, c: float) -> np.ndarray:
+    """The primitive rows (-a b c)/2, (a -b c)/2, (a b -c)/2 of the body-centred orthorhombic
+    lattice with edges a, b and c; ``bct_primitive(a, c)`` when b = a."""
+    return 0.5 * np.array([[-a, b, c], [a, -b, c], [a, b, -c]])
 
 
 def hexagonal(a: float, c: float) -> np.ndarray:

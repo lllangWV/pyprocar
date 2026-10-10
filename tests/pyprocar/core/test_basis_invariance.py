@@ -29,7 +29,9 @@ from tests.utils.lattices import (
     BasisVariant,
     basis_variants,
     bct_primitive,
+    body_centred_primitive,
     reciprocal,
+    rhombohedral,
 )
 
 REASON = (
@@ -164,14 +166,30 @@ def _drawn_steps(reciprocal_lattice: np.ndarray, kgrid: tuple[int, int, int]) ->
     return found.lattice / np.array(found.n)[:, None]
 
 
+NO_LABEL_FREE_BASIS = pytest.mark.xfail(
+    strict=True,
+    reason="no reduced basis of the obtuse rhombohedral 6^3 k-point lattice is free of the row"
+    + " labels: the threefold axis permutes the given rows, and the only basis it maps to itself"
+    + " is the given one, which is not reduced. Drawing the given basis was measured worse than"
+    + " a label-dependent reduced one (https://github.com/lllangWV/pyprocar/pull/68"
+    + "#issuecomment-6101888251), so the grid depends on the order and signs of the rows",
+)
+
+
 def _drawn_grid_cases() -> list:
     cases = []
     for kgrid, grid_id in [((6, 6, 6), "6x6x6"), ((4, 6, 8), "4x6x8")]:
         for name, variant in VARIANTS:
             if not variant.is_relabelling:
                 continue
+            known = (
+                name == "obtuse rhombohedral"
+                and kgrid == (6, 6, 6)
+                and not (variant.change == np.eye(3, dtype=int)).all()
+            )
             case_id = f"{name}-{variant.name}-{grid_id}"
-            cases.append(pytest.param(name, variant, kgrid, id=case_id))
+            marks = [NO_LABEL_FREE_BASIS] if known else []
+            cases.append(pytest.param(name, variant, kgrid, id=case_id, marks=marks))
     return cases
 
 
@@ -201,14 +219,6 @@ def test_drawn_k_grid_does_not_depend_on_the_order_signs_or_rounding_of_the_rows
         np.vstack([given_steps, -given_steps]),
         atol=1e-9 * np.abs(k_lattice).max(),
     )
-
-
-GIVEN_NO_WORSE_TO = 1.155
-"""The largest ratio of given to reduced row lengths at which drawing the given basis put a
-model band's Fermi surface area no further from converged than a reduced basis did, on every
-sheared k-grid measured for #59 with no reduced basis free of the row labels."""
-GIVEN_WORSE_FROM = 1.178
-"""The least ratio at which the given basis put the area further off, on the same k-grids."""
 
 
 def _niggli(lattice: np.ndarray) -> np.ndarray:
@@ -278,9 +288,9 @@ def test_drawn_k_grid_is_free_of_the_row_labels_where_it_can_be(variant, kgrid):
     along, give the same k-points. Reciprocal rows that are reduced or an obtuse superbase are
     drawn as given, on any grid (#302). Elsewhere, where a reduced basis of the k-point lattice
     is kept by every lattice symmetry that permutes the rows, every labelling draws the same
-    reduced steps. Where none is, every reduced basis depends on the labels. Every labelling
-    then draws the given rows when they are within ``GIVEN_NO_WORSE_TO`` of reduced, and
-    reduced steps from ``GIVEN_WORSE_FROM`` on."""
+    reduced steps. Where none is, every reduced basis depends on the labels, and every
+    labelling still draws reduced steps: the given rows, drawn instead, put a Fermi surface
+    area tens of percent further off than the labels move it (#59)."""
     n = np.array(kgrid)
     k_lattice = variant.reciprocal / n[:, None]
     minima, reduced = _reduced_bases(k_lattice)
@@ -303,7 +313,6 @@ def test_drawn_k_grid_is_free_of_the_row_labels_where_it_can_be(variant, kgrid):
     is_given = [_same_rows(steps, k_lattice, atol) for steps in drawn]
     given_lengths = np.sort(np.linalg.norm(variant.reciprocal, axis=1))
     given_minima = _successive_minima(_niggli(variant.reciprocal), reach=2)
-    ratio = (np.sort(np.linalg.norm(k_lattice, axis=1)) / minima).max()
     if (given_lengths <= given_minima * (1 + 1e-4)).all() or _obtuse_superbase(variant.reciprocal):
         assert all(is_given)
     elif any(
@@ -312,12 +321,8 @@ def test_drawn_k_grid_is_free_of_the_row_labels_where_it_can_be(variant, kgrid):
     ):
         assert all(is_reduced)
         assert all(_same_rows(steps, drawn[0], atol) for steps in drawn)
-    elif ratio <= GIVEN_NO_WORSE_TO:
-        assert all(is_given)
-    elif ratio >= GIVEN_WORSE_FROM:
-        assert all(is_reduced)
     else:
-        assert all(is_given) or all(is_reduced)
+        assert all(is_reduced)
 
 
 def _successive_minima(lattice: np.ndarray, reach: int = 3) -> np.ndarray:
@@ -349,7 +354,7 @@ def test_drawn_k_grid_of_a_sheared_basis_is_reduced(cell_name, variant, kgrid):
     np.testing.assert_allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-6)
 
 
-FAR_FROM_REDUCED = [
+NOT_REDUCED = [
     pytest.param(
         OBTUSE_RHOMBOHEDRAL,
         [[0, -1, 1], [1, 0, -1], [0, 0, 1]],
@@ -368,20 +373,36 @@ FAR_FROM_REDUCED = [
         (6, 6, 6),
         id="bct c/a 1.7",
     ),
+    pytest.param(
+        rhombohedral(5.0, 60.0),
+        [[1, 0, 0], [0, 1, -1], [1, -1, 0]],
+        (6, 6, 6),
+        id="fcc",
+    ),
+    pytest.param(
+        body_centred_primitive(3.0, 3.6, 4.4),
+        [[1, 0, 0], [0, 1, 0], [1, 0, 1]],
+        (6, 6, 6),
+        id="orthorhombic I",
+    ),
 ]
-"""Sheared rows on a k-grid whose given steps are 2.9, 3.2 and 2.6 times the successive minima,
-and whose k-point lattice has no reduced basis that every symmetry permuting the rows keeps."""
+"""Sheared rows on a k-grid whose given steps are 2.9, 3.2, 2.6, 1.155 and 1.124 times the
+successive minima, and whose k-point lattice has no reduced basis that every symmetry permuting
+the rows keeps."""
 
 
 @pytest.mark.guards_existing_behaviour(
-    reason="dev draws these in a reduced basis; eb7a2ba1 drew them in the given one, 2.6 to 3.2"
-    + " times longer, and the drawn area grew by 83 to 126%"
+    reason="dev draws these in a reduced basis. eb7a2ba1 drew the first three in the given one,"
+    + " 2.6 to 3.2 times longer, and the drawn area grew by 83 to 126%. 277d777d drew the last two"
+    + " in the given one, and a model band's area was 20.5% and 39.5% off against dev's 1.7% and 7%"
 )
-@pytest.mark.parametrize(("cell", "change", "kgrid"), FAR_FROM_REDUCED)
-def test_drawn_k_grid_of_a_basis_far_from_reduced_is_reduced(cell, change, kgrid):
-    """A given basis far from reduced is never drawn as given, even where no reduced basis is
-    free of the row labels: marching cubes on its long thin cells doubles the drawn area (#302).
-    The drawn steps are as short as the successive minima of the k-point lattice."""
+@pytest.mark.parametrize(("cell", "change", "kgrid"), NOT_REDUCED)
+def test_drawn_k_grid_of_a_basis_not_reduced_is_reduced(cell, change, kgrid):
+    """A given basis that is not reduced or an obtuse superbase is never drawn as given, near
+    reduced or far from it, even where no reduced basis is free of the row labels. Far from
+    reduced, marching cubes on its long thin cells doubles the drawn area (#302). Within 16% of
+    reduced, it still put a model band's area tens of percent further off than a reduced basis
+    (#59). The drawn steps are as short as the successive minima of the k-point lattice."""
     given = reciprocal(np.array(change) @ cell)
     minima = _successive_minima(given / np.array(kgrid)[:, None], reach=6)
 
