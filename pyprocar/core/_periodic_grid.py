@@ -241,12 +241,13 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
     rather than reaching (b1, b1 + b2 + b3, b3). Both keys are integers, so rounding noise in the
     lattice cannot change the choice.
 
-    Neither key changes when the given rows are reordered or negated. Bases still tied that span
-    one set of rows up to sign draw the same grid, and the first in the order of the entries is
-    taken. Bases tied with different rows are images of each other under a symmetry that
-    permutes the given rows, such as the threefold axis of a rhombohedral primitive cell, and
-    any pick among them depends on how the rows are labelled (#59), so the identity is returned
-    and the grid is drawn in the given basis.
+    Neither key changes when the given rows are reordered or negated, and neither does the
+    next, ``_relabelled_form``. Bases still tied that span one set of rows up to sign draw the
+    same grid, and the first in the order of the entries is taken. Bases still tied with
+    different rows are images of each other under a symmetry that permutes the given rows, such
+    as the threefold axis of a rhombohedral primitive cell, and any pick among them depends on
+    how the rows are labelled (#59), so the identity is returned and the grid is drawn in the
+    given basis.
 
     Candidate rows are the -1, 0, 1 combinations of the reduced rows. A hexagonal plane has
     reduced bases that are no signed permutation of each other, (b1, b2) and (b1, b2 - b1).
@@ -270,10 +271,28 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
     entries = bases[keep].reshape(-1, 9).T[::-1]
     order = keep[np.lexsort((*entries, changed[keep], distance[keep]))]
     nearest = order[(distance[order] == distance[order[0]]) & (changed[order] == changed[order[0]])]
-    row_sets = {frozenset(map(tuple, np.vstack([b[axes], -b[axes]]))) for b in bases[nearest]}
+    forms = [_relabelled_form(bases[i]) for i in nearest]
+    chosen = [i for i, form in zip(nearest, forms, strict=True) if form == min(forms)]
+    row_sets = {frozenset(map(tuple, np.vstack([b[axes], -b[axes]]))) for b in bases[chosen]}
     if len(row_sets) > 1:
         return np.eye(3, dtype=int)
-    return bases[order[0]]
+    return bases[chosen[0]]
+
+
+_SIGNED_PERMUTATIONS = np.array(
+    [
+        np.diag(signs) @ np.eye(3, dtype=int)[list(order)]
+        for order in itertools.permutations(range(3))
+        for signs in itertools.product((1, -1), repeat=3)
+    ]
+)
+
+
+def _relabelled_form(basis: np.ndarray) -> tuple[int, ...]:
+    """The least entries, in row-major order, of ``basis`` with its rows and columns reordered
+    and negated: the same for a basis whose given rows or drawn rows are labelled otherwise."""
+    forms = (_SIGNED_PERMUTATIONS[:, None] @ basis @ _SIGNED_PERMUTATIONS[None, :]).reshape(-1, 9)
+    return tuple(int(i) for i in forms[np.lexsort(forms.T[::-1])[0]])
 
 
 def _obtuse_superbase(rows: np.ndarray) -> bool:
