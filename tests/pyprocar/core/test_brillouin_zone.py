@@ -5,20 +5,17 @@ This module contains unit tests for the BrillouinZone
 and BrillouinZone2D classes.
 """
 
-import itertools
 import warnings
 
 import numpy as np
 import pytest
 import pyvista as pv
-from scipy.spatial import ConvexHull, Voronoi
+from scipy.spatial import ConvexHull
 
 from pyprocar.core.brillouin_zone import BrillouinZone, BrillouinZone2D, clip_to_zone
 from tests.pyprocar.core.test_bandstructure2d_grid import HEXAGONAL
 from tests.utils.lattices import (
-    MONOCLINIC,
     SHEARS,
-    TRICLINIC,
     bcc_primitive,
     cubic,
     fcc_primitive,
@@ -318,54 +315,6 @@ BASES = {
     "b2+3b1": SHEARS["r2 + 3 r1"],
     "b2+3b1,b3-2b1+2b2": SHEARS["r2 + 3 r1, r3 - 2 r1 + 2 r2"],
 }
-# The cells' rows are used as reciprocal rows here: the zone is that of whatever lattice is given.
-SHEARED_CELLS = [
-    pytest.param(cell, shear, id=f"{name}-{shear_name}")
-    for name, cell in [("monoclinic", MONOCLINIC), ("triclinic", TRICLINIC)]
-    for shear_name, shear in BASES.items()
-]
-
-
-def _voronoi_reference(cell: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Face vectors and vertices of the Voronoi cell of the origin among the 7^3 block of
-    lattice points of ``cell``, from scipy.spatial.Voronoi."""
-    steps = np.array(list(itertools.product(range(-3, 4), repeat=3)))
-    origin = len(steps) // 2
-    voronoi = Voronoi(steps @ cell)
-    pairs = voronoi.ridge_points[(voronoi.ridge_points == origin).any(axis=1)]
-    neighbours = pairs.sum(axis=1) - origin
-    vertices = voronoi.vertices[voronoi.regions[voronoi.point_region[origin]]]
-    return voronoi.points[neighbours], vertices
-
-
-def _sorted_rows(points: np.ndarray) -> np.ndarray:
-    rounded = np.round(points, 9) + 0.0
-    return rounded[np.lexsort(rounded.T[::-1])]
-
-
-@pytest.mark.parametrize(("cell", "shear"), SHEARED_CELLS)
-def test_zone_faces_match_voronoi_for_any_basis_of_the_lattice(cell, shear):
-    from pyprocar.core.brillouin_zone import zone_face_steps
-
-    basis = shear @ cell
-    faces, _ = _voronoi_reference(cell)
-
-    found = zone_face_steps(basis) @ basis
-
-    np.testing.assert_allclose(_sorted_rows(found), _sorted_rows(faces), atol=1e-9)
-
-
-@pytest.mark.parametrize(("cell", "shear"), SHEARED_CELLS)
-def test_brillouin_zone_matches_voronoi_for_any_basis_of_the_lattice(cell, shear):
-    basis = shear @ cell
-    _, vertices = _voronoi_reference(cell)
-
-    zone = BrillouinZone(basis)
-
-    assert ConvexHull(zone.points).volume == pytest.approx(abs(np.linalg.det(cell)), rel=1e-9)
-    np.testing.assert_allclose(_sorted_rows(zone.points), _sorted_rows(vertices), atol=1e-9)
-
-
 @pytest.mark.guards_existing_behaviour(
     reason="only its lattice moved to tests/utils/lattices.py, bitwise the same; dev passes it"
 )

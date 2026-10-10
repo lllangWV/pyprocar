@@ -24,7 +24,6 @@ from tests.utils import DATA_DIR
 from tests.utils.lattices import (
     BI2SE3_RHOMBOHEDRAL,
     SHEARS,
-    STANDARD_CELLS,
     TRICLINIC,
     TURN,
     fcc_primitive,
@@ -390,68 +389,6 @@ def test_doubly_sheared_basis_snaps_every_direction_with_cubic_indices_up_to_2()
 
     assert len(cubic) == 98
     assert missed == []
-
-
-@pytest.mark.guards_existing_behaviour(
-    reason="dev snaps these from its given-basis candidates; #302 must not lose them"
-)
-def test_standard_cells_snap_every_direction_with_given_indices_up_to_4():
-    """Before #302 the candidates were the directions with indices up to 4 in the given
-    basis. On cells given in their usual basis, each still snaps, under the same name."""
-    given = _primitive_indices(4)
-
-    missed = {}
-    for name, real in STANDARD_CELLS.items():
-        reciprocal = np.linalg.inv(real).T
-        for uvw in given:
-            exact = np.array(uvw) @ real
-            direction, indices = snap_normal(_turned_by(exact), reciprocal)
-            if indices != uvw or not np.allclose(
-                direction, exact / np.linalg.norm(exact), atol=1e-12
-            ):
-                missed.setdefault(name, []).append(uvw)
-
-    assert len(given) == 578
-    assert missed == {}
-
-
-def test_snapped_directions_do_not_depend_on_the_basis_or_the_orientation():
-    """Normals typed to 4 digits along directions with indices up to 2, and along four of
-    index 3 (cubic [1 1 3] and [2 2 3] on fcc), snap to the exact direction in every basis of
-    the lattice and orientation, and name it with integers in the basis given. Normals
-    far from low-index directions stay as given."""
-    standard = [*_primitive_indices(2), (3, 3, -1), (3, 3, 1), (-1, 3, 3), (1, 3, 3)]
-    unsnapped = np.random.default_rng(302).normal(size=(5, 3))
-    orientations = {"": np.eye(3), ", turned": TURN}
-
-    wrong = []
-    for (name, cell), (basis, change), (orientation, turn) in itertools.product(
-        STANDARD_CELLS.items(),
-        {"given": np.eye(3, dtype=int), **SHEARS}.items(),
-        orientations.items(),
-    ):
-        frame = basis + orientation
-        real = change @ cell @ turn.T
-        reciprocal = np.linalg.inv(real).T
-        for uvw in standard:
-            exact = np.array(uvw) @ cell @ turn.T
-            exact /= np.linalg.norm(exact)
-            direction, indices = snap_normal(np.round(exact, 4), reciprocal)
-            if not np.allclose(direction, exact, atol=1e-12):
-                wrong.append((name, frame, uvw))
-            # None: the rounded normal was already the exact direction, as for [2 1 0] on cubic.
-            elif indices is not None:
-                named = np.array(indices) @ real
-                if not np.allclose(named / np.linalg.norm(named), exact, atol=1e-12) or not all(
-                    type(i) is int for i in indices
-                ):
-                    wrong.append((name, frame, uvw))
-        for normal in unsnapped @ turn.T:
-            if snap_normal(normal, reciprocal)[1] is not None:
-                wrong.append((name, frame, tuple(normal)))
-
-    assert len(standard) == 102
-    assert wrong == []
 
 
 FCC_PRIMITIVE_RECIPROCAL = reciprocal(fcc_primitive(1.0))

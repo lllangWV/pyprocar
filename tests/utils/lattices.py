@@ -137,7 +137,8 @@ class BasisVariant:
 
 def basis_variants(cell: np.ndarray) -> Iterator[BasisVariant]:
     """The cell as given, sheared by each of ``SHEARS``, with its rows in every other order, with
-    one row negated, turned by ``TURN``, and with 1e-16 of rounding noise in every entry."""
+    one row negated, turned by ``TURN``, sheared by U1 and turned, and with 1e-16 of rounding noise
+    in every entry."""
     identity = np.eye(3, dtype=int)
     yield BasisVariant("given", cell, identity, np.eye(3))
     for name, change in SHEARS.items():
@@ -152,4 +153,5 @@ def basis_variants(cell: np.ndarray) -> Iterator[BasisVariant]:
         change[row, row] = -1
         yield BasisVariant(f"-r{row + 1}", change @ cell, change, np.eye(3))
     yield BasisVariant("turned", cell @ TURN.T, identity, TURN)
+    yield BasisVariant("U1, turned", SHEARS["U1"] @ cell @ TURN.T, SHEARS["U1"], TURN)
     yield BasisVariant("rounding noise", cell * (1 + _NOISE), identity, np.eye(3))
