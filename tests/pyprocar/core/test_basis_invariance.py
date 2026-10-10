@@ -22,7 +22,7 @@ from pyprocar.core.brillouin_zone import BrillouinZone, zone_face_steps
 from pyprocar.core.ebs import ElectronicBandStructureMesh
 from pyprocar.core.kpoints import KGRID_MODE, KGridInfo
 from pyprocar.plotter._surface_plot import snap_normal
-from tests.utils.lattices import TURN, STANDARD_CELLS, BasisVariant, basis_variants, reciprocal
+from tests.utils.lattices import STANDARD_CELLS, TURN, BasisVariant, basis_variants, reciprocal
 
 REASON = (
     "dev passes this contract; it keeps #302's regressions out: fcc [113] and [223] at 88c0b927,"
@@ -189,11 +189,16 @@ def test_drawn_k_grid_of_a_sheared_basis_does_not_depend_on_the_order_signs_or_t
     cell_name, variant
 ):
     """The sheared rows reordered, with one negated, or turned, give the same k-points on 6^3:
-    the drawn grid steps are the same vectors up to sign."""
+    the drawn grid steps are the same vectors up to sign, a basis of the cell's k-point
+    lattice."""
+    k_lattice = reciprocal(STANDARD_CELLS[cell_name]) / 6
     drawn = periodic_grid(_grid_mesh(variant.reciprocal, (6, 6, 6)))
     assert drawn is not None
     expected = drawn.lattice / np.array(drawn.n)[:, None]
     scale = np.abs(expected).max()
+    in_k_lattice = expected @ variant.turn @ np.linalg.inv(k_lattice)
+    np.testing.assert_allclose(in_k_lattice, np.rint(in_k_lattice), rtol=0, atol=1e-9)
+    assert abs(np.linalg.det(np.rint(in_k_lattice))) == pytest.approx(1.0)
 
     for real, turn in [(change @ variant.real, np.eye(3)) for change in RELABELLINGS] + [
         (variant.real @ TURN.T, TURN)
