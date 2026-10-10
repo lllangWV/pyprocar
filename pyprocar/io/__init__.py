@@ -1,6 +1,8 @@
 from enum import Enum
 from pathlib import Path
 
+from pyprocar.core.dos import register_dos_reader as _register_dos_reader
+from pyprocar.core.ebs import register_ebs_reader as _register_ebs_reader
 from pyprocar.io.abinit import AbinitParser
 from pyprocar.io.base import BaseParser
 from pyprocar.io.bxsf import BxsfParser
@@ -45,3 +47,7 @@ def get_parser(
         raise ValueError(msg)
 
     return parser
+
+
+_register_ebs_reader(lambda code, dirpath: get_parser(code, dirpath).ebs)
+_register_dos_reader(lambda code, dirpath: get_parser(code, dirpath).dos)
