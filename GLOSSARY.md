@@ -14,11 +14,11 @@ _Avoid_: reciprocal cell, k-space lattice
 The lengths of the shortest three linearly independent vectors of a lattice. They depend only on the lattice.
 
 **Reduced basis**:
-A basis whose sorted row lengths equal the lattice's successive minima, within tolerance. Some symmetric lattices, such as hexagonal, fcc and rhombohedral, have several that are not reorderings or negations of each other.
+A basis whose sorted row lengths equal the lattice's successive minima, within tolerance. Some symmetric lattices, such as hexagonal, fcc, and rhombohedral lattices with an angle of at most 60 or at least 109.47 degrees, have several that are not reorderings or negations of each other.
 _Avoid_: canonical basis, Niggli basis (for the general idea)
 
 **Obtuse superbase**:
-A basis of the lattice, with some of its rows negated, together with minus the sum of those rows, where all four vectors meet pairwise at obtuse angles. Any three of them form a Selling-reduced basis. A basis is an obtuse superbase when some choice of signs makes it one.
+Four lattice vectors, the rows of a basis with some of them negated and minus their sum, that meet pairwise at obtuse angles. Any three of them form a Selling-reduced basis.
 _Avoid_: Selling basis
 
 **Basis variant**:
@@ -55,10 +55,9 @@ _Avoid_: label independence (for this stronger property)
 
 - A **basis variant** is a **relabelling**, a **shear**, or both.
 - A **drawn grid** samples one **k-point lattice** in one **drawn basis**.
-- The **drawn basis** is a **reduced basis** of the **k-point lattice**, unless the given reciprocal basis is reduced or an **obtuse superbase**.
 - **Basis invariance** implies **label independence**, but not the reverse.
 
 ## Flagged ambiguities
 
-- "Canonical basis" (issue #59) meant one basis that every caller uses and that depends on the lattice only. No such **reduced basis** exists when the lattice's symmetry permutes its reduced bases, as for fcc and rhombohedral cells. Resolved: say **reduced basis**, and state whether a result needs **label independence** or **basis invariance**.
+- "Canonical basis" (issue #59) meant one basis that every caller uses and that depends on the lattice only. No such **reduced basis** exists when the lattice's symmetry permutes its reduced bases, as for the fcc lattice and the Bi2Se3 rhombohedral lattice. Resolved: say **reduced basis**, and state whether a result needs **label independence** or **basis invariance**.
 - "Reduced grid" (issue #59) meant a candidate **drawn grid** in one of several **reduced bases**. Resolved: say **drawn grid** for the one drawn, and "the drawn grid in each reduced basis" for the candidates.
