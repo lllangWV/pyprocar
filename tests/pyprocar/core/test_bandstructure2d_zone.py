@@ -25,10 +25,11 @@ from tests.pyprocar.core.test_bandstructure2d_grid import (
     saw_band,
     tight_binding_graphene,
 )
+from tests.utils.lattices import shear
 from tests.utils.user_warning import user_warning
 
 CUBIC = np.eye(3)
-SHEARED = np.array([[1.0, 0, 0], [3.0, 1, 0], [0, 0, 1]])
+SHEARED = shear(3) @ CUBIC
 """The cubic reciprocal lattice in the basis b1, b2 + 3 b1, b3."""
 
 

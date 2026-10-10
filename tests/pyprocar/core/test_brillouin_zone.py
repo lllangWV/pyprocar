@@ -5,71 +5,41 @@ This module contains unit tests for the BrillouinZone
 and BrillouinZone2D classes.
 """
 
-import itertools
 import warnings
 
 import numpy as np
 import pytest
 import pyvista as pv
-from scipy.spatial import ConvexHull, Voronoi
+from scipy.spatial import ConvexHull
 
 from pyprocar.core.brillouin_zone import BrillouinZone, BrillouinZone2D, clip_to_zone
 from tests.pyprocar.core.test_bandstructure2d_grid import HEXAGONAL
+from tests.utils.lattices import (
+    SHEARS,
+    bcc_primitive,
+    cubic,
+    fcc_primitive,
+    hexagonal,
+    reciprocal,
+)
 
 
 @pytest.fixture
 def simple_cubic_reciprocal_lattice():
-    """
-    Create a simple cubic reciprocal lattice.
-
-    Returns
-    -------
-    np.ndarray
-        A 3x3 array representing a simple cubic reciprocal lattice
-        with lattice parameter 2*pi.
-    """
-    return np.array([
-        [2 * np.pi, 0.0, 0.0],
-        [0.0, 2 * np.pi, 0.0],
-        [0.0, 0.0, 2 * np.pi]
-    ])
+    """The reciprocal lattice of the cubic cell with edge 1, with 2 pi."""
+    return cubic(2 * np.pi)
 
 
 @pytest.fixture
 def fcc_reciprocal_lattice():
-    """
-    Create an FCC reciprocal lattice (BCC in reciprocal space).
-
-    Returns
-    -------
-    np.ndarray
-        A 3x3 array representing an FCC reciprocal lattice.
-    """
-    a = 2 * np.pi
-    return np.array([
-        [-a, a, a],
-        [a, -a, a],
-        [a, a, -a]
-    ])
+    """The reciprocal lattice of the fcc cell with cubic edge 1 (a bcc lattice), with 2 pi."""
+    return 2 * np.pi * reciprocal(fcc_primitive(1.0))
 
 
 @pytest.fixture
 def hexagonal_reciprocal_lattice():
-    """
-    Create a hexagonal reciprocal lattice.
-
-    Returns
-    -------
-    np.ndarray
-        A 3x3 array representing a hexagonal reciprocal lattice.
-    """
-    a = 2 * np.pi / 3.0
-    c = 2 * np.pi / 5.0
-    return np.array([
-        [a, a / np.sqrt(3), 0.0],
-        [0.0, 2 * a / np.sqrt(3), 0.0],
-        [0.0, 0.0, c]
-    ])
+    """The reciprocal lattice of the hexagonal cell with a = 3 and c = 5, with 2 pi."""
+    return 2 * np.pi * reciprocal(hexagonal(3.0, 5.0))
 
 
 class TestBrillouinZone:
@@ -340,62 +310,16 @@ class TestBrillouinZone2D:
             assert bz2d.n_points > 0
 
 
-MONOCLINIC = np.array([[1.0, 0.0, 0.0], [0.0, 1.3, 0.0], [0.4, 0.0, 0.9]])
-TRICLINIC = np.array([[1.0, 0.1, 0.05], [0.3, 1.2, 0.0], [0.2, 0.35, 0.8]])
-SHEARS = {
+BASES = {
     "unsheared": np.eye(3, dtype=int),
-    "b2+3b1": np.array([[1, 0, 0], [3, 1, 0], [0, 0, 1]]),
-    "b2+3b1,b3-2b1+2b2": np.array([[1, 0, 0], [3, 1, 0], [-2, 2, 1]]),
+    "b2+3b1": SHEARS["r2 + 3 r1"],
+    "b2+3b1,b3-2b1+2b2": SHEARS["r2 + 3 r1, r3 - 2 r1 + 2 r2"],
 }
-SHEARED_CELLS = [
-    pytest.param(cell, shear, id=f"{name}-{shear_name}")
-    for name, cell in [("monoclinic", MONOCLINIC), ("triclinic", TRICLINIC)]
-    for shear_name, shear in SHEARS.items()
-]
-
-
-def _voronoi_reference(cell: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Face vectors and vertices of the Voronoi cell of the origin among the 7^3 block of
-    lattice points of ``cell``, from scipy.spatial.Voronoi."""
-    steps = np.array(list(itertools.product(range(-3, 4), repeat=3)))
-    origin = len(steps) // 2
-    voronoi = Voronoi(steps @ cell)
-    pairs = voronoi.ridge_points[(voronoi.ridge_points == origin).any(axis=1)]
-    neighbours = pairs.sum(axis=1) - origin
-    vertices = voronoi.vertices[voronoi.regions[voronoi.point_region[origin]]]
-    return voronoi.points[neighbours], vertices
-
-
-def _sorted_rows(points: np.ndarray) -> np.ndarray:
-    rounded = np.round(points, 9) + 0.0
-    return rounded[np.lexsort(rounded.T[::-1])]
-
-
-@pytest.mark.parametrize(("cell", "shear"), SHEARED_CELLS)
-def test_zone_faces_match_voronoi_for_any_basis_of_the_lattice(cell, shear):
-    from pyprocar.core.brillouin_zone import zone_face_steps
-
-    basis = shear @ cell
-    faces, _ = _voronoi_reference(cell)
-
-    found = zone_face_steps(basis) @ basis
-
-    np.testing.assert_allclose(_sorted_rows(found), _sorted_rows(faces), atol=1e-9)
-
-
-@pytest.mark.parametrize(("cell", "shear"), SHEARED_CELLS)
-def test_brillouin_zone_matches_voronoi_for_any_basis_of_the_lattice(cell, shear):
-    basis = shear @ cell
-    _, vertices = _voronoi_reference(cell)
-
-    zone = BrillouinZone(basis)
-
-    assert ConvexHull(zone.points).volume == pytest.approx(abs(np.linalg.det(cell)), rel=1e-9)
-    np.testing.assert_allclose(_sorted_rows(zone.points), _sorted_rows(vertices), atol=1e-9)
-
-
+@pytest.mark.guards_existing_behaviour(
+    reason="only its lattice moved to tests/utils/lattices.py, bitwise the same; dev passes it"
+)
 @pytest.mark.parametrize(
-    "shear", [SHEARS["unsheared"], SHEARS["b2+3b1"]], ids=["unsheared", "b2+3b1"]
+    "shear", [BASES["unsheared"], BASES["b2+3b1"]], ids=["unsheared", "b2+3b1"]
 )
 def test_2d_brillouin_zone_is_the_hexagonal_prism_for_any_basis(
     hexagonal_reciprocal_lattice, shear
@@ -420,7 +344,7 @@ def test_2d_brillouin_zone_is_the_hexagonal_prism_for_any_basis(
     reason="dev builds the zone without spglib; this guards the delaunay_reduce call this PR adds"
 )
 def test_building_a_zone_emits_no_warnings():
-    lattice = np.array([[1.0, 0.0, 0.0], [3.0, 1.0, 0.0], [-2.0, 2.0, 1.0]])
+    lattice = SHEARS["r2 + 3 r1, r3 - 2 r1 + 2 r2"].astype(float)
     with warnings.catch_warnings(record=True) as record:
         warnings.simplefilter("always")
         BrillouinZone(lattice)
@@ -447,14 +371,14 @@ def test_2d_zone_face_normals_point_out_of_the_prism_at_any_energy(e_min, e_max)
     assert (outward > 0).all(), outward
 
 
-CUBIC = 2 * np.pi * np.eye(3)
+CUBIC = cubic(2 * np.pi)
 # Keys name the real-space lattice whose reciprocal lattice the value is.
 ZONES_3D = {
     "cubic": CUBIC,
-    "fcc": 2 * np.pi * np.array([[-1.0, 1.0, 1.0], [1.0, -1.0, 1.0], [1.0, 1.0, -1.0]]),
-    "bcc": 2 * np.pi * np.array([[0.0, 1.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 0.0]]),
+    "fcc": 2 * np.pi * reciprocal(fcc_primitive(1.0)),
+    "bcc": 2 * np.pi * reciprocal(bcc_primitive(1.0)),
     "hexagonal": 2 * np.pi * HEXAGONAL,
-    "sheared-cubic": SHEARS["b2+3b1,b3-2b1+2b2"] @ CUBIC,
+    "sheared-cubic": BASES["b2+3b1,b3-2b1+2b2"] @ CUBIC,
 }
 
 

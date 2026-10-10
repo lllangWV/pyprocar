@@ -7,13 +7,12 @@ import pytest
 
 from pyprocar.core.ebs import ElectronicBandStructure, ElectronicBandStructureMesh
 from pyprocar.core.kpoints import KGRID_MODE, KGridInfo, get_kpoints_from_kgrid
+from tests.utils.lattices import fcc_primitive, hexagonal, reciprocal, shear
 
-HEXAGONAL_REAL = np.array([[1.0, 0.0, 0.0], [-0.5, np.sqrt(3) / 2, 0.0], [0.0, 0.0, 1.6]])
-FCC_REAL = 0.5 * np.array([[0.0, 1.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 0.0]])
 RECIPROCAL_LATTICES = {
-    "hexagonal": np.linalg.inv(HEXAGONAL_REAL).T,
-    "fcc": np.linalg.inv(FCC_REAL).T,
-    "cubic, b2'=(3,1,0)": np.array([[1.0, 0.0, 0.0], [3.0, 1.0, 0.0], [0.0, 0.0, 1.0]]),
+    "hexagonal": reciprocal(hexagonal(1.0, 1.6)),
+    "fcc": reciprocal(fcc_primitive(1.0)),
+    "cubic, b2'=(3,1,0)": shear(3).astype(float),
 }
 # Every lattice vector within 4 cells: a superset of the zone's face vectors for these lattices.
 LATTICE_STEPS = np.array([s for s in itertools.product(range(-4, 5), repeat=3) if any(s)])
