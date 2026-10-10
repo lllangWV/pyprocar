@@ -265,15 +265,15 @@ def _symmetries_permuting_rows(k_lattice: np.ndarray) -> list[np.ndarray]:
 
 
 GIVEN_OR_SHEARED = [
-    case
-    for case, (_, variant) in zip(CASES, VARIANTS, strict=True)
+    pytest.param(variant, id=f"{name}-{variant.name}")
+    for name, variant in VARIANTS
     if variant.name == "given" or not variant.is_relabelling
 ]
 
 
 @pytest.mark.parametrize("kgrid", [(6, 6, 6), (12, 12, 6)], ids=["6x6x6", "12x12x6"])
-@pytest.mark.parametrize(("cell_name", "variant"), GIVEN_OR_SHEARED)
-def test_drawn_k_grid_is_free_of_the_row_labels_where_it_can_be(cell_name, variant, kgrid):
+@pytest.mark.parametrize("variant", GIVEN_OR_SHEARED)
+def test_drawn_k_grid_is_free_of_the_row_labels_where_it_can_be(variant, kgrid):
     """The given or sheared rows in each relabelling of ``basis_variants``, with N reordered
     along, give the same k-points. Reciprocal rows that are reduced or an obtuse superbase are
     drawn as given, on any grid (#302). Elsewhere, where a reduced basis of the k-point lattice
