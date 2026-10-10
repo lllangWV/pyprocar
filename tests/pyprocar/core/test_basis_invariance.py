@@ -169,8 +169,8 @@ NO_LABEL_FREE_BASIS = pytest.mark.xfail(
     strict=True,
     reason="no reduced basis of the obtuse rhombohedral 6^3 k-point lattice is free of the row"
     + " labels: the threefold axis permutes the given rows, and the only basis it maps to itself"
-    + " is the given one, which is not reduced. Drawing the given basis was measured worse than"
-    + " a label-dependent reduced one (https://github.com/lllangWV/pyprocar/pull/68"
+    + " is the given one, which is not reduced. Drawing given bases that are not reduced was"
+    + " measured worse than a label-dependent reduced one on most inputs (https://github.com/lllangWV/pyprocar/pull/68"
     + "#issuecomment-6101888251), so the grid depends on the order and signs of the rows",
 )
 

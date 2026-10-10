@@ -251,7 +251,7 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
     cell, no reduced basis is free of the labels, and the first basis in the ranking is drawn.
     It depends on the labels, but its steps stay reduced. The given basis, which no labelling
     changes, was measured worse: within 16% of reduced it put a model band's area up to 40% off
-    where a reduced pick was 7% off (#59), and farther out it drew up to twice the area (#302).
+    where a reduced pick was 7% off, and farther out up to 126% off (#59).
 
     Candidate rows are the -1, 0, 1 combinations of the reduced rows. A hexagonal plane has
     reduced bases that are no signed permutation of each other, (b1, b2) and (b1, b2 - b1).
