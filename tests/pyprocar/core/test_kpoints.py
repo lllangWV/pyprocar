@@ -22,6 +22,7 @@ from pyprocar.core.kpoints import (
     reduced_to_cartesian,
     sort_kpoints,
 )
+from tests.utils.lattices import cubic
 from tests.utils.user_warning import user_warning
 
 # =============================================================================
@@ -31,18 +32,8 @@ from tests.utils.user_warning import user_warning
 
 @pytest.fixture
 def simple_cubic_reciprocal_lattice():
-    """
-    Create a simple cubic reciprocal lattice.
-
-    Returns
-    -------
-    np.ndarray
-        A 3x3 array representing a simple cubic reciprocal lattice
-        with lattice parameter 2*pi.
-    """
-    return np.array(
-        [[2 * np.pi, 0.0, 0.0], [0.0, 2 * np.pi, 0.0], [0.0, 0.0, 2 * np.pi]]
-    )
+    """The reciprocal lattice of the cubic cell with edge 1, with 2 pi."""
+    return cubic(2 * np.pi)
 
 
 @pytest.fixture

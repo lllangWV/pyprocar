@@ -21,6 +21,17 @@ from pyprocar.plotter.fs_plot import (
     dHvA_frequency,
 )
 from tests.utils import DATA_DIR
+from tests.utils.lattices import (
+    BI2SE3_RHOMBOHEDRAL,
+    SHEARS,
+    STANDARD_CELLS,
+    TRICLINIC,
+    TURN,
+    fcc_primitive,
+    hexagonal,
+    reciprocal,
+    shear,
+)
 
 RADIUS = 0.3
 
@@ -269,7 +280,7 @@ def test_rounded_111_normal_cuts_the_exact_111_plane():
     assert np.asarray(areas) == pytest.approx([np.pi * 0.1 * np.sqrt(3)], rel=0.02)
 
 
-A3_PLUS_6_A1 = np.array([[1.0, 0.0, -6.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+A3_PLUS_6_A1 = reciprocal(SHEARS["r3 + 6 r1"])
 """Reciprocal rows of the simple cubic lattice given as a1, a2, a3 + 6 a1 (units of a): the
 same lattice, where [1 1 1] is -5 a1' + a2' + a3'."""
 
@@ -325,12 +336,14 @@ def test_exact_lattice_normals_are_not_reported_as_snapped(normal):
     assert snap_normal(normal, np.eye(3))[1] is None
 
 
+@pytest.mark.guards_existing_behaviour(
+    reason="only its lattice moved to tests/utils/lattices.py, bitwise the same; dev passes it"
+)
 def test_exact_hexagonal_lattice_direction_is_not_reported_as_snapped():
-    real = np.array([[2.46, 0, 0], [-1.23, 2.46 * np.sqrt(3) / 2, 0], [0, 0, 6.7]])
-    reciprocal = np.linalg.inv(real).T
+    real = hexagonal(2.46, 6.7)
 
     for uvw in [(1, 1, 3), (2, -1, 3), (1, 0, 0)]:
-        assert snap_normal(np.asarray(uvw, float) @ real, reciprocal)[1] is None
+        assert snap_normal(np.asarray(uvw, float) @ real, reciprocal(real))[1] is None
 
 
 def _turned_by(direction, angle: float = 1e-4, toward=(0.3, 0.5, 0.8)) -> np.ndarray:
@@ -355,10 +368,13 @@ def test_sheared_basis_snaps_to_111_and_names_it_in_the_given_basis():
         np.testing.assert_allclose(direction, np.ones(3) / np.sqrt(3), atol=1e-12)
 
 
+@pytest.mark.guards_existing_behaviour(
+    reason="only its lattice moved to tests/utils/lattices.py, bitwise the same; dev passes it"
+)
 def test_doubly_sheared_basis_snaps_every_direction_with_cubic_indices_up_to_2():
     """Rows a1, a2 + 3 a1, a3 + 3 a1 + 3 a2 of the cubic lattice: the given indices of a
     snapped direction, times these rows, are its cubic indices."""
-    given = np.array([[1, 0, 0], [3, 1, 0], [3, 3, 1]])
+    given = SHEARS["r2 + 3 r1, r3 + 3 r1 + 3 r2"]
     reciprocal = np.linalg.inv(given.astype(float)).T
     cubic = _primitive_indices(2)
 
@@ -374,29 +390,6 @@ def test_doubly_sheared_basis_snaps_every_direction_with_cubic_indices_up_to_2()
 
     assert len(cubic) == 98
     assert missed == []
-
-
-_HEX_ROWS = np.array([[1.0, 0.0, 0.0], [-0.5, np.sqrt(3) / 2, 0.0], [0.0, 0.0, 1.0]])
-BI2SE3_RHOMBOHEDRAL = np.array(
-    [
-        [2.068734, -1.194384, 9.546678],
-        [0.0, 2.388768, 9.546678],
-        [-2.068734, -1.194384, 9.546678],
-    ]
-)
-"""The rhombohedral primitive cell of Bi2Se3 (a = 9.841 Angstrom, alpha = 24.27 degrees): not
-reduced, its successive minima are 4.14, 4.14 and 9.84 Angstrom."""
-STANDARD_CELLS = {
-    "SrVO3 cubic": 3.84652 * np.eye(3),
-    "Au fcc, van-alphen POSCAR": 2.949546
-    * np.array([[1.0, 0, 0], [0.5, np.sqrt(3) / 2, 0], [0.5, np.sqrt(3) / 6, np.sqrt(2 / 3)]]),
-    "fcc primitive": 2.04 * np.array([[0.0, 1, 1], [1, 0, 1], [1, 1, 0]]),
-    "bcc primitive": 1.65 * np.array([[-1.0, 1, 1], [1, -1, 1], [1, 1, -1]]),
-    "hexagonal c/a 2.72": _HEX_ROWS * [2.46, 2.46, 6.7],
-    "hexagonal c/a 1.62": _HEX_ROWS * [3.21, 3.21, 5.21],
-    "Bi2Se3 rhombohedral": BI2SE3_RHOMBOHEDRAL,
-}
-"""Real-space rows of cells as their POSCARs give them."""
 
 
 @pytest.mark.guards_existing_behaviour(
@@ -422,24 +415,6 @@ def test_standard_cells_snap_every_direction_with_given_indices_up_to_4():
     assert missed == {}
 
 
-SHEARS = {
-    "given": np.eye(3, dtype=int),
-    "a3 + 6 a1": np.array([[1, 0, 0], [0, 1, 0], [6, 0, 1]]),
-    "doubly sheared": np.array([[1, 0, 0], [3, 1, 0], [3, 3, 1]]),
-    "a2 - 2 a1, a3 + a1 + 2 a2": np.array([[1, 0, 0], [-2, 1, 0], [1, 2, 1]]),
-}
-"""Changes of basis (unimodular): the given real rows are these times the cell's rows."""
-
-TURN = np.array(
-    [
-        [0.36, -0.48, 0.8],
-        [0.8, 0.6, 0.0],
-        [-0.48, 0.64, 0.6],
-    ]
-)
-"""A rotation (orthonormal rows, det 1), as a POSCAR in another orientation gives it."""
-
-
 def test_snapped_directions_do_not_depend_on_the_basis_or_the_orientation():
     """Normals typed to 4 digits along directions with indices up to 2, and along four of
     index 3 (cubic [1 1 3] and [2 2 3] on fcc), snap to the exact direction in every basis of
@@ -450,11 +425,13 @@ def test_snapped_directions_do_not_depend_on_the_basis_or_the_orientation():
     orientations = {"": np.eye(3), ", turned": TURN}
 
     wrong = []
-    for (name, cell), (basis, shear), (orientation, turn) in itertools.product(
-        STANDARD_CELLS.items(), SHEARS.items(), orientations.items()
+    for (name, cell), (basis, change), (orientation, turn) in itertools.product(
+        STANDARD_CELLS.items(),
+        {"given": np.eye(3, dtype=int), **SHEARS}.items(),
+        orientations.items(),
     ):
         frame = basis + orientation
-        real = shear @ cell @ turn.T
+        real = change @ cell @ turn.T
         reciprocal = np.linalg.inv(real).T
         for uvw in standard:
             exact = np.array(uvw) @ cell @ turn.T
@@ -477,7 +454,7 @@ def test_snapped_directions_do_not_depend_on_the_basis_or_the_orientation():
     assert wrong == []
 
 
-FCC_PRIMITIVE_RECIPROCAL = np.array([[-1.0, 1, 1], [1, -1, 1], [1, 1, -1]])
+FCC_PRIMITIVE_RECIPROCAL = reciprocal(fcc_primitive(1.0))
 """Rows b1, b2, b3 of the fcc lattice with real rows (0 1 1)/2, (1 0 1)/2, (1 1 0)/2."""
 
 
@@ -631,25 +608,27 @@ def test_plane_tangent_to_the_surface_at_a_translate_closes_its_orbit():
     assert np.asarray(areas) == pytest.approx([0.7253], rel=1e-3)
 
 
+@pytest.mark.guards_existing_behaviour(
+    reason="only its lattice moved to tests/utils/lattices.py, bitwise the same; dev passes it"
+)
 def test_fcc_plane_through_grid_lines_counts_its_orbit_once():
     """The plane through Gamma normal to a3 of an fcc cell holds grid lines of the k mesh,
     so its cut passes through mesh vertices. Lattice translates of the orbit then have
     different node sets but the same area-weighted centroid modulo a lattice vector; the
     plane 1e-10 above cuts no vertex and gives the same single orbit."""
-    fcc = np.array([[-1, 1, 1], [1, -1, 1], [1, 1, -1]]) / 4.08
-    surface = _periodic_surface(lambda k: _sum_of_cosines(k) + 0.05, fcc)
-    normal = np.linalg.inv(fcc).T[2]
+    surface = _periodic_surface(lambda k: _sum_of_cosines(k) + 0.05, FCC)
+    normal = np.linalg.inv(FCC).T[2]
     normal /= np.linalg.norm(normal)
 
-    areas, n_open = cross_section_areas(surface, normal, (0, 0, 0), fcc)
-    above, _ = cross_section_areas(surface, normal, 1e-10 * normal, fcc)
+    areas, n_open = cross_section_areas(surface, normal, (0, 0, 0), FCC)
+    above, _ = cross_section_areas(surface, normal, 1e-10 * normal, FCC)
 
     assert n_open == 0
     assert len(areas) == len(above) == 1
     assert areas[0] == pytest.approx(above[0], rel=1e-8)
 
 
-SHEARED_CUBIC = np.array([[1.0, 0.0, 0.0], [3.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+SHEARED_CUBIC = shear(3).astype(float)
 
 
 @pytest.mark.parametrize(
@@ -678,12 +657,15 @@ def test_sheared_basis_counts_only_the_orbit_in_the_first_zone(normal, height):
     assert np.asarray(areas) == pytest.approx([np.pi * (0.1 - height**2)], rel=0.04)
 
 
+@pytest.mark.guards_existing_behaviour(
+    reason="only its lattice moved to tests/utils/lattices.py, bitwise the same; dev passes it"
+)
 def test_sheared_basis_finds_the_orbit_at_a_zone_corner_six_cells_out():
     """b2 = (3, 1, 0), b3 = (-2, 2, 1) span the cubic lattice. The zone corner R = (0.5,
     0.5, -0.5) is the point (-5, 1.5, -0.5) of this basis. A plane 0.05 from R cuts the
     pocket |k - R|^2 = 0.02 in an orbit of area pi (0.02 - 0.05^2), and the sphere
     |k|^2 = 0.1 around Gamma at distance D in an orbit of area pi (0.1 - D^2)."""
-    basis = np.array([[1.0, 0.0, 0.0], [3.0, 1.0, 0.0], [-2.0, 2.0, 1.0]])
+    basis = SHEARS["r2 + 3 r1, r3 - 2 r1 + 2 r2"].astype(float)
     normal = np.array([0.3971, 0.5523, 0.7330]) / np.linalg.norm([0.3971, 0.5523, 0.7330])
     origin = np.array([0.5, 0.5, -0.5]) + 0.05 * normal
 
@@ -702,14 +684,16 @@ def test_sheared_basis_finds_the_orbit_at_a_zone_corner_six_cells_out():
     )
 
 
+@pytest.mark.guards_existing_behaviour(
+    reason="only its lattice moved to tests/utils/lattices.py, bitwise the same; dev passes it"
+)
 def test_shifted_grid_finds_the_line_through_a_zone_corner_below_the_start_cells():
     """The triclinic zone's corner V = (0.245642, 0.17609, -0.640012) lies at -1.939 b1 of the
     basis below. On a grid shifted half a spacing along b1, each translate of the period
     starts 0.125 b1 above an integer, so the plane 0.005 inside V meets the zone only in the
     translate three cells down. The level set f2 = f2(V) is a lattice plane through V that
     cuts the plane in one open line."""
-    cell = np.array([[1.0, 0.1, 0.05], [0.3, 1.2, 0.0], [0.2, 0.35, 0.8]])
-    basis = np.array([[-1, 0, 0], [0, -1, 0], [2, 0, 1]]) @ cell
+    basis = np.array([[-1, 0, 0], [0, -1, 0], [2, 0, 1]]) @ TRICLINIC
     corner = np.array([0.245642, 0.17609, -0.640012])
     f2 = (corner @ np.linalg.inv(basis))[1]
     normal = corner / np.linalg.norm(corner) + np.array([0.05, -0.03, 0.02])
@@ -740,7 +724,7 @@ def test_orbit_reaching_five_cells_from_the_zone_closes():
     assert np.asarray(areas) == pytest.approx([5.1506, 5.1506], rel=1e-4)
 
 
-SHEARED_TWICE = np.array([[1.0, 0.0, 0.0], [3.0, 1.0, 0.0], [-2.0, 2.0, 1.0]])
+SHEARED_TWICE = SHEARS["r2 + 3 r1, r3 - 2 r1 + 2 r2"].astype(float)
 """b2 = (3, 1, 0), b3 = (-2, 2, 1): a basis of the cubic lattice."""
 
 

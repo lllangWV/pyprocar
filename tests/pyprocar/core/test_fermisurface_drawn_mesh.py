@@ -17,6 +17,16 @@ import pytest
 from pyprocar.core.ebs import ElectronicBandStructureMesh
 from pyprocar.core.fermisurface import FermiSurface, generate_band_isosurfaces
 from pyprocar.core.kpoints import KGRID_MODE, KGridInfo
+from tests.utils.lattices import (
+    SHEARS,
+    TURN,
+    bcc_primitive,
+    fcc_primitive,
+    hexagonal,
+    reciprocal,
+    rhombohedral,
+    shear,
+)
 from tests.utils.user_warning import user_warning
 
 AREA_TOL = 2e-8
@@ -24,16 +34,15 @@ SPHERE_AREA = 1.2365362569504919
 """Today's area of |k|^2 = 0.1 on the cubic 16^3 [0,1) grid."""
 ANALYTIC_SPHERE = 4 * math.pi * 0.1
 CUBIC = np.eye(3)
-U1 = np.array([[0, -1, 4], [2, -2, -5], [1, -2, 2]], dtype=float)
-HEX_REAL = np.array([[1.0, 0, 0], [-0.5, math.sqrt(3) / 2, 0], [0, 0, 1.6]])
-HEX = np.linalg.inv(HEX_REAL).T
-FCC = np.linalg.inv(np.array([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]])).T
-BCC = np.linalg.inv(0.5 * np.array([[-1.0, 1, 1], [1, -1, 1], [1, 1, -1]])).T
+U1 = SHEARS["U1"] @ CUBIC
+HEX = reciprocal(hexagonal(1.0, 1.6))
+FCC = reciprocal(fcc_primitive(1.0))
+BCC = reciprocal(bcc_primitive(1.0))
 
 
 def sheared(k: int) -> np.ndarray:
     """The cubic reciprocal lattice in the basis b1, b2 + k b1, b3."""
-    return np.array([[1.0, 0, 0], [k, 1, 0], [0, 0, 1]])
+    return shear(k) @ CUBIC
 
 
 def grid_fracs(kgrid, kshift=(0.0, 0.0, 0.0), centred: bool = False) -> np.ndarray:
@@ -126,8 +135,11 @@ def test_sphere_on_a_sheared_unequal_grid_has_the_reduced_area(k, expected):
     assert area(fs) == pytest.approx(expected, abs=AREA_TOL)
 
 
+@pytest.mark.guards_existing_behaviour(
+    reason="only its lattice moved to tests/utils/lattices.py, bitwise the same; dev passes it"
+)
 @pytest.mark.parametrize(
-    "lattice", [U1, np.array([[1.0, 0, 0], [3, 1, 0], [-2, 2, 1]])], ids=["U1", "b2-b3"]
+    "lattice", [U1, SHEARS["r2 + 3 r1, r3 - 2 r1 + 2 r2"] @ CUBIC], ids=["U1", "b2-b3"]
 )
 def test_sphere_on_a_general_shear_has_the_reduced_area(lattice):
     """A4: today 5.3422 and 0.9854."""
@@ -419,18 +431,6 @@ def test_hexagonal_basis_with_rounded_lengths_is_drawn_as_given():
     fs = FermiSurface.from_ebs(mesh(f, band, BISB, (12, 12, 1), 0.0))
 
     np.testing.assert_array_equal(fs.ebs.reciprocal_lattice, BISB)
-
-
-def rhombohedral(a: float, alpha: float) -> np.ndarray:
-    """Real rows of the rhombohedral primitive cell with edge a and angle alpha (degrees),
-    its threefold axis along z."""
-    c = math.cos(math.radians(alpha))
-    tx, ty, tz = math.sqrt((1 - c) / 2), math.sqrt((1 - c) / 6), math.sqrt((1 + 2 * c) / 3)
-    return a * np.array([[tx, -ty, tz], [0, 2 * ty, tz], [-tx, -ty, tz]])
-
-
-TURN = np.array([[0.36, -0.48, 0.8], [0.8, 0.6, 0.0], [-0.48, 0.64, 0.6]])
-"""A rotation (orthonormal rows, det 1), as a POSCAR in another orientation gives it."""
 
 
 @pytest.mark.guards_existing_behaviour(
