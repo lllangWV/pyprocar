@@ -41,6 +41,12 @@ def bcc_primitive(a: float) -> np.ndarray:
     return a / 2 * np.array([[-1.0, 1.0, 1.0], [1.0, -1.0, 1.0], [1.0, 1.0, -1.0]])
 
 
+def bct_primitive(a: float, c: float) -> np.ndarray:
+    """The primitive rows (-a a c)/2, (a -a c)/2, (a a -c)/2 of the body-centred tetragonal
+    lattice with edges a, a and c; ``bcc_primitive(a)`` when c = a."""
+    return 0.5 * np.array([[-a, a, c], [a, -a, c], [a, a, -c]])
+
+
 def hexagonal(a: float, c: float) -> np.ndarray:
     """Rows a1 = (a, 0, 0) and a2 at 120 degrees to it, and a3 = (0, 0, c)."""
     return _HEX_ROWS * [a, a, c]

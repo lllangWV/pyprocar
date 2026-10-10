@@ -22,7 +22,15 @@ from pyprocar.core.brillouin_zone import BrillouinZone, zone_face_steps
 from pyprocar.core.ebs import ElectronicBandStructureMesh
 from pyprocar.core.kpoints import KGRID_MODE, KGridInfo
 from pyprocar.plotter._surface_plot import snap_normal
-from tests.utils.lattices import STANDARD_CELLS, TURN, BasisVariant, basis_variants, reciprocal
+from tests.utils.lattices import (
+    OBTUSE_RHOMBOHEDRAL,
+    STANDARD_CELLS,
+    TURN,
+    BasisVariant,
+    basis_variants,
+    bct_primitive,
+    reciprocal,
+)
 
 REASON = (
     "dev passes this contract; it keeps #302's regressions out: fcc [113] and [223] at 88c0b927,"
@@ -211,10 +219,10 @@ def test_drawn_k_grid_of_a_sheared_basis_does_not_depend_on_the_order_signs_or_t
         )
 
 
-def _successive_minima(lattice: np.ndarray) -> np.ndarray:
+def _successive_minima(lattice: np.ndarray, reach: int = 3) -> np.ndarray:
     """Lengths of the shortest three independent vectors of the lattice with these rows, from
-    every combination of the rows with coefficients up to 3."""
-    combos = np.array(list(itertools.product(range(-3, 4), repeat=3)))
+    every combination of the rows with coefficients up to ``reach``."""
+    combos = np.array(list(itertools.product(range(-reach, reach + 1), repeat=3)))
     vectors = combos[np.any(combos, axis=1)] @ lattice
     picked: list[np.ndarray] = []
     for vector in vectors[np.argsort(np.linalg.norm(vectors, axis=1), kind="stable")]:
@@ -239,6 +247,41 @@ def test_drawn_k_grid_of_a_sheared_basis_is_reduced(cell_name, variant, kgrid):
     assert found is not None
     steps = found.lattice / np.array(found.n)[:, None]
     # The Bi2Se3 rows, rounded to 6 decimals, make lengths equal in the crystal 8e-8 apart.
+    np.testing.assert_allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-6)
+
+
+FAR_FROM_REDUCED = [
+    pytest.param(OBTUSE_RHOMBOHEDRAL, [[0, -1, 1], [1, 0, -1], [0, 0, 1]], (12, 12, 6), id="obtuse"),
+    pytest.param(
+        STANDARD_CELLS["hexagonal c/a 1.62"],
+        [[0, 1, -1], [1, 1, 1], [1, 0, 1]],
+        (12, 12, 6),
+        id="hexagonal c/a 1.62",
+    ),
+    pytest.param(
+        bct_primitive(3.0, 5.1), [[0, -1, 1], [1, 0, -1], [0, 0, 1]], (6, 6, 6), id="bct c/a 1.7"
+    ),
+]
+"""Sheared rows on a k-grid whose given steps are 2.9, 3.2 and 2.6 times the successive minima,
+and whose k-point lattice has no reduced basis that every symmetry permuting the rows keeps."""
+
+
+@pytest.mark.guards_existing_behaviour(
+    reason="dev draws these in a reduced basis; eb7a2ba1 drew them in the given one, 2.6 to 3.2"
+    + " times longer, and the drawn area grew by 83 to 126%"
+)
+@pytest.mark.parametrize(("cell", "change", "kgrid"), FAR_FROM_REDUCED)
+def test_drawn_k_grid_of_a_basis_far_from_reduced_is_reduced(cell, change, kgrid):
+    """A given basis far from reduced is never drawn as given, even where no reduced basis is
+    free of the row labels: marching cubes on its long thin cells doubles the drawn area (#302).
+    The drawn steps are as short as the successive minima of the k-point lattice."""
+    k_lattice = reciprocal(np.array(change) @ cell) / np.array(kgrid)[:, None]
+    minima = _successive_minima(k_lattice, reach=6)
+
+    found = periodic_grid(_grid_mesh(reciprocal(np.array(change) @ cell), kgrid))
+
+    assert found is not None
+    steps = found.lattice / np.array(found.n)[:, None]
     np.testing.assert_allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-6)
 
 
