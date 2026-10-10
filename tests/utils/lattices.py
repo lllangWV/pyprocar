@@ -38,7 +38,19 @@ def fcc_primitive(a: float) -> np.ndarray:
 def bcc_primitive(a: float) -> np.ndarray:
     """The primitive rows (-1 1 1) a/2, (1 -1 1) a/2, (1 1 -1) a/2 of the bcc lattice with cubic
     edge a. Its reciprocal lattice is ``fcc_primitive(2 / a)``, up to rounding."""
-    return a / 2 * np.array([[-1.0, 1.0, 1.0], [1.0, -1.0, 1.0], [1.0, 1.0, -1.0]])
+    return bct_primitive(a, a)
+
+
+def bct_primitive(a: float, c: float) -> np.ndarray:
+    """The primitive rows (-a a c)/2, (a -a c)/2, (a a -c)/2 of the body-centred tetragonal
+    lattice with edges a, a and c; ``bcc_primitive(a)`` when c = a."""
+    return body_centred_primitive(a, a, c)
+
+
+def body_centred_primitive(a: float, b: float, c: float) -> np.ndarray:
+    """The primitive rows (-a b c)/2, (a -b c)/2, (a b -c)/2 of the body-centred orthorhombic
+    lattice with edges a, b and c; ``bct_primitive(a, c)`` when b = a."""
+    return 0.5 * np.array([[-a, b, c], [a, -b, c], [a, b, -c]])
 
 
 def hexagonal(a: float, c: float) -> np.ndarray:
@@ -101,6 +113,7 @@ SHEARS: dict[str, np.ndarray] = {
     "r2 + 3 r1, r3 - 2 r1 + 2 r2": np.array([[1, 0, 0], [3, 1, 0], [-2, 2, 1]]),
     "r2 - 2 r1, r3 + r1 + 2 r2": np.array([[1, 0, 0], [-2, 1, 0], [1, 2, 1]]),
     "U1": np.array([[0, -1, 4], [2, -2, -5], [1, -2, 2]]),
+    "r1 + r3, r2 + r3": np.array([[1, 0, 1], [0, 1, 1], [0, 0, 1]]),
 }
 """Unimodular changes of basis other than a signed permutation: ``shear @ rows`` is the same
 lattice in a basis that is not reduced."""

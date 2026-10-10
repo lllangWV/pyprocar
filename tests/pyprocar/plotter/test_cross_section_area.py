@@ -26,6 +26,7 @@ from tests.utils.lattices import (
     SHEARS,
     TRICLINIC,
     TURN,
+    cubic,
     fcc_primitive,
     hexagonal,
     reciprocal,
@@ -389,6 +390,28 @@ def test_doubly_sheared_basis_snaps_every_direction_with_cubic_indices_up_to_2()
 
     assert len(cubic) == 98
     assert missed == []
+
+
+@pytest.mark.guards_existing_behaviour(
+    reason="dev builds the snap candidates on every call, so no lattice gets another's answer"
+)
+def test_snap_normal_answers_for_the_lattice_it_is_given_now():
+    """One array holds the cubic, then the hexagonal, then the cubic reciprocal lattice again,
+    changed in place. A normal 1e-4 rad from [1 2 3] snaps to [1 2 3] of the lattice the array
+    holds at that call, even after the caller scales the direction returned before."""
+    cells = [cubic(3.84652), hexagonal(2.46, 6.7), cubic(3.84652)]
+    lattice = np.empty((3, 3))
+
+    for real in cells:
+        lattice[:] = reciprocal(real)
+        exact = np.array([1, 2, 3]) @ real
+        exact /= np.linalg.norm(exact)
+
+        direction, uvw = snap_normal(_turned_by(exact), lattice)
+
+        assert uvw == (1, 2, 3)
+        np.testing.assert_allclose(direction, exact, rtol=0, atol=1e-12)
+        direction *= 2.0
 
 
 FCC_PRIMITIVE_RECIPROCAL = reciprocal(fcc_primitive(1.0))

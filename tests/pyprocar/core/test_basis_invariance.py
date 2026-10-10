@@ -15,6 +15,7 @@ from functools import cache
 
 import numpy as np
 import pytest
+import spglib
 from scipy.spatial import ConvexHull, Voronoi
 
 from pyprocar.core._periodic_grid import periodic_grid
@@ -22,7 +23,15 @@ from pyprocar.core.brillouin_zone import BrillouinZone, zone_face_steps
 from pyprocar.core.ebs import ElectronicBandStructureMesh
 from pyprocar.core.kpoints import KGRID_MODE, KGridInfo
 from pyprocar.plotter._surface_plot import snap_normal
-from tests.utils.lattices import STANDARD_CELLS, BasisVariant, basis_variants, reciprocal
+from tests.utils.lattices import (
+    OBTUSE_RHOMBOHEDRAL,
+    STANDARD_CELLS,
+    BasisVariant,
+    basis_variants,
+    bct_primitive,
+    body_centred_primitive,
+    reciprocal,
+)
 
 REASON = (
     "dev passes this contract; it keeps #302's regressions out: fcc [113] and [223] at 88c0b927,"
@@ -52,22 +61,9 @@ LOW_INDICES = [*_primitive_indices(2), (3, 3, -1), (3, 3, 1), (-1, 3, 3), (1, 3,
 rows (on other cells, four more directions of index 3)."""
 GIVEN_INDICES = _primitive_indices(4)
 """The candidates before #302: every direction with indices up to 4 in the given rows."""
-OTHER_RELABELLINGS = 10
-"""Relabellings per cell besides the cell as given. Each probes its own tenth of GIVEN_INDICES:
-a snap_normal call takes about 1 ms, and all 578 in every relabelling would take a minute."""
-
-
-def _given_index_cases() -> list:
-    cases = []
-    for name, cell in STANDARD_CELLS.items():
-        others = [v for v in basis_variants(cell) if v.is_relabelling and v.name != "given"]
-        assert len(others) == OTHER_RELABELLINGS
-        for share, variant in enumerate(others, start=1):
-            probes = GIVEN_INDICES[share - 1 :: OTHER_RELABELLINGS]
-            cases.append(pytest.param(name, variant, probes, id=f"{name}-{variant.name}"))
-        given = next(basis_variants(cell))
-        cases.append(pytest.param(name, given, GIVEN_INDICES, id=f"{name}-{given.name}"))
-    return cases
+RELABELLED = [
+    case for case, (_, variant) in zip(CASES, VARIANTS, strict=True) if variant.is_relabelling
+]
 
 
 UNSNAPPED = np.random.default_rng(302).normal(size=(3, 3))
@@ -101,17 +97,16 @@ def _snap_misses(
 
 
 @pytest.mark.guards_existing_behaviour(reason=REASON)
-@pytest.mark.parametrize(("cell_name", "variant", "probes"), _given_index_cases())
+@pytest.mark.parametrize(("cell_name", "variant"), RELABELLED)
 def test_snap_normal_snaps_every_direction_with_given_indices_up_to_4_in_any_relabelling(
-    cell_name, variant, probes
+    cell_name, variant
 ):
     """Before #302 the candidates were the directions with indices up to 4 in the given rows. A
     relabelling of the rows has the same directions with indices up to 4, so each snaps, to the
-    exact direction, under integer indices in the rows given. The cell as given probes all 578;
-    each other relabelling probes a tenth of them, together all 578 again."""
+    exact direction, under integer indices in the rows given."""
     cell = STANDARD_CELLS[cell_name]
 
-    missed = _snap_misses(variant, cell, probes)
+    missed = _snap_misses(variant, cell, GIVEN_INDICES)
 
     assert len(GIVEN_INDICES) == 578
     assert missed == []
@@ -144,19 +139,39 @@ def _grid_mesh(reciprocal_lattice: np.ndarray, kgrid: tuple[int, int, int]):
     )
 
 
-def _assert_same_points(found: np.ndarray, expected: np.ndarray, atol: float) -> None:
+def _same_points(found: np.ndarray, expected: np.ndarray, atol: float) -> bool:
     """The two sets of points match one to one within ``atol``."""
     distance = np.linalg.norm(found[:, None, :] - expected[None, :, :], axis=2)
-    assert len(found) == len(expected)
-    assert distance.min(axis=0).max() <= atol
-    assert distance.min(axis=1).max() <= atol
+    return bool(
+        len(found) == len(expected)
+        and distance.min(axis=0).max() <= atol
+        and distance.min(axis=1).max() <= atol
+    )
 
 
-ORDER_DEPENDENT = pytest.mark.xfail(
+def _assert_same_points(found: np.ndarray, expected: np.ndarray, atol: float) -> None:
+    assert _same_points(found, expected, atol)
+
+
+def _same_rows(found: np.ndarray, expected: np.ndarray, atol: float) -> bool:
+    """The rows are the same vectors up to order and sign, within ``atol``."""
+    return _same_points(np.vstack([found, -found]), np.vstack([expected, -expected]), atol)
+
+
+def _drawn_steps(reciprocal_lattice: np.ndarray, kgrid: tuple[int, int, int]) -> np.ndarray:
+    """The drawn grid steps, rows of ``lattice / n``, of the full grid ``kgrid``."""
+    found = periodic_grid(_grid_mesh(reciprocal_lattice, kgrid))
+    assert found is not None
+    return found.lattice / np.array(found.n)[:, None]
+
+
+NO_LABEL_FREE_BASIS = pytest.mark.xfail(
     strict=True,
-    reason="dev draws the obtuse rhombohedral 6^3 grid in a basis that depends on the order and"
-    + " signs of the rows (_nearest_identity breaks ties on index entries); with a row negated the"
-    + " Fermi surface of one band moves by up to 2.8% at 6^3 and 0.5% at 16^3",
+    reason="no reduced basis of the obtuse rhombohedral 6^3 k-point lattice is free of the row"
+    + " labels: the threefold axis permutes the given rows, and the only basis it maps to itself"
+    + " is the given one, which is not reduced. Drawing given bases that are not reduced was"
+    + " measured worse more often than better against a label-dependent reduced one (https://github.com/lllangWV/pyprocar/pull/68"
+    + "#issuecomment-6101888251), so the grid depends on the order and signs of the rows",
 )
 
 
@@ -172,7 +187,7 @@ def _drawn_grid_cases() -> list:
                 and not (variant.change == np.eye(3, dtype=int)).all()
             )
             case_id = f"{name}-{variant.name}-{grid_id}"
-            marks = [ORDER_DEPENDENT] if known else []
+            marks = [NO_LABEL_FREE_BASIS] if known else []
             cases.append(pytest.param(name, variant, kgrid, id=case_id, marks=marks))
     return cases
 
@@ -203,6 +218,192 @@ def test_drawn_k_grid_does_not_depend_on_the_order_signs_or_rounding_of_the_rows
         np.vstack([given_steps, -given_steps]),
         atol=1e-9 * np.abs(k_lattice).max(),
     )
+
+
+def _niggli(lattice: np.ndarray) -> np.ndarray:
+    """spglib's Niggli-reduced basis of the lattice with these rows, a reduction the drawn grid
+    does not use."""
+    scale = abs(np.linalg.det(lattice)) ** (1 / 3)
+    return spglib.niggli_reduce(lattice / scale) * scale
+
+
+def _reduced_bases(k_lattice: np.ndarray) -> tuple[np.ndarray, list[np.ndarray]]:
+    """The successive minima of the lattice with rows ``k_lattice``, and every basis of it with
+    those sorted row lengths, as Cartesian rows, from the combinations up to 2 of its Niggli
+    basis."""
+    niggli = _niggli(k_lattice)
+    minima = _successive_minima(niggli, reach=2)
+    combos = np.array(list(itertools.product(range(-2, 3), repeat=3)))
+    leading = np.take_along_axis(combos, (combos != 0).argmax(axis=1)[:, None], axis=1)[:, 0]
+    vectors = combos[leading > 0] @ niggli
+    short = vectors[np.linalg.norm(vectors, axis=1) <= minima[-1] * (1 + 1e-6)]
+    bases = []
+    for trio in itertools.combinations(short, 3):
+        rows = np.array(trio)
+        lengths = np.sort(np.linalg.norm(rows, axis=1))
+        unimodular = abs(np.linalg.det(rows @ np.linalg.inv(k_lattice))) == pytest.approx(1.0)
+        if np.allclose(lengths, minima, rtol=1e-6) and unimodular:
+            bases.append(rows)
+    return minima, bases
+
+
+def _obtuse_superbase(rows: np.ndarray) -> bool:
+    """With some signs, the three rows and minus their sum meet pairwise at obtuse angles."""
+    for signs in itertools.product((1, -1), repeat=2):
+        signed = rows * np.array([1, *signs])[:, None]
+        four = np.vstack([signed, -signed.sum(axis=0)])
+        unit = four / np.linalg.norm(four, axis=1, keepdims=True)
+        if ((unit @ unit.T)[~np.eye(4, dtype=bool)] < -1e-4).all():
+            return True
+    return False
+
+
+def _symmetries_permuting_rows(k_lattice: np.ndarray) -> list[np.ndarray]:
+    """Maps x -> x @ M of the lattice symmetries that permute the rows up to sign: the signed
+    permutations P with P G P^T = G, for G = ``k_lattice @ k_lattice.T``. Relabelled by such a
+    P, the rows are the same lattice turned, so no rule that reads the lattice alone can tell
+    the two labellings apart."""
+    gram = k_lattice @ k_lattice.T
+    maps = []
+    for order in itertools.permutations(range(3)):
+        for signs in itertools.product((1, -1), repeat=3):
+            p = np.diag(signs) @ np.eye(3)[list(order)]
+            if np.allclose(p @ gram @ p.T, gram, rtol=0, atol=1e-6 * np.abs(gram).max()):
+                maps.append(np.linalg.inv(k_lattice) @ p @ k_lattice)
+    return maps
+
+
+GIVEN_OR_SHEARED = [
+    pytest.param(variant, id=f"{name}-{variant.name}")
+    for name, variant in VARIANTS
+    if variant.name == "given" or not variant.is_relabelling
+]
+
+
+@pytest.mark.parametrize("kgrid", [(6, 6, 6), (12, 12, 6)], ids=["6x6x6", "12x12x6"])
+@pytest.mark.parametrize("variant", GIVEN_OR_SHEARED)
+def test_drawn_k_grid_is_free_of_the_row_labels_where_it_can_be(variant, kgrid):
+    """The given or sheared rows in each relabelling of ``basis_variants``, with N reordered
+    along, give the same k-points. Reciprocal rows that are reduced or an obtuse superbase are
+    drawn as given, on any grid (#302). Elsewhere, where a reduced basis of the k-point lattice
+    is kept by every lattice symmetry that permutes the rows, every labelling draws the same
+    reduced steps. Where none is, every reduced basis depends on the labels, and every
+    labelling still draws reduced steps: the given rows, drawn instead, put a model band's
+    area up to 40% off where a reduced basis was 7% off (#59)."""
+    n = np.array(kgrid)
+    k_lattice = variant.reciprocal / n[:, None]
+    minima, reduced = _reduced_bases(k_lattice)
+    atol = 1e-6 * minima[-1]
+
+    drawn = [
+        _drawn_steps(relabelled.reciprocal, tuple((np.abs(relabelled.change) @ n).tolist()))
+        @ relabelled.turn
+        for relabelled in basis_variants(variant.real)
+        if relabelled.is_relabelling
+    ]
+
+    for steps in drawn:
+        in_k_lattice = steps @ np.linalg.inv(k_lattice)
+        np.testing.assert_allclose(in_k_lattice, np.rint(in_k_lattice), rtol=0, atol=1e-6)
+        assert abs(np.linalg.det(np.rint(in_k_lattice))) == pytest.approx(1.0)
+    is_reduced = [
+        np.allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-6) for steps in drawn
+    ]
+    given_lengths = np.sort(np.linalg.norm(variant.reciprocal, axis=1))
+    given_minima = _successive_minima(_niggli(variant.reciprocal), reach=2)
+    if (given_lengths <= given_minima * (1 + 1e-4)).all() or _obtuse_superbase(variant.reciprocal):
+        assert all(_same_rows(steps, k_lattice, atol) for steps in drawn)
+        return
+    assert all(is_reduced)
+    symmetries = _symmetries_permuting_rows(k_lattice)
+    if any(all(_same_rows(rows @ m, rows, atol) for m in symmetries) for rows in reduced):
+        assert all(_same_rows(steps, drawn[0], atol) for steps in drawn)
+
+
+def _successive_minima(lattice: np.ndarray, reach: int = 3) -> np.ndarray:
+    """Lengths of the shortest three independent vectors of the lattice with these rows, from
+    every combination of the rows with coefficients up to ``reach``."""
+    combos = np.array(list(itertools.product(range(-reach, reach + 1), repeat=3)))
+    vectors = combos[np.any(combos, axis=1)] @ lattice
+    picked: list[np.ndarray] = []
+    for vector in vectors[np.argsort(np.linalg.norm(vectors, axis=1), kind="stable")]:
+        if np.linalg.matrix_rank(np.array([*picked, vector]), tol=1e-9) > len(picked):
+            picked.append(vector)
+    return np.linalg.norm(np.array(picked), axis=1)
+
+
+@pytest.mark.guards_existing_behaviour(
+    reason="dev draws every shear of these cells in a reduced basis; #59's tie rule must keep it"
+)
+@pytest.mark.parametrize("kgrid", [(6, 6, 6), (16, 16, 16)], ids=["6x6x6", "16x16x16"])
+@pytest.mark.parametrize(("cell_name", "variant"), SHEARED)
+def test_drawn_k_grid_of_a_sheared_basis_is_reduced(cell_name, variant, kgrid):
+    """N points along each sheared row sample the cell's own N^3 k-point lattice, as the shear is
+    unimodular. The drawn grid steps are as short as its successive minima, as they are for the
+    cell's own rows when those are reduced: a shear must not stretch the cells marched on."""
+    minima = _successive_minima(reciprocal(STANDARD_CELLS[cell_name]) / np.array(kgrid)[:, None])
+
+    steps = _drawn_steps(variant.reciprocal, kgrid)
+
+    # The Bi2Se3 rows, rounded to 6 decimals, make lengths equal in the crystal 8e-8 apart.
+    np.testing.assert_allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-6)
+
+
+NOT_REDUCED = [
+    pytest.param(
+        OBTUSE_RHOMBOHEDRAL,
+        [[0, -1, 1], [1, 0, -1], [0, 0, 1]],
+        (12, 12, 6),
+        id="obtuse",
+    ),
+    pytest.param(
+        STANDARD_CELLS["hexagonal c/a 1.62"],
+        [[0, 1, -1], [1, 1, 1], [1, 0, 1]],
+        (12, 12, 6),
+        id="hexagonal c/a 1.62",
+    ),
+    pytest.param(
+        bct_primitive(3.0, 5.1),
+        [[0, -1, 1], [1, 0, -1], [0, 0, 1]],
+        (6, 6, 6),
+        id="bct c/a 1.7",
+    ),
+    pytest.param(
+        STANDARD_CELLS["fcc primitive"],
+        [[1, 0, 0], [0, 1, -1], [1, -1, 0]],
+        (6, 6, 6),
+        id="fcc",
+    ),
+    pytest.param(
+        body_centred_primitive(3.0, 3.6, 4.4),
+        [[1, 0, 0], [0, 1, 0], [1, 0, 1]],
+        (6, 6, 6),
+        id="orthorhombic I",
+    ),
+]
+"""Sheared rows on a k-grid whose given steps are 2.9, 3.2, 2.6, 1.155 and 1.124 times the
+successive minima, and whose k-point lattice has no reduced basis that every symmetry permuting
+the rows keeps."""
+
+
+@pytest.mark.guards_existing_behaviour(
+    reason="dev draws these in a reduced basis. eb7a2ba1 drew the first three in the given one,"
+    + " 2.6 to 3.2 times longer, and the drawn area grew by 83 to 126%. 277d777d drew the last two"
+    + " in the given one, and a model band's area was 20.5% and 39.5% off against dev's 1.7% and 7%"
+)
+@pytest.mark.parametrize(("cell", "change", "kgrid"), NOT_REDUCED)
+def test_drawn_k_grid_of_a_basis_not_reduced_is_reduced(cell, change, kgrid):
+    """A given basis that is not reduced or an obtuse superbase is never drawn as given, near
+    reduced or far from it, even where no reduced basis is free of the row labels. Far from
+    reduced, marching cubes on its long thin cells doubles the drawn area (#302). Within 16% of
+    reduced, it still put a model band's area up to 40% off where a reduced basis was 7% off
+    (#59). The drawn steps are as short as the successive minima of the k-point lattice."""
+    given = reciprocal(np.array(change) @ cell)
+    minima = _successive_minima(given / np.array(kgrid)[:, None], reach=6)
+
+    steps = _drawn_steps(given, kgrid)
+
+    np.testing.assert_allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-6)
 
 
 @cache

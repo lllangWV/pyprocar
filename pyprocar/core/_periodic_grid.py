@@ -66,7 +66,8 @@ class PeriodicGrid:
 
     @property
     def is_identity(self) -> bool:
-        """The given basis is reduced or an obtuse superbase, so the grid is drawn as stored."""
+        """The grid is drawn as stored: the given basis is reduced or an obtuse superbase, or
+        its k-point steps are reduced."""
         return bool((self._to_source == np.eye(3, dtype=int)).all())
 
     @property
@@ -236,8 +237,21 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
     """Of the bases with the sorted row lengths of the reduced basis ``steps @ lattice``, the one
     closest to the identity in index space, so a shear of a reduced basis returns to it exactly.
     Ties go to the fewest changed entries, which undoes a single shear b2 + 3 b1 of an fcc basis
-    rather than reaching (b1, b1 + b2 + b3, b3), then to the first in the order of the entries:
-    integers only, so rounding noise in the lattice cannot change the choice.
+    rather than reaching (b1, b1 + b2 + b3, b3). Both keys are integers, so rounding noise in the
+    lattice cannot change the choice.
+
+    Neither key changes when the given rows are reordered or negated, and neither does the
+    next, ``_placement``: where the drawn rows sit against the given ones. Bases tied on all
+    three that span one set of rows up to sign draw the same grid, and the first in the order
+    of the entries is taken. Bases tied with different rows are images under a symmetry that
+    permutes the given rows, and a pick among them would depend on how the rows are labelled
+    (#59), so the next group in the ranking is tried.
+
+    When no group spans one set of rows, as for the threefold axis of a rhombohedral primitive
+    cell, no reduced basis is free of the labels, and the first basis in the ranking is drawn.
+    It depends on the labels, but its steps stay reduced. The given basis, which no labelling
+    changes, was measured worse more often than better: within 16% of reduced it put a model
+    band's area up to 262% off where a reduced pick was exact, and farther out 126% off (#59).
 
     Candidate rows are the -1, 0, 1 combinations of the reduced rows. A hexagonal plane has
     reduced bases that are no signed permutation of each other, (b1, b2) and (b1, b2 - b1).
@@ -259,7 +273,46 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
     changed = np.count_nonzero(change, axis=(1, 2))
     keep = np.flatnonzero(usable)
     entries = bases[keep].reshape(-1, 9).T[::-1]
-    return bases[keep[np.lexsort((*entries, changed[keep], distance[keep]))[0]]]
+    order = keep[np.lexsort((*entries, changed[keep], distance[keep]))]
+    gram = lattice @ lattice.T
+    unit = REDUCED_TOLERANCE * np.abs(gram).max()
+    left = order
+    while left.size:
+        level = left[(distance[left] == distance[left[0]]) & (changed[left] == changed[left[0]])]
+        groups: dict[tuple[int, ...], list[int]] = {}
+        for i in level:
+            groups.setdefault(_placement(bases[i], gram, unit), []).append(int(i))
+        for placement in sorted(groups):
+            group = bases[groups[placement]]
+            if len({frozenset(map(tuple, np.vstack([b[axes], -b[axes]]))) for b in group}) == 1:
+                return group[0]
+        left = left[len(level) :]
+    return bases[order[0]]
+
+
+_SIGNED_PERMUTATIONS = np.array(
+    [
+        np.diag(signs) @ np.eye(3, dtype=int)[list(order)]
+        for order in itertools.permutations(range(3))
+        for signs in itertools.product((1, -1), repeat=3)
+    ]
+)
+
+
+def _placement(basis: np.ndarray, gram: np.ndarray, unit: float) -> tuple[int, ...]:
+    """The inner products of the drawn rows ``basis @ lattice`` with the given rows (``gram`` is
+    ``lattice @ lattice.T``), in whole ``unit``s, least in row-major order over reordered and
+    negated rows and columns: the same for any labelling of either set of rows. A turn or
+    rounding noise changes it only where an inner product sits within rounding of a half
+    ``unit``. There it can split bases that a symmetry relates into separate groups, and the
+    drawn grid can depend on the turn, as for rhombohedral reciprocal rows whose cosine is
+    0.51505 on 6^3."""
+    forms = np.rint(basis @ gram / unit).astype(np.int64) @ _SIGNED_PERMUTATIONS
+    # Over reordered and negated rows, the least form is the rows, each with its first nonzero
+    # entry negative, in sorted order.
+    leading = np.take_along_axis(forms, (forms != 0).argmax(axis=2)[..., None], axis=2)
+    forms = np.where(leading > 0, -forms, forms)
+    return min(tuple(i for row in sorted(form) for i in row) for form in forms.tolist())
 
 
 def _obtuse_superbase(rows: np.ndarray) -> bool:
