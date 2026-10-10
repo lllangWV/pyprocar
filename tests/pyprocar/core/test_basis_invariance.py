@@ -177,6 +177,37 @@ def test_drawn_k_grid_does_not_depend_on_the_order_signs_or_rounding_of_the_rows
     )
 
 
+def _successive_minima(lattice: np.ndarray) -> np.ndarray:
+    """Lengths of the shortest three independent vectors of the lattice with these rows, from
+    every combination of the rows with coefficients up to 3."""
+    combos = np.array(list(itertools.product(range(-3, 4), repeat=3)))
+    vectors = combos[np.any(combos, axis=1)] @ lattice
+    picked: list[np.ndarray] = []
+    for vector in vectors[np.argsort(np.linalg.norm(vectors, axis=1), kind="stable")]:
+        if np.linalg.matrix_rank(np.array([*picked, vector]), tol=1e-9) > len(picked):
+            picked.append(vector)
+    return np.linalg.norm(np.array(picked), axis=1)
+
+
+@pytest.mark.guards_existing_behaviour(
+    reason="dev draws every shear of these cells in a reduced basis; #59's tie rule must keep it"
+)
+@pytest.mark.parametrize("kgrid", [(6, 6, 6), (16, 16, 16)], ids=["6x6x6", "16x16x16"])
+@pytest.mark.parametrize(("cell_name", "variant"), SHEARED)
+def test_drawn_k_grid_of_a_sheared_basis_is_reduced(cell_name, variant, kgrid):
+    """N points along each sheared row sample the cell's own N^3 k-point lattice, as the shear is
+    unimodular. The drawn grid steps are as short as its successive minima, as they are for the
+    cell's own rows when those are reduced: a shear must not stretch the cells marched on."""
+    minima = _successive_minima(reciprocal(STANDARD_CELLS[cell_name]) / np.array(kgrid)[:, None])
+
+    found = periodic_grid(_grid_mesh(variant.reciprocal, kgrid))
+
+    assert found is not None
+    steps = found.lattice / np.array(found.n)[:, None]
+    # POSCAR rounding: the Bi2Se3 rows give lengths 8e-8 apart that are equal in the crystal.
+    np.testing.assert_allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-4)
+
+
 @cache
 def _voronoi_zone(cell_name: str) -> tuple[np.ndarray, np.ndarray]:
     """Face vectors and vertices of the Voronoi cell of the origin among the 9^3 block of
