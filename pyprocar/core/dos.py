@@ -8,7 +8,7 @@ from collections import Counter
 from collections.abc import Iterable, Sequence
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 import numpy as np
 import numpy.typing as npt
@@ -35,6 +35,18 @@ if TYPE_CHECKING:
     from pyprocar.core.structure import Structure
 
 
+class DosReader(Protocol):
+    def __call__(self, code: str, dirpath: str) -> DensityOfStates | None: ...
+
+
+_read_dos: DosReader | None = None
+
+
+def register_dos_reader(reader: DosReader) -> None:
+    global _read_dos  # noqa: PLW0603
+    _read_dos = reader
+
+
 def get_dos_from_code(
     code: str,
     dirpath: str,
@@ -56,14 +68,13 @@ def get_dos_from_code(
         Name of the cache file to use when ``use_cache`` is ``True``.
     """
 
-    from pyprocar.io import get_parser
-
     dos_filepath = Path(dirpath) / filename
 
     if not use_cache or not dos_filepath.exists():
         logger.info("Parsing DOS calculation directory: %s", dirpath)
-        parser = get_parser(code, dirpath)
-        dos = parser.dos
+        if _read_dos is None:
+            raise RuntimeError("Import pyprocar.io to read a calculation directory")
+        dos = _read_dos(code, dirpath)
         if dos is None:
             raise ValueError(f"The {code} parser found no dos in {dirpath}")
         if use_cache:

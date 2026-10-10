@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
 from functools import cached_property
 from pathlib import Path
-from typing import Any, SupportsInt
+from typing import Any, Protocol, SupportsInt
 
 import numpy as np
 import numpy.typing as npt
@@ -117,17 +117,28 @@ def get_ebs_from_data(
         return ElectronicBandStructure(**ebs_args)
 
 
+class EbsReader(Protocol):
+    def __call__(self, code: str, dirpath: str) -> ElectronicBandStructure | None: ...
+
+
+_read_ebs: EbsReader | None = None
+
+
+def register_ebs_reader(reader: EbsReader) -> None:
+    global _read_ebs  # noqa: PLW0603
+    _read_ebs = reader
+
+
 def get_ebs_from_code(
     code: str, dirpath: str, use_cache: bool = False, ebs_filename: str = "ebs.pkl", **kwargs
 ):
-    from pyprocar.io import get_parser
-
     ebs_filepath = Path(dirpath) / ebs_filename
 
     if not use_cache or not ebs_filepath.exists():
         logger.info(f"Parsing EBS calculation directory: {dirpath}")
-        parser = get_parser(code, dirpath)
-        ebs = parser.ebs
+        if _read_ebs is None:
+            raise RuntimeError("Import pyprocar.io to read a calculation directory")
+        ebs = _read_ebs(code, dirpath)
         if ebs is None:
             raise ValueError(f"The {code} parser found no ebs in {dirpath}")
         if use_cache:
