@@ -22,7 +22,7 @@ from pyprocar.core.brillouin_zone import BrillouinZone, zone_face_steps
 from pyprocar.core.ebs import ElectronicBandStructureMesh
 from pyprocar.core.kpoints import KGRID_MODE, KGridInfo
 from pyprocar.plotter._surface_plot import snap_normal
-from tests.utils.lattices import STANDARD_CELLS, BasisVariant, basis_variants, reciprocal
+from tests.utils.lattices import TURN, STANDARD_CELLS, BasisVariant, basis_variants, reciprocal
 
 REASON = (
     "dev passes this contract; it keeps #302's regressions out: fcc [113] and [223] at 88c0b927,"
@@ -175,6 +175,35 @@ def test_drawn_k_grid_does_not_depend_on_the_order_signs_or_rounding_of_the_rows
         np.vstack([given_steps, -given_steps]),
         atol=1e-9 * np.abs(k_lattice).max(),
     )
+
+
+RELABELLINGS = [
+    *(np.eye(3, dtype=int)[list(order)] for order in itertools.permutations(range(3))),
+    *(np.diag(signs) for signs in [(-1, 1, 1), (1, -1, 1), (1, 1, -1)]),
+]
+"""The row orders and the single negated rows that ``basis_variants`` applies to a cell."""
+
+
+@pytest.mark.parametrize(("cell_name", "variant"), SHEARED)
+def test_drawn_k_grid_of_a_sheared_basis_does_not_depend_on_the_order_signs_or_turn_of_its_rows(
+    cell_name, variant
+):
+    """The sheared rows reordered, with one negated, or turned, give the same k-points on 6^3:
+    the drawn grid steps are the same vectors up to sign."""
+    drawn = periodic_grid(_grid_mesh(variant.reciprocal, (6, 6, 6)))
+    assert drawn is not None
+    expected = drawn.lattice / np.array(drawn.n)[:, None]
+    scale = np.abs(expected).max()
+
+    for real, turn in [(change @ variant.real, np.eye(3)) for change in RELABELLINGS] + [
+        (variant.real @ TURN.T, TURN)
+    ]:
+        found = periodic_grid(_grid_mesh(reciprocal(real), (6, 6, 6)))
+        assert found is not None
+        steps = found.lattice / np.array(found.n)[:, None] @ turn
+        _assert_same_points(
+            np.vstack([steps, -steps]), np.vstack([expected, -expected]), atol=1e-9 * scale
+        )
 
 
 def _successive_minima(lattice: np.ndarray) -> np.ndarray:
