@@ -16,7 +16,7 @@ from pyprocar.core._periodic_grid import _gauss_steps, periodic_grid
 from tests.pyprocar.core.test_basis_invariance import _grid_mesh
 from tests.utils.lattices import hexagonal, reciprocal, shear
 
-TIMEOUT_SECONDS = 10
+pytestmark = pytest.mark.timeout(10)
 
 HALF_PLUS_ULP_ROWS = np.array(
     [
@@ -46,7 +46,6 @@ def _about_z(degrees: float) -> np.ndarray:
     return np.array([[cos, -sin, 0.0], [sin, cos, 0.0], [0.0, 0.0, 1.0]])
 
 
-@pytest.mark.timeout(TIMEOUT_SECONDS)
 def test_gauss_steps_ends_when_the_projection_rounds_to_half_plus_an_ulp():
     steps = _gauss_steps(HALF_PLUS_ULP_ROWS)
 
@@ -55,7 +54,6 @@ def test_gauss_steps_ends_when_the_projection_rounds_to_half_plus_an_ulp():
     np.testing.assert_allclose(lengths, _shortest_pair(HALF_PLUS_ULP_ROWS), rtol=1e-12)
 
 
-@pytest.mark.timeout(TIMEOUT_SECONDS)
 @pytest.mark.parametrize("kgrid", [(12, 12, 1), (9, 9, 1)])
 @pytest.mark.parametrize("degrees", [270.0, 275.0])
 def test_periodic_grid_draws_a_turned_hexagonal_plane(degrees, kgrid):
