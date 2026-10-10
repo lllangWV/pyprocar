@@ -101,6 +101,7 @@ SHEARS: dict[str, np.ndarray] = {
     "r2 + 3 r1, r3 - 2 r1 + 2 r2": np.array([[1, 0, 0], [3, 1, 0], [-2, 2, 1]]),
     "r2 - 2 r1, r3 + r1 + 2 r2": np.array([[1, 0, 0], [-2, 1, 0], [1, 2, 1]]),
     "U1": np.array([[0, -1, 4], [2, -2, -5], [1, -2, 2]]),
+    "r1 + r3, r2 + r3": np.array([[1, 0, 1], [0, 1, 1], [0, 0, 1]]),
 }
 """Unimodular changes of basis other than a signed permutation: ``shear @ rows`` is the same
 lattice in a basis that is not reduced."""
