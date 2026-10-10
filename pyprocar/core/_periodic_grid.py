@@ -242,12 +242,13 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
     lattice cannot change the choice.
 
     Neither key changes when the given rows are reordered or negated, and neither does the
-    next, ``_relabelled_form``. Bases still tied that span one set of rows up to sign draw the
-    same grid, and the first in the order of the entries is taken. Bases still tied with
-    different rows are images of each other under a symmetry that permutes the given rows, such
-    as the threefold axis of a rhombohedral primitive cell, and any pick among them depends on
-    how the rows are labelled (#59), so the identity is returned and the grid is drawn in the
-    given basis.
+    next, ``_placement``: where the drawn rows sit against the given ones. Bases tied on all
+    three that span one set of rows up to sign draw the same grid, and the first in the order
+    of the entries is taken. Bases tied with different rows are images under a symmetry that
+    permutes the given rows, and a pick among them would depend on how the rows are labelled
+    (#59), so the next group in the ranking is tried. When no group spans one set of rows, as
+    for the threefold axis of a rhombohedral primitive cell, the identity is returned and the
+    grid is drawn in the given basis.
 
     Candidate rows are the -1, 0, 1 combinations of the reduced rows. A hexagonal plane has
     reduced bases that are no signed permutation of each other, (b1, b2) and (b1, b2 - b1).
@@ -270,13 +271,20 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
     keep = np.flatnonzero(usable)
     entries = bases[keep].reshape(-1, 9).T[::-1]
     order = keep[np.lexsort((*entries, changed[keep], distance[keep]))]
-    nearest = order[(distance[order] == distance[order[0]]) & (changed[order] == changed[order[0]])]
-    forms = [_relabelled_form(bases[i]) for i in nearest]
-    chosen = [i for i, form in zip(nearest, forms, strict=True) if form == min(forms)]
-    row_sets = {frozenset(map(tuple, np.vstack([b[axes], -b[axes]]))) for b in bases[chosen]}
-    if len(row_sets) > 1:
-        return np.eye(3, dtype=int)
-    return bases[chosen[0]]
+    gram = lattice @ lattice.T
+    unit = REDUCED_TOLERANCE * np.abs(gram).max()
+    left = order
+    while left.size:
+        level = left[(distance[left] == distance[left[0]]) & (changed[left] == changed[left[0]])]
+        groups: dict[tuple[int, ...], list[int]] = {}
+        for i in level:
+            groups.setdefault(_placement(bases[i], gram, unit), []).append(int(i))
+        for placement in sorted(groups):
+            group = bases[groups[placement]]
+            if len({frozenset(map(tuple, np.vstack([b[axes], -b[axes]]))) for b in group}) == 1:
+                return group[0]
+        left = left[len(level) :]
+    return np.eye(3, dtype=int)
 
 
 _SIGNED_PERMUTATIONS = np.array(
@@ -288,10 +296,13 @@ _SIGNED_PERMUTATIONS = np.array(
 )
 
 
-def _relabelled_form(basis: np.ndarray) -> tuple[int, ...]:
-    """The least entries, in row-major order, of ``basis`` with its rows and columns reordered
-    and negated: the same for a basis whose given rows or drawn rows are labelled otherwise."""
-    forms = (_SIGNED_PERMUTATIONS[:, None] @ basis @ _SIGNED_PERMUTATIONS[None, :]).reshape(-1, 9)
+def _placement(basis: np.ndarray, gram: np.ndarray, unit: float) -> tuple[int, ...]:
+    """The inner products of the drawn rows ``basis @ lattice`` with the given rows (``gram`` is
+    ``lattice @ lattice.T``), in whole ``unit``s, least in row-major order over reordered and
+    negated rows and columns: the same for any labelling of either set of rows, for a turned
+    lattice and for rounding noise."""
+    products = np.rint(basis @ gram / unit).astype(np.int64)
+    forms = (_SIGNED_PERMUTATIONS[:, None] @ products @ _SIGNED_PERMUTATIONS[None, :]).reshape(-1, 9)
     return tuple(int(i) for i in forms[np.lexsort(forms.T[::-1])[0]])
 
 
