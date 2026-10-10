@@ -1,5 +1,6 @@
 """PyVista plotter behaviour shared by FermiPlotter and BS2DPlotter."""
 
+import functools
 import logging
 import os
 from typing import Any, cast
@@ -33,8 +34,9 @@ normals reach too). Distinct candidates are at least 4.4e-3 rad apart on hexagon
 with c/a = 1.633, 15 times this angle (fcc 7.1e-3, bcc 7.5e-3, cubic 9.0e-3, the Bi2Se3
 rhombohedral primitive cell 3.4e-3). A longer cell has more candidates: 2.4e-3 at c/a = 3,
 1.6e-3 at c/a = 4, 5.7e-4 at c/a = 8 and 1.9e-4 at c/a = 15, where a normal typed far from
-any low-index direction can snap to a high-index one. A call builds the candidates anew:
-about 1 ms on these cells up to c/a = 4, 8-10 ms at c/a = 8 and 15.
+any low-index direction can snap to a high-index one. The candidates are built once per
+lattice: the first call on a lattice takes about 1 ms on cubic cells, 20 ms at c/a = 20 and
+45 ms at c/a = 30, and a repeat call 0.02 to 0.12 ms.
 """
 
 SNAP_REACH = 4
@@ -66,6 +68,20 @@ def _snap_candidates(real: np.ndarray) -> np.ndarray:
     return candidates[np.gcd.reduce(np.abs(candidates), axis=1) == 1]
 
 
+@functools.lru_cache(maxsize=32)
+def _snap_directions(reciprocal_bytes: bytes) -> tuple[np.ndarray, np.ndarray]:
+    """Read-only snap candidates of the 3x3 float64 reciprocal lattice with these bytes: their
+    indices in the given basis and unit directions. Keyed on the values, so a lattice changed
+    in place is a new key."""
+    real = np.linalg.inv(np.frombuffer(reciprocal_bytes, dtype=np.float64).reshape(3, 3)).T
+    indices = _snap_candidates(real)
+    directions = indices @ real
+    directions /= np.linalg.norm(directions, axis=1, keepdims=True)
+    indices.flags.writeable = False
+    directions.flags.writeable = False
+    return indices, directions
+
+
 def snap_normal(
     normal, reciprocal_lattice: np.ndarray
 ) -> tuple[np.ndarray, tuple[int, int, int] | None]:
@@ -80,10 +96,8 @@ def snap_normal(
     Returns the indices in the given basis when the normal was changed, otherwise None.
     """
     normal = np.asarray(normal, dtype=np.float64) / np.linalg.norm(normal)
-    real = np.linalg.inv(np.asarray(reciprocal_lattice, dtype=np.float64)).T
-    indices = _snap_candidates(real)
-    directions = indices @ real
-    directions /= np.linalg.norm(directions, axis=1, keepdims=True)
+    lattice = np.ascontiguousarray(reciprocal_lattice, dtype=np.float64)
+    indices, directions = _snap_directions(lattice.tobytes())
     cosines = directions @ normal
     best = int(np.argmax(cosines))
     sine = float(np.linalg.norm(np.cross(directions[best], normal)))
@@ -91,7 +105,7 @@ def snap_normal(
     if angle > SNAP_ANGLE or angle < 1e-12:
         return normal, None
     u, v, w = (int(i) for i in indices[best])
-    return directions[best], (u, v, w)
+    return directions[best].copy(), (u, v, w)
 
 
 def cross_section_areas(

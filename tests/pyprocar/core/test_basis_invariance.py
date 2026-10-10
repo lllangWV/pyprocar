@@ -53,8 +53,8 @@ rows (on other cells, four more directions of index 3)."""
 GIVEN_INDICES = _primitive_indices(4)
 """The candidates before #302: every direction with indices up to 4 in the given rows."""
 OTHER_RELABELLINGS = 10
-"""Relabellings per cell besides the cell as given. Each probes its own tenth of GIVEN_INDICES:
-a snap_normal call takes about 1 ms, and all 578 in every relabelling would take a minute."""
+"""Relabellings per cell besides the cell as given. Each probes its own tenth of GIVEN_INDICES,
+together all 578 again."""
 
 
 def _given_index_cases() -> list:
