@@ -66,8 +66,9 @@ class PeriodicGrid:
 
     @property
     def is_identity(self) -> bool:
-        """The grid is drawn as stored: the given basis is reduced, or which reduced basis is
-        nearest it would depend on the order and signs of its rows (``_nearest_identity``)."""
+        """The grid is drawn as stored: the given basis is reduced or an obtuse superbase, or
+        which reduced basis is nearest it would depend on the order and signs of its rows
+        (``_nearest_identity``)."""
         return bool((self._to_source == np.eye(3, dtype=int)).all())
 
     @property
@@ -173,7 +174,7 @@ def periodic_grid(ebs: ElectronicBandStructureMesh) -> PeriodicGrid | None:
 
     basis = np.asarray(ebs.reciprocal_lattice, dtype=np.float64)
     live = big_n > 1
-    if is_reduced_basis(basis, live):
+    if is_reduced_basis(basis, live) or _obtuse_superbase(basis[live]):
         to_source = np.eye(3, dtype=int)
     else:
         # Reduce the k-point lattice, not the reciprocal lattice: for unequal N only it is diagonal.
@@ -273,6 +274,26 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
     if len(row_sets) > 1:
         return np.eye(3, dtype=int)
     return bases[order[0]]
+
+
+def _obtuse_superbase(rows: np.ndarray) -> bool:
+    """With some signs, the rows and minus their sum meet pairwise at angles whose cosine is
+    below -REDUCED_TOLERANCE: a Selling-reduced basis, of a lattice whose reduction is unique.
+    Signs do not change the grid the rows span.
+
+    Such a basis is drawn as given, as before #302, though it may not be the shortest. The
+    rhombohedral primitive cell of Bi2Se3 is one; drawn in its reduced bases, (b1 + b2 + b3)
+    and two of the b_i, marching cubes on 16^3 cuts the orbit along hexagonal [1 0 3] as 0.357
+    or, 0.01 above, as two orbits; the analytic band has one of 0.283, the given basis 0.281.
+    """
+    apart = ~np.eye(len(rows) + 1, dtype=bool)
+    for signs in itertools.product((1, -1), repeat=len(rows) - 1):
+        signed = rows * np.array([1, *signs])[:, None]
+        superbase = np.vstack([signed, -signed.sum(axis=0)])
+        unit = superbase / np.linalg.norm(superbase, axis=1, keepdims=True)
+        if ((unit @ unit.T)[apart] < -REDUCED_TOLERANCE).all():
+            return True
+    return False
 
 
 def _snap_shift(shift: np.ndarray) -> np.ndarray:
