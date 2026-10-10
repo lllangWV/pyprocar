@@ -250,8 +250,8 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
     When no group spans one set of rows, as for the threefold axis of a rhombohedral primitive
     cell, no reduced basis is free of the labels, and the first basis in the ranking is drawn.
     It depends on the labels, but its steps stay reduced. The given basis, which no labelling
-    changes, was measured worse: within 16% of reduced it put a model band's area up to 40% off
-    where a reduced pick was 7% off, and farther out up to 126% off (#59).
+    changes, was measured worse more often than better: within 16% of reduced it put a model
+    band's area up to 262% off where a reduced pick was exact, and farther out 126% off (#59).
 
     Candidate rows are the -1, 0, 1 combinations of the reduced rows. A hexagonal plane has
     reduced bases that are no signed permutation of each other, (b1, b2) and (b1, b2 - b1).
