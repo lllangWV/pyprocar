@@ -13,14 +13,11 @@ from typing import Any
 
 import numpy as np
 
-from pyprocar.core import (
-    DensityOfStates,
-    ElectronicBandStructure,
-    KPath,
-    Structure,
-    get_ebs_from_data,
-)
-from pyprocar.core import kpoints as k_utils
+import pyprocar.core.kpoints as k_utils
+from pyprocar.core.dos import DensityOfStates
+from pyprocar.core.ebs import ElectronicBandStructure, get_ebs_from_data
+from pyprocar.core.kpoints import KPath
+from pyprocar.core.structure import Structure
 from pyprocar.io.base import BaseParser
 from pyprocar.io.qe.projwfc import AtomicProjXML, ProjwfcDOS, ProjwfcIn, ProjwfcOut
 from pyprocar.io.qe.projwfc.spinor import spinor_projections

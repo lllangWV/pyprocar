@@ -1,4 +1,5 @@
-from pyprocar.core import FermiSurface, ProcarSelect
+from pyprocar.core.fermisurface import FermiSurface
+from pyprocar.core.procarselect import ProcarSelect
 from pyprocar.io import ProcarParser
 from pyprocar.utils import UtilsProcar, welcome
 

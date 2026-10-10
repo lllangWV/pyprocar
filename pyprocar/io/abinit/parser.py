@@ -8,13 +8,10 @@ from typing import Any
 
 import numpy as np
 
-from pyprocar.core import (
-    DensityOfStates,
-    ElectronicBandStructure,
-    KPath,
-    Structure,
-    get_ebs_from_data,
-)
+from pyprocar.core.dos import DensityOfStates
+from pyprocar.core.ebs import ElectronicBandStructure, get_ebs_from_data
+from pyprocar.core.kpoints import KPath
+from pyprocar.core.structure import Structure
 from pyprocar.io.abinit.dos import AbinitDOS
 from pyprocar.io.abinit.kpoints import AbinitKpoints
 from pyprocar.io.abinit.output import AbinitOutput

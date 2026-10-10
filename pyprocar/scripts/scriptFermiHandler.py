@@ -12,7 +12,7 @@ import numpy as np
 from pyprocar.cfg import ConfigFactory, ConfigManager
 from pyprocar.cfg.base import PlotType
 from pyprocar.cfg.fermi_surface_3d import FermiSurface3DConfig
-from pyprocar.core import ElectronicBandStructureMesh
+from pyprocar.core.ebs import ElectronicBandStructureMesh
 from pyprocar.core.fermisurface import FermiSurface
 from pyprocar.plotter import FermiPlotter
 from pyprocar.scripts._selection import as_clim, resolve_spins

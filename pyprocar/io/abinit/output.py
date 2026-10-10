@@ -9,7 +9,7 @@ from typing import Any
 
 import numpy as np
 
-from pyprocar.core import Structure
+from pyprocar.core.structure import Structure
 from pyprocar.utils import elements
 from pyprocar.utils.units import AU_TO_ANG, HARTREE_TO_EV
 

@@ -8,7 +8,7 @@ from enum import Enum
 
 import matplotlib.pyplot as plt
 
-from pyprocar.core import FermiSurface
+from pyprocar.core.fermisurface import FermiSurface
 from pyprocar.plotter import FermiSlicePlotter
 from pyprocar.scripts._selection import resolve_spins, signed_clim
 from pyprocar.utils import welcome
