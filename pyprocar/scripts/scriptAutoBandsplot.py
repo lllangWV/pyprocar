@@ -5,7 +5,7 @@ import os
 
 import numpy as np
 
-from pyprocar.core import ElectronicBandStructure
+from pyprocar.core.ebs import ElectronicBandStructure
 from pyprocar.io import get_parser
 from pyprocar.pyposcar.clusters import Clusters
 from pyprocar.pyposcar.defects import FindDefect

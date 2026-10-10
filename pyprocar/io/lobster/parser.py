@@ -8,7 +8,10 @@ from typing import Any
 
 import numpy as np
 
-from pyprocar.core import DensityOfStates, ElectronicBandStructure, KPath, Structure
+from pyprocar.core.dos import DensityOfStates
+from pyprocar.core.ebs import ElectronicBandStructure
+from pyprocar.core.kpoints import KPath
+from pyprocar.core.structure import Structure
 from pyprocar.io.base import BaseParser
 from pyprocar.io.lobster.doscar_lobster import LOBSTER_ORBITALS, DoscarLobster
 from pyprocar.io.lobster.fatband import Fatband

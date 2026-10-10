@@ -20,7 +20,7 @@ from matplotlib.collections import LineCollection, PathCollection
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MultipleLocator
 
-from pyprocar.core import KPath
+from pyprocar.core.kpoints import KPath
 from pyprocar.plotter._series import LineSeries, channel_lims, line_series, resolve_clim
 
 logger = logging.getLogger(__name__)

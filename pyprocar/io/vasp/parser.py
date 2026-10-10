@@ -5,9 +5,11 @@ from typing import overload
 
 import numpy as np
 
-from pyprocar.core import DensityOfStates, ElectronicBandStructure, Structure, get_ebs_from_data
-from pyprocar.core import kpoints as kpoints_core
+import pyprocar.core.kpoints as kpoints_core
 from pyprocar.core.atomic_orbital_index import OrbitalIndexer
+from pyprocar.core.dos import DensityOfStates
+from pyprocar.core.ebs import ElectronicBandStructure, get_ebs_from_data
+from pyprocar.core.structure import Structure
 from pyprocar.io.base import BaseParser
 from pyprocar.io.vasp.doscar import Doscar
 from pyprocar.io.vasp.kpoints import Kpoints

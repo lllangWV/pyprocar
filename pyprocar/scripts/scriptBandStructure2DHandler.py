@@ -13,7 +13,8 @@ import pyvista as pv
 from pyprocar.cfg import ConfigFactory, ConfigManager
 from pyprocar.cfg.band_structure_2d import Bandstructure2DConfig
 from pyprocar.cfg.base import PlotType
-from pyprocar.core import BandStructure2D, ElectronicBandStructureMesh
+from pyprocar.core.bandstructure2D import BandStructure2D
+from pyprocar.core.ebs import ElectronicBandStructureMesh
 from pyprocar.plotter import BS2DPlotter
 from pyprocar.scripts._selection import as_clim
 from pyprocar.utils import welcome

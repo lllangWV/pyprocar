@@ -7,9 +7,10 @@ from pathlib import Path
 
 import numpy as np
 
-from pyprocar.core import DensityOfStates, Structure
+from pyprocar.core.dos import DensityOfStates
 from pyprocar.core.ebs import ElectronicBandStructure, get_ebs_from_data
 from pyprocar.core.kpoints import KPath, insert_continuous_points
+from pyprocar.core.structure import Structure
 from pyprocar.io.base import BaseParser
 from pyprocar.io.elk.bands import ElkBands
 from pyprocar.io.elk.dos import ElkDOS

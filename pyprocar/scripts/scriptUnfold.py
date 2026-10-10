@@ -6,10 +6,11 @@ import numpy as np
 
 from pyprocar.cfg import ConfigFactory, ConfigManager, PlotType
 from pyprocar.cfg.unfold import UnfoldingConfig, UnfoldMode, UnfoldPlotMode
-from pyprocar.core import ElectronicBandStructurePath, Structure
 from pyprocar.core.atomic_orbital_index import orbital_indices
+from pyprocar.core.ebs import ElectronicBandStructurePath
 from pyprocar.core.projection import selection_resolver
 from pyprocar.core.property_store import Property
+from pyprocar.core.structure import Structure
 from pyprocar.plotter.bs_plot import BandStructurePlotter
 from pyprocar.scripts._selection import (
     as_lim,

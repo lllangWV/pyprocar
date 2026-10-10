@@ -13,8 +13,8 @@ import numpy as np
 from pyprocar.cfg import ConfigFactory, ConfigManager
 from pyprocar.cfg.base import PlotType
 from pyprocar.cfg.dos import DensityOfStatesConfig
-from pyprocar.core import DensityOfStates
 from pyprocar.core.atomic_orbital_index import orbital_indices
+from pyprocar.core.dos import DensityOfStates
 from pyprocar.core.property_store import Property
 from pyprocar.plotter.dos_plot import AxesOrientation, DOSPlotter
 from pyprocar.scripts._selection import (
