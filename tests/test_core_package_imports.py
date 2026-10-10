@@ -19,9 +19,10 @@ ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "pyprocar"
 CORE_INIT = PACKAGE / "core" / "__init__.py"
 THROUGH_PACKAGE = "imports {name} through pyprocar/core/__init__.py; use `{instead}`"
+DEFINING_SUBMODULE = "import the submodule that defines the name"
 WHOLE_PACKAGE = (
     "imports the package pyprocar.core, which loads pyprocar/core/__init__.py; "
-    + "import the submodule that defines the name"
+    + DEFINING_SUBMODULE
 )
 
 
@@ -99,6 +100,12 @@ def test_every_import_form_of_the_core_package_is_caught():
         "def f():\n    from ..core import KPath": [
             "pyprocar/io/example.py:2: imports KPath through pyprocar/core/__init__.py; "
             + "use `from pyprocar.core.kpoints import KPath`",
+        ],
+        "from pyprocar.core import *": [
+            first + "imports * through pyprocar/core/__init__.py; " + DEFINING_SUBMODULE,
+        ],
+        "from pyprocar.core import __all__": [
+            first + "imports __all__ through pyprocar/core/__init__.py; " + DEFINING_SUBMODULE,
         ],
         "import pyprocar.core": [first + WHOLE_PACKAGE],
         "from pyprocar import core": [first + WHOLE_PACKAGE],
