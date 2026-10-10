@@ -66,8 +66,8 @@ class PeriodicGrid:
 
     @property
     def is_identity(self) -> bool:
-        """The grid is drawn as stored: the given basis is reduced or an obtuse superbase, or
-        which reduced basis is nearest it would depend on the order and signs of its rows
+        """The grid is drawn as stored: the given basis is reduced or an obtuse superbase, or no
+        reduced basis can be picked without depending on how its rows are labelled
         (``_nearest_identity``)."""
         return bool((self._to_source == np.eye(3, dtype=int)).all())
 
@@ -301,9 +301,12 @@ def _placement(basis: np.ndarray, gram: np.ndarray, unit: float) -> tuple[int, .
     ``lattice @ lattice.T``), in whole ``unit``s, least in row-major order over reordered and
     negated rows and columns: the same for any labelling of either set of rows, for a turned
     lattice and for rounding noise."""
-    products = np.rint(basis @ gram / unit).astype(np.int64)
-    forms = (_SIGNED_PERMUTATIONS[:, None] @ products @ _SIGNED_PERMUTATIONS[None, :]).reshape(-1, 9)
-    return tuple(int(i) for i in forms[np.lexsort(forms.T[::-1])[0]])
+    forms = np.rint(basis @ gram / unit).astype(np.int64) @ _SIGNED_PERMUTATIONS
+    # Over reordered and negated rows, the least form is the rows, each with its first nonzero
+    # entry negative, in sorted order.
+    leading = np.take_along_axis(forms, (forms != 0).argmax(axis=2)[..., None], axis=2)
+    forms = np.where(leading > 0, -forms, forms)
+    return min(tuple(i for row in sorted(form) for i in row) for form in forms.tolist())
 
 
 def _obtuse_superbase(rows: np.ndarray) -> bool:
