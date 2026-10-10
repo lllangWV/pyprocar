@@ -1,55 +1,77 @@
+import itertools
 import logging
-from typing import List
+import warnings
+from collections.abc import Callable
+from typing import cast
 
 import numpy as np
 import pyvista as pv
-import trimesh
+import spglib
 from scipy.spatial import Voronoi
+
+from pyprocar.utils.log_utils import warn_user
 
 logger = logging.getLogger(__name__)
 
+_FACE_CANDIDATES = np.array([s for s in itertools.product(range(-2, 3), repeat=3) if any(s)])
+_NEIGHBOURS = np.array(list(itertools.product(range(-1, 2), repeat=3)))
+_ORIGIN = len(_NEIGHBOURS) // 2
 
-class Lines:
-    def __init__(self, verts: np.ndarray = None, faces: np.ndarray = None):
 
-        self.verts = verts
-        self.faces = faces
+def reduced_basis_steps(basis: np.ndarray) -> np.ndarray:
+    """Integer rows T for which ``T @ basis`` is the Delaunay-reduced basis of the lattice
+    spanned by the rows of ``basis``."""
+    return _spglib_reduction_steps(basis, spglib.delaunay_reduce)
 
-        self.pyvista_line = pv.PolyData()
-        self.trimesh_line = None
-        self.connectivity = []
 
-        self._get_connectivity()
+def niggli_basis_steps(basis: np.ndarray) -> np.ndarray:
+    """Integer rows T for which ``T @ basis`` is the Niggli-reduced basis of the lattice
+    spanned by the rows of ``basis``: three shortest linearly independent lattice vectors,
+    whose lengths are the lattice's successive minima."""
+    return _spglib_reduction_steps(basis, spglib.niggli_reduce)
 
-    @property
-    def nface(self):
-        return len(self.faces)
 
-    def _get_connectivity(self):
-        for iface in range(len(self.faces)):
-            self.connectivity.append(
-                [self.faces[iface][0], self.faces[iface][-1]]
-            )  # to connect the 1st and last point
-            for ipoint in range(len(self.faces[iface]) - 1):
-                point_1 = self.faces[ipoint]
-                point_2 = self.faces[ipoint + 1]
-                self.connectivity.append([point_1, point_2])
+def _spglib_reduction_steps(
+    basis: np.ndarray, reduce: Callable[[np.ndarray], np.ndarray | None]
+) -> np.ndarray:
+    lattice = np.asarray(basis, dtype=np.float64)
+    unit = lattice / abs(np.linalg.det(lattice)) ** (1 / 3)
+    with warnings.catch_warnings():
+        # spglib warns on every call while its process-wide OLD_ERROR_HANDLING is on; the
+        # None return below is the error check it asks for.
+        warnings.filterwarnings("ignore", "Set OLD_ERROR_HANDLING", DeprecationWarning)
+        reduced = reduce(unit)
+    if reduced is None:
+        raise ValueError(f"spglib {reduce.__name__} fails on the lattice {lattice.tolist()}")
+    return np.rint(reduced @ np.linalg.inv(unit)).astype(int)
 
-    # def _create_pyvista(self):
-    #     cell = []
-    #     for iline in self.connectivity:
-    #         cell.append([2, iline[0], iline[1]])
-    #     self.pyvista_line.lines = cell
 
-    def _create_trimesh(self):
+def zone_face_steps(reciprocal_lattice: np.ndarray) -> np.ndarray:
+    """Integer coefficients, in the rows of ``reciprocal_lattice``, of the lattice vectors
+    whose bisector planes bound the first Brillouin zone.
 
-        entries = []
-        for iline in self.connectivity:
-            entries.append(trimesh.path.entries.Line(iline))
+    The candidates are the 5^3 block of the Delaunay-reduced basis, whatever basis is given.
+    The face vectors are the 7 pairs of an obtuse superbase and the reduced basis is 3 of
+    them, so each face vector has coefficients -2 to 2 in it. A candidate is dropped when its
+    midpoint lies on or beyond the bisector plane of another.
+    """
+    lattice = np.asarray(reciprocal_lattice, dtype=np.float64)
+    candidates = _FACE_CANDIDATES @ reduced_basis_steps(lattice)
+    zone = candidates @ lattice
+    beyond = zone @ zone.T >= (zone * zone).sum(axis=1)[:, None] * (1 - 1e-9)
+    np.fill_diagonal(beyond, False)
+    return candidates[~beyond.any(axis=0)]
 
-            self.trimesh_line = trimesh.path.path.Path(
-                entries=entries, vertices=self.verts
-            )
+
+def _wigner_seitz(reciprocal_lattice: np.ndarray) -> tuple[np.ndarray, list[list[int]]]:
+    """Vertices and faces of the origin's Voronoi cell."""
+    lattice = np.asarray(reciprocal_lattice, dtype=np.float64)
+    face_steps = zone_face_steps(lattice)
+    steps = np.vstack([_NEIGHBOURS, face_steps[np.abs(face_steps).max(axis=1) > 1]])
+    brill = Voronoi(steps @ lattice)
+    cell = [brill.ridge_dict[pair] for pair in brill.ridge_dict if _ORIGIN in pair]
+    used = np.unique(np.concatenate(cell))
+    return brill.vertices[used], [np.searchsorted(used, face).tolist() for face in cell]
 
 
 class BrillouinZone(pv.PolyData):
@@ -66,30 +88,17 @@ class BrillouinZone(pv.PolyData):
 
     """
 
-    def __init__(
-        self, reciprocal_lattice: np.ndarray, transformation_matrix: List[int] = None
-    ):
+    def __init__(self, reciprocal_lattice: np.ndarray, transformation_matrix: list[int] = None):
         logger.info("___Initializing BrillouinZone object___")
 
         self.reciprocal = reciprocal_lattice
         verts, faces = self.wigner_seitz()
 
-        # Format faces for pv.PolyData
-        new_faces = []
-        for iface in faces:
-            new_faces.append(len(iface))
-            for ivert in iface:
-                new_faces.append(ivert)
-
-        # Initialize with the properly formatted faces array
-        super().__init__(verts, new_faces)
+        super().__init__(verts, [i for face in faces for i in (len(face), *face)])
+        self.compute_normals(point_normals=False, auto_orient_normals=True, inplace=True)
 
         logger.debug(f"BrillouinZone faces: {len(faces)}")
         logger.debug(f"BrillouinZone verts: {verts.shape}")
-
-        self._fix_normals_direction()
-
-        return None
 
     @property
     def centers(self):
@@ -117,7 +126,6 @@ class BrillouinZone(pv.PolyData):
                 num_verts = verts_in_face
                 face = [num_verts]
             else:
-
                 if count == num_verts:
                     count = 0
                     new_faces.append(face)
@@ -141,45 +149,7 @@ class BrillouinZone(pv.PolyData):
             Returns the wigner Seitz cell in the form of a tuple containing the verts and faces of the cell
         """
         logger.info("___Calculating Wigner Seitz cell___")
-
-        kpoints = []
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                for k in range(-1, 2):
-                    vec = (
-                        i * self.reciprocal[0]
-                        + j * self.reciprocal[1]
-                        + k * self.reciprocal[2]
-                    )
-                    kpoints.append(vec)
-        # print(kpoints, self.reciprocal)
-        brill = Voronoi(np.array(kpoints))
-        faces = []
-        for idict in brill.ridge_dict:
-            if idict[0] == 13 or idict[1] == 13:
-                faces.append(brill.ridge_dict[idict])
-
-        verts = brill.vertices
-
-        return np.array(verts, dtype=float), faces
-
-    def _fix_normals_direction(self):
-        """
-        Helper method that calculates the normals of the Wigner seits cell
-        """
-        logger.info("___Fixing normals direction___")
-        cell_centers = self.cell_centers().points
-        if len(cell_centers) == 0:
-            logger.warning("___No centers found___")
-            return None
-
-        center = cell_centers[0]
-        n1 = center / np.linalg.norm(center)
-        n2 = self.face_normals[0]
-        correction = np.sign(np.dot(n1, n2))
-        if correction == -1:
-            self.compute_normals(flip_normals=True, inplace=True)
-        return None
+        return _wigner_seitz(self.reciprocal)
 
 
 class BrillouinZone2D(pv.PolyData):
@@ -204,35 +174,26 @@ class BrillouinZone2D(pv.PolyData):
         self,
         e_min,
         e_max,
-        reciprocal_lattice: np.ndarray,
-        transformation_matrix: List[int] = None,
+        axis: int = 2,
+        reciprocal_lattice: np.ndarray = None,
+        transformation_matrix: list[int] = None,
     ):
-
         self.reciprocal = reciprocal_lattice
 
         verts, faces = self.wigner_seitz()
 
-        min_val = verts[:, 2].min()
-        max_val = verts[:, 2].max()
+        min_val = verts[:, axis].min()
+        max_val = verts[:, axis].max()
 
         for vert in verts:
-            vert_z = vert[2]
+            vert_z = vert[axis]
             if np.isclose(vert_z, min_val, atol=1e-2):
-                vert[2] = e_min
+                vert[axis] = e_min
             if np.isclose(vert_z, max_val, atol=1e-2):
-                vert[2] = e_max
+                vert[axis] = e_max
 
-        new_faces = []
-        for iface in faces:
-            new_faces.append(len(iface))
-            for ivert in iface:
-                new_faces.append(ivert)
-
-        # Initialize with the properly formatted faces array
-        super().__init__(verts, new_faces)
-
-        self._fix_normals_direction()
-        return None
+        super().__init__(verts, [i for face in faces for i in (len(face), *face)])
+        self.compute_normals(point_normals=False, auto_orient_normals=True, inplace=True)
 
     @property
     def centers(self):
@@ -260,7 +221,6 @@ class BrillouinZone2D(pv.PolyData):
                 num_verts = verts_in_face
                 face = [num_verts]
             else:
-
                 if count == num_verts:
                     count = 0
                     new_faces.append(face)
@@ -283,36 +243,18 @@ class BrillouinZone2D(pv.PolyData):
         Tuple(n_verts,n_faces)
             Returns the wigner Seitz cell in the form of a tuple containing the verts and faces of the cell
         """
+        return _wigner_seitz(self.reciprocal)
 
-        kpoints = []
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                for k in range(-1, 2):
-                    vec = (
-                        i * self.reciprocal[0]
-                        + j * self.reciprocal[1]
-                        + k * self.reciprocal[2]
-                    )
-                    kpoints.append(vec)
-        # print(kpoints, self.reciprocal)
-        brill = Voronoi(np.array(kpoints))
-        faces = []
-        for idict in brill.ridge_dict:
-            if idict[0] == 13 or idict[1] == 13:
-                faces.append(brill.ridge_dict[idict])
 
-        verts = brill.vertices
+def clip_to_zone(surface: pv.PolyData, zone: pv.PolyData) -> pv.PolyData:
+    """The part of ``surface`` inside every face plane of ``zone``; empty when none is."""
+    for normal, center in zip(zone.face_normals, zone.centers, strict=True):
+        surface = cast(pv.PolyData, surface.clip(origin=center, normal=normal, inplace=False))
+        if surface.n_points == 0:
+            break
+    return surface
 
-        return np.array(verts, dtype=float), faces
 
-    def _fix_normals_direction(self):
-        """
-        Helper method that calculates the normals of the Wigner seits cell
-        """
-        center = self.centers[0]
-        n1 = center / np.linalg.norm(center)
-        n2 = self.face_normals[0]
-        correction = np.sign(np.dot(n1, n2))
-        if correction == -1:
-            self.compute_normals(flip_normals=True, inplace=True)
-        return None
+def warn_clipped_away(label: str) -> None:
+    """Tell the user that ``label`` lost every point to ``clip_to_zone`` and is not drawn."""
+    warn_user(f"{label} lies only outside the first Brillouin zone; it is not drawn")

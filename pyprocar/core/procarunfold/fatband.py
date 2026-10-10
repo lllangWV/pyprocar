@@ -1,30 +1,29 @@
 #!/usr/bin/env python
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.collections import LineCollection
 from matplotlib.colors import colorConverter
-import numpy as np
-import argparse
-import os.path
 
 
 def plot_band_weight(
-        kslist,
-        ekslist,
-        wkslist=None,
-        efermi=None,
-        shift_efermi=False,
-        yrange=None,
-        output=None,
-        style="alpha",
-        color="blue",
-        axis=None,
-        width=10,
-        fatness=4,
-        xticks=None,
-        cmap=mpl.cm.bwr,
-        weight_min=-0.1,
-        weight_max=0.6,
+    kslist,
+    ekslist,
+    wkslist=None,
+    efermi=None,
+    shift_efermi=False,
+    yrange=None,
+    output=None,
+    style="alpha",
+    color="blue",
+    axis=None,
+    width=10,
+    fatness=4,
+    xticks=None,
+    cmap=mpl.cm.bwr,
+    weight_min=-0.1,
+    weight_max=0.6,
 ):
     if axis is None:
         fig, a = plt.subplots()
@@ -60,16 +59,13 @@ def plot_band_weight(
 
                 if max(alpha_values) > 1:
                     print("alpha is larger than 1. Renormalizing values.")
-                    alpha_values = [
-                        alpha_i / max(alpha_values) for alpha_i in alpha_values
-                    ]
+                    alpha_values = [alpha_i / max(alpha_values) for alpha_i in alpha_values]
 
                 lc = LineCollection(
                     segments,
                     linewidths=[fatness] * len(x),
                     colors=[
-                        colorConverter.to_rgba(color, alpha=alpha_i)
-                        for alpha_i in alpha_values
+                        colorConverter.to_rgba(color, alpha=alpha_i) for alpha_i in alpha_values
                     ],
                 )
 
@@ -102,53 +98,3 @@ def plot_band_weight(
                 a.axhline(efermi, linestyle="--", color="black")
 
     return a
-
-
-def main():
-    parser = argparse.ArgumentParser(description="plot wannier bands.")
-    parser.add_argument("fname", type=str, help="dat filename")
-    parser.add_argument("-e",
-                        "--efermi",
-                        type=float,
-                        help="Fermi energy",
-                        default=None)
-    parser.add_argument("-o",
-                        "--output",
-                        type=str,
-                        help="output filename",
-                        default=None)
-    parser.add_argument("-w",
-                        "--weight",
-                        action="store_true",
-                        help="use -w to plot weighted band.")
-    parser.add_argument("-y",
-                        "--yrange",
-                        type=float,
-                        nargs="+",
-                        help="range of yticks",
-                        default=None)
-    parser.add_argument("-s",
-                        "--style",
-                        type=str,
-                        help="style of line, width | alpha",
-                        default="width")
-    args = parser.parse_args()
-    if args.output is None:
-        output = os.path.splitext(args.fname)[0] + ".png"
-    if args.efermi is None:
-        efermi = get_fermi("SCF/OUTCAR")
-    plot_band_weight_file(
-        fname=args.fname,
-        efermi=efermi,
-        weight=args.weight,
-        yrange=args.yrange,
-        style=args.style,
-    )
-    if output is not None:
-        plt.savefig(output)
-
-    plt.show()
-
-
-if __name__ == "__main__":
-    main()

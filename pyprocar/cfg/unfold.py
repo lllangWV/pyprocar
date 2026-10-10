@@ -1,9 +1,9 @@
 from dataclasses import asdict, dataclass, field
-from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Tuple
+from enum import Enum
+from typing import Any
 
 from pyprocar.cfg.band_structure import BandStructureConfig
-from pyprocar.cfg.base import BaseConfig, PlotType
+from pyprocar.cfg.base import PlotType
 
 
 class UnfoldPlotMode(Enum):
@@ -16,8 +16,10 @@ class UnfoldPlotMode(Enum):
         Represents the band structure in a simple, where the colors are the different bands.
     PARAMETRIC : str
         Represents the band structure in a parametric form, summing over the projections.
-    SACATTER : str
+    SCATTER : str
         Represents the band structure in a scatter plot, where the colors are the different bands.
+    SACATTER : str
+        Deprecated alias of SCATTER, the misspelled name earlier releases used.
     ATOMIC : str
         Represents the band structure in an atomic level plot, plots singlr kpoint bands.
     OVERLAY : str
@@ -32,11 +34,12 @@ class UnfoldPlotMode(Enum):
 
     PLAIN = "plain"
     PARAMETRIC = "parametric"
-    SACATTER = "scatter"
+    SCATTER = "scatter"
     ATOMIC = "atomic"
     OVERLAY = "overlay"
     OVERLAY_SPECIES = "overlay_species"
     OVERLAY_ORBITALS = "overlay_orbitals"
+    SACATTER = "scatter"
 
 
 class UnfoldMode(Enum):
@@ -65,7 +68,7 @@ class UnfoldingConfig(BandStructureConfig):
 
     Parameters
     ----------
-    color: str, optional (default 'black')
+    color: str, optional (default '#eeeeee')
         Sets the overall color for plot lines.
 
     Plot Appearance
@@ -109,7 +112,7 @@ class UnfoldingConfig(BandStructureConfig):
     clim: Tuple[float], optional
         Color scale limits for the color bar.
     opacity: List[float], optional
-        Opacities for the plot lines, default is [1.0, 1.0].
+        Opacities for the plot lines, default is [0.3, 0.3].
     plot_color_bar: bool, optional (default True)
         If true, a color bar will be shown on the plot.
 
@@ -140,46 +143,36 @@ class UnfoldingConfig(BandStructureConfig):
     savefig: Optional[str], optional
         The file name to save the figure. If null, the figure will not be saved.
 
-    Advanced Configurations
-    -----------------------
-    weighted_color: bool, optional (default True)
-        If true, the color of the lines will be weighted.
-    weighted_width: bool, optional (default False)
-        If true, the width of the lines will be weighted.
-
     Methods
     -------
     __post_init__():
         Post-initialization to validate the data and set default values.
     """
 
-    modes: List[str] = field(
-        default_factory=lambda: [mode.value for mode in UnfoldMode]
-    )
     # Basic Plot Settings
     color: str = "#eeeeee"
-    spin_colors: Tuple[str] = ("blue", "red")
+    spin_colors: tuple[str] = ("blue", "red")
     fermi_color: str = "blue"
     grid_color: str = "grey"
 
     # Line Styles
     fermi_linestyle: str = "dotted"
     grid_linestyle: str = "solid"
-    linestyle: List[str] = field(default_factory=lambda: ["solid", "dashed"])
+    linestyle: list[str] = field(default_factory=lambda: ["solid", "dashed"])
 
     # Line Widths
     fermi_linewidth: int = 1
     grid_linewidth: int = 1
-    linewidth: List[float] = field(default_factory=lambda: [1.0, 1.0])
+    linewidth: list[float] = field(default_factory=lambda: [1.0, 1.0])
 
     # Markers
-    marker: List[str] = field(default_factory=lambda: ["o", "v", "^", "D"])
-    markersize: List[float] = field(default_factory=lambda: [0.2, 0.2])
+    marker: list[str] = field(default_factory=lambda: ["o", "v", "^", "D"])
+    markersize: list[float] = field(default_factory=lambda: [0.2, 0.2])
 
     # Color and Opacity Settings
     cmap: str = "jet"
-    clim: Optional[Tuple[float, float]] = (0.0, 1.0)
-    opacity: List[float] = field(default_factory=lambda: [0.3, 0.3])
+    clim: tuple[float, float] | None = (0.0, 1.0)
+    opacity: list[float] = field(default_factory=lambda: [0.3, 0.3])
     plot_color_bar: bool = True
 
     # Grid and Legend
@@ -189,25 +182,21 @@ class UnfoldingConfig(BandStructureConfig):
     legend: bool = True
 
     # Labels and Title
-    label: List[str] = field(default_factory=lambda: [r"$\uparrow$", r"$\downarrow$"])
-    title: Optional[str] = None
+    label: list[str] = field(default_factory=lambda: [r"$\uparrow$", r"$\downarrow$"])
+    title: str | None = None
 
     # Miscellaneous
-    figure_size: Tuple[int] = (9, 6)
+    figure_size: tuple[int] = (9, 6)
     dpi: str = "figure"
-    savefig: Optional[str] = None
-
-    # Advanced Configurations
-    weighted_color: bool = True
-    weighted_width: bool = False
+    savefig: str | None = None
 
     # label params
-    x_label_params: Dict[str, any] = field(default_factory=lambda: {})
-    y_label_params: Dict[str, any] = field(default_factory=lambda: {})
-    title_params: Dict[str, any] = field(default_factory=lambda: {})
+    x_label_params: dict[str, any] = field(default_factory=lambda: {})
+    y_label_params: dict[str, any] = field(default_factory=lambda: {})
+    title_params: dict[str, any] = field(default_factory=lambda: {})
 
     # x tick parameters
-    major_x_tick_params: Dict[str, Any] = field(
+    major_x_tick_params: dict[str, Any] = field(
         default_factory=lambda: {
             "direction": "in",
             "length": 4,
@@ -217,7 +206,7 @@ class UnfoldingConfig(BandStructureConfig):
     )
 
     # y tick parameters
-    major_y_tick_params: Dict[str, Any] = field(
+    major_y_tick_params: dict[str, Any] = field(
         default_factory=lambda: {
             "direction": "in",
             "length": 4,
@@ -225,7 +214,7 @@ class UnfoldingConfig(BandStructureConfig):
             "colors": "black",
         }
     )
-    minor_y_tick_params: Dict[str, Any] = field(
+    minor_y_tick_params: dict[str, Any] = field(
         default_factory=lambda: {
             "direction": "in",
             "length": 2,
@@ -239,9 +228,6 @@ class UnfoldingConfig(BandStructureConfig):
     minor_y_locator = None
     multiple_locator_y_major_value: float = None
     multiple_locator_y_minor_value: float = None
-
-    weighted_width: bool = False
-    weighted_color: bool = True
 
     def __post_init__(self):
         """Post-initialization to validate the data and set default values."""

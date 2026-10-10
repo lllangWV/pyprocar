@@ -1,20 +1,20 @@
 import os
 import shutil
+import tempfile
 import zipfile
 from pathlib import Path
-from typing import Union
 
 os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
 
 from concurrent.futures import ThreadPoolExecutor
 
-from huggingface_hub import HfApi, hf_hub_download, list_repo_files, snapshot_download
+from huggingface_hub import HfApi, snapshot_download
 
 REPO_ID = "lllangWV/pyprocar_test_data"
 REPO_TYPE = "dataset"
 
 
-def compress_dirpath(dirpath: Union[str, Path], output_path: Union[str, Path] = None):
+def compress_dirpath(dirpath: str | Path, output_path: str | Path = None):
     """Compress test data directory into a zip archive.
 
     Parameters
@@ -33,7 +33,7 @@ def compress_dirpath(dirpath: Union[str, Path], output_path: Union[str, Path] = 
             zipf.write(file, file.relative_to(dirpath.parent))
 
 
-def uncompress_dirpath(dirpath: Union[str, Path]):
+def uncompress_dirpath(dirpath: str | Path):
     """Uncompress test data from a zip archive.
 
     Parameters
@@ -54,7 +54,7 @@ def uncompress_dirpath(dirpath: Union[str, Path]):
         zipf.extractall(path=outpath)
 
 
-def compress_test_data(data_dirpath: Union[str, Path]):
+def compress_test_data(data_dirpath: str | Path):
     """Compress test data with custom logic for different directories.
 
     - codes, io, issues directories are compressed as whole directories
@@ -86,7 +86,7 @@ def compress_test_data(data_dirpath: Union[str, Path]):
                         compress_dirpath(level2_dir)
 
 
-def uncompress_test_data(data_dirpath: Union[str, Path]):
+def uncompress_test_data(data_dirpath: str | Path):
     """Uncompress test data with custom logic for different directories.
 
     - codes, io, issues directories are uncompressed from whole directory zip files
@@ -115,9 +115,7 @@ def uncompress_test_data(data_dirpath: Union[str, Path]):
             if level1_dir.is_dir():
                 for level2_dir in level1_dir.iterdir():
                     if level2_dir.is_file() and level2_dir.suffix == ".zip":
-                        print(
-                            f"Uncompressing {level2_dir.relative_to(data_dirpath)}..."
-                        )
+                        print(f"Uncompressing {level2_dir.relative_to(data_dirpath)}...")
                         # Create directory with same name as zip (without .zip extension)
                         extract_dir = level2_dir.with_suffix("")
                         extract_dir.mkdir(exist_ok=True)
@@ -130,9 +128,7 @@ def uncompress_test_data(data_dirpath: Union[str, Path]):
                         level2_dir.unlink()
 
 
-def download_test_data(
-    relpath: str, output_path: Union[str, Path] = ".", force: bool = False
-):
+def download_test_data(relpath: str, output_path: str | Path = ".", force: bool = False):
     """
     Download test data from:
     https://huggingface.co/datasets/lllangWV/pyprocar_test_data/tree/main/
@@ -154,46 +150,33 @@ def download_test_data(
     # Ensure the output directory exists - this is critical for Jupyter notebooks
     output_path.mkdir(parents=True, exist_ok=True)
 
-    pattern = relpath + "*"
+    archive = output_path / f"{relpath}.zip"
+    archive.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=archive.parent) as staging:
+        snapshot_download(
+            repo_id=REPO_ID,
+            repo_type=REPO_TYPE,
+            allow_patterns=[f"{relpath}.zip"],
+            local_dir=staging,
+        )
+        downloaded = Path(staging) / f"{relpath}.zip"
+        if not downloaded.is_file():
+            raise FileNotFoundError(f"{relpath}.zip is not in the {REPO_ID} dataset")
+        downloaded.replace(archive)
 
-    download_dirpath = snapshot_download(
-        repo_id=REPO_ID,
-        repo_type=REPO_TYPE,
-        allow_patterns=[pattern],
-    )
-    download_path = Path(download_dirpath)
-    data_dir = download_path / "data"
-
-    dataset_cache_dir = download_path.parent.parent
-
-    shutil.copytree(data_dir, output_path / "data", dirs_exist_ok=True)
-    shutil.rmtree(dataset_cache_dir)
-
-    data_dir = output_path / "data"
-    # print(data_dir)
-    # uncompress_test_data(data_dir)
-
-    uncompress_dirpath(full_data_path.with_suffix(".zip"))
-
-    os.remove(full_data_path.with_suffix(".zip"))
-
-    # Handle cache directory cleanup more safely
-    cache_dir = output_path / ".cache"
-    if cache_dir.exists():
-        shutil.rmtree(cache_dir)
+    uncompress_dirpath(archive)
+    archive.unlink()
 
     return full_data_path
 
 
-def download_from_hf(
-    relpath: str, output_path: Union[str, Path] = ".", force: bool = False
-):
+def download_from_hf(relpath: str, output_path: str | Path = ".", force: bool = False):
     with ThreadPoolExecutor(1) as executor:
         future = executor.submit(download_test_data, relpath, output_path, force)
         return future.result()
 
 
-def remove_zip_files(dirpath: Union[str, Path]):
+def remove_zip_files(dirpath: str | Path):
     """Remove all zip files from a directory and its subdirectories.
 
     Parameters
@@ -234,7 +217,7 @@ def remove_zip_files(dirpath: Union[str, Path]):
     print(f"Finished removing zip files from {dirpath}")
 
 
-def upload_test_data_to_hf(data_dirpath: Union[str, Path]):
+def upload_test_data_to_hf(data_dirpath: str | Path):
     """Upload test data to Hugging Face Hub.
 
     Compresses the test data directory and uploads it to the Hugging Face Hub.

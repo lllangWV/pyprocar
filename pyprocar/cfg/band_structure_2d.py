@@ -1,6 +1,5 @@
 from dataclasses import asdict, dataclass, field
-from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Tuple
+from enum import Enum
 
 from pyprocar.cfg.base import BaseConfig, PlotType
 
@@ -61,9 +60,9 @@ class Bandstructure2DConfig(BaseConfig):
     surface_color: Optional[str], optional
         Specific color for the surface if not using a colormap.
     surface_spinpol_colors: List[str], optional
-        Colors for each spin-polarized band, default is an empty list.
+        Colors for each spin-polarized band, default is [].
     surface_bands_colors: List[str], optional
-        Colors for each band in the surface plot, default is an empty list.
+        Colors for each band in the surface plot, default is [].
     surface_opacity: float, optional (default 1.0)
         Sets the opacity level of the surface.
     surface_clim: Optional[List[float]], optional
@@ -120,7 +119,7 @@ class Bandstructure2DConfig(BaseConfig):
     -------------
     plotter_offscreen: bool, optional (default False)
         Controls whether the plotter renders offscreen.
-    plotter_camera_pos: List[int], optional (default [1, 1, 1])
+    plotter_camera_pos: List[int], optional (default None)
         Specifies the camera position for the plotter.
 
     Axes Configuration
@@ -162,26 +161,26 @@ class Bandstructure2DConfig(BaseConfig):
     -----------------------
     show_scalar_bar: bool, optional (default True)
         Whether to show the scalar bar (colorbar).
-    scalar_bar_config: dict, optional (default {})
+    scalar_bar_config: dict, optional
         Configuration for the scalar bar. See the PyVista documentation for
         `add_scalar_bar`(https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.add_scalar_bar#pyvista.Plotter.add_scalar_bar)`_
         for more information
 
     Animation Configuration
     ----------------------
-    save_gif_config: dict, optional (default {})
+    save_gif_config: dict, optional
         Configuration for the GIF animation. The arguments are
         `generate_orbital_path_kwargs (https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.generate_orbital_path)_` : dict
         `orbit_on_path_kwargs (https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.orbit_on_path)_` : dict
         `open_gif_kwargs (https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.open_gif)_` : dict
 
-    save_mp4_config: dict, optional (default {})
+    save_mp4_config: dict, optional
         Configuration for the MP4 animation. The arguments are
         `generate_orbital_path_kwargs (https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.generate_orbital_path)_`
         `open_movie_kwargs (https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.open_movie)_`
         `orbit_on_path_kwargs (https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.orbit_on_path)_`
 
-    save_mesh_config: dict, optional (default {})
+    save_mesh_config: dict, optional
         Configuration for the mesh saving. The arguments are
         `save_meshio_kwargs (https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.save_meshio)_`
 
@@ -199,24 +198,22 @@ class Bandstructure2DConfig(BaseConfig):
         Returns a dictionary of the configuration settings.
     """
 
-    modes: List[str] = field(
-        default_factory=lambda: [mode.value for mode in BandStructure2DMode]
-    )
+    modes: list[str] = field(default_factory=lambda: [mode.value for mode in BandStructure2DMode])
 
     mode: BandStructure2DMode = BandStructure2DMode.PLAIN
     property: BandStructure2DProperty = BandStructure2DProperty.FERMI_SPEED
     # Basic Plot Settings
     background_color: str = "white"
     plotter_offscreen: bool = False
-    plotter_camera_pos: List[int] = None
+    plotter_camera_pos: list[int] = None
 
     # Surface Appearance
     surface_cmap: str = "jet"
-    surface_color: Optional[str] = None
-    surface_spinpol_colors: List[str] = field(default_factory=list)
-    surface_bands_colors: List[str] = field(default_factory=list)
+    surface_color: str | None = None
+    surface_spinpol_colors: list[str] = field(default_factory=list)
+    surface_bands_colors: list[str] = field(default_factory=list)
     surface_opacity: float = 1.0
-    surface_clim: Optional[List[float]] = None
+    surface_clim: list[float] | None = None
 
     # Brillouin Zone Styling
     show_brillouin_zone: bool = True
@@ -224,23 +221,23 @@ class Bandstructure2DConfig(BaseConfig):
     brillouin_zone_line_width: float = 3.5
     brillouin_zone_color: str = "black"
     brillouin_zone_opacity: float = 1.0
-    extended_zone_directions: Optional[List[List[int]]] = None
-    supercell: List[int] = field(default_factory=lambda: [1, 1, 1])
+    extended_zone_directions: list[list[int]] | None = None
+    supercell: list[int] = field(default_factory=lambda: [1, 1, 1])
     clip_brillouin_zone: bool = True
     clip_brillouin_zone_factor: float = 1.5
 
     # Texture and Axes
     texture_cmap: str = "jet"
-    texture_color: Optional[str] = None
+    texture_color: str | None = None
     texture_size: float = 0.1
     texture_scale: bool = False
-    texture_clim: Optional[List[float]] = None
+    texture_clim: list[float] | None = None
     texture_opacity: float = 1.0
     add_axes: bool = True
     x_axes_label: str = "Kx"
     y_axes_label: str = "Ky"
     z_axes_label: str = "E"
-    energy_lim: List[int] = field(default_factory=lambda: [-2, 2])
+    energy_lim: list[int] = field(default_factory=lambda: [-2, 2])
 
     # Advanced Configurations
     projection_accuracy: str = "high"
@@ -280,7 +277,7 @@ class Bandstructure2DConfig(BaseConfig):
     fermi_plane_color: str = "black"
     fermi_plane_size: float = 0.5
     show_fermi_plane_text: bool = True
-    fermi_text_position: List[float] = field(default_factory=lambda: [0, 2, 0])
+    fermi_text_position: list[float] = field(default_factory=lambda: [0, 2, 0])
 
     # Animation Configuration
     save_gif_config: dict = field(
