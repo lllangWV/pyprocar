@@ -66,7 +66,8 @@ class PeriodicGrid:
 
     @property
     def is_identity(self) -> bool:
-        """The given basis is reduced or an obtuse superbase, so the grid is drawn as stored."""
+        """The grid is drawn as stored: the given basis is reduced, or which reduced basis is
+        nearest it would depend on the order and signs of its rows (``_nearest_identity``)."""
         return bool((self._to_source == np.eye(3, dtype=int)).all())
 
     @property
@@ -172,7 +173,7 @@ def periodic_grid(ebs: ElectronicBandStructureMesh) -> PeriodicGrid | None:
 
     basis = np.asarray(ebs.reciprocal_lattice, dtype=np.float64)
     live = big_n > 1
-    if is_reduced_basis(basis, live) or _obtuse_superbase(basis[live]):
+    if is_reduced_basis(basis, live):
         to_source = np.eye(3, dtype=int)
     else:
         # Reduce the k-point lattice, not the reciprocal lattice: for unequal N only it is diagonal.
@@ -236,8 +237,15 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
     """Of the bases with the sorted row lengths of the reduced basis ``steps @ lattice``, the one
     closest to the identity in index space, so a shear of a reduced basis returns to it exactly.
     Ties go to the fewest changed entries, which undoes a single shear b2 + 3 b1 of an fcc basis
-    rather than reaching (b1, b1 + b2 + b3, b3), then to the first in the order of the entries:
-    integers only, so rounding noise in the lattice cannot change the choice.
+    rather than reaching (b1, b1 + b2 + b3, b3). Both keys are integers, so rounding noise in the
+    lattice cannot change the choice.
+
+    Neither key changes when the given rows are reordered or negated. Bases still tied that span
+    one set of rows up to sign draw the same grid, and the first in the order of the entries is
+    taken. Bases tied with different rows are images of each other under a symmetry that
+    permutes the given rows, such as the threefold axis of a rhombohedral primitive cell, and
+    any pick among them depends on how the rows are labelled (#59), so the identity is returned
+    and the grid is drawn in the given basis.
 
     Candidate rows are the -1, 0, 1 combinations of the reduced rows. A hexagonal plane has
     reduced bases that are no signed permutation of each other, (b1, b2) and (b1, b2 - b1).
@@ -259,27 +267,12 @@ def _nearest_identity(steps: np.ndarray, lattice: np.ndarray, live: np.ndarray) 
     changed = np.count_nonzero(change, axis=(1, 2))
     keep = np.flatnonzero(usable)
     entries = bases[keep].reshape(-1, 9).T[::-1]
-    return bases[keep[np.lexsort((*entries, changed[keep], distance[keep]))[0]]]
-
-
-def _obtuse_superbase(rows: np.ndarray) -> bool:
-    """With some signs, the rows and minus their sum meet pairwise at angles whose cosine is
-    below -REDUCED_TOLERANCE: a Selling-reduced basis, of a lattice whose reduction is unique.
-    Signs do not change the grid the rows span.
-
-    Such a basis is drawn as given, as before #302, though it may not be the shortest. The
-    rhombohedral primitive cell of Bi2Se3 is one; drawn in its reduced bases, (b1 + b2 + b3)
-    and two of the b_i, marching cubes on 16^3 cuts the orbit along hexagonal [1 0 3] as 0.357
-    or, 0.01 above, as two orbits; the analytic band has one of 0.283, the given basis 0.281.
-    """
-    apart = ~np.eye(len(rows) + 1, dtype=bool)
-    for signs in itertools.product((1, -1), repeat=len(rows) - 1):
-        signed = rows * np.array([1, *signs])[:, None]
-        superbase = np.vstack([signed, -signed.sum(axis=0)])
-        unit = superbase / np.linalg.norm(superbase, axis=1, keepdims=True)
-        if ((unit @ unit.T)[apart] < -REDUCED_TOLERANCE).all():
-            return True
-    return False
+    order = keep[np.lexsort((*entries, changed[keep], distance[keep]))]
+    nearest = order[(distance[order] == distance[order[0]]) & (changed[order] == changed[order[0]])]
+    row_sets = {frozenset(map(tuple, np.vstack([b[axes], -b[axes]]))) for b in bases[nearest]}
+    if len(row_sets) > 1:
+        return np.eye(3, dtype=int)
+    return bases[order[0]]
 
 
 def _snap_shift(shift: np.ndarray) -> np.ndarray:
