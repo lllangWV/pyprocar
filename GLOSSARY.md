@@ -53,7 +53,7 @@ _Avoid_: label independence (for this stronger property)
 
 ## Relationships
 
-- A **basis variant** is a **relabelling** or a **shear**.
+- A **basis variant** is a **relabelling**, a **shear**, or both.
 - A **drawn grid** samples one **k-point lattice** in one **drawn basis**.
 - The **drawn basis** is a **reduced basis** of the **k-point lattice**, unless the given reciprocal basis is reduced or an **obtuse superbase**.
 - **Basis invariance** implies **label independence**, but not the reverse.
