@@ -31,7 +31,6 @@ from tests.utils.lattices import (
     bct_primitive,
     body_centred_primitive,
     reciprocal,
-    rhombohedral,
 )
 
 REASON = (
@@ -289,8 +288,8 @@ def test_drawn_k_grid_is_free_of_the_row_labels_where_it_can_be(variant, kgrid):
     drawn as given, on any grid (#302). Elsewhere, where a reduced basis of the k-point lattice
     is kept by every lattice symmetry that permutes the rows, every labelling draws the same
     reduced steps. Where none is, every reduced basis depends on the labels, and every
-    labelling still draws reduced steps: the given rows, drawn instead, put a Fermi surface
-    area tens of percent further off than the labels move it (#59)."""
+    labelling still draws reduced steps: the given rows, drawn instead, put a model band's
+    area up to 40% off where a reduced basis was 7% off (#59)."""
     n = np.array(kgrid)
     k_lattice = variant.reciprocal / n[:, None]
     minima, reduced = _reduced_bases(k_lattice)
@@ -310,19 +309,15 @@ def test_drawn_k_grid_is_free_of_the_row_labels_where_it_can_be(variant, kgrid):
     is_reduced = [
         np.allclose(np.sort(np.linalg.norm(steps, axis=1)), minima, rtol=1e-6) for steps in drawn
     ]
-    is_given = [_same_rows(steps, k_lattice, atol) for steps in drawn]
     given_lengths = np.sort(np.linalg.norm(variant.reciprocal, axis=1))
     given_minima = _successive_minima(_niggli(variant.reciprocal), reach=2)
     if (given_lengths <= given_minima * (1 + 1e-4)).all() or _obtuse_superbase(variant.reciprocal):
-        assert all(is_given)
-    elif any(
-        all(_same_rows(rows @ m, rows, atol) for m in _symmetries_permuting_rows(k_lattice))
-        for rows in reduced
-    ):
-        assert all(is_reduced)
+        assert all(_same_rows(steps, k_lattice, atol) for steps in drawn)
+        return
+    assert all(is_reduced)
+    symmetries = _symmetries_permuting_rows(k_lattice)
+    if any(all(_same_rows(rows @ m, rows, atol) for m in symmetries) for rows in reduced):
         assert all(_same_rows(steps, drawn[0], atol) for steps in drawn)
-    else:
-        assert all(is_reduced)
 
 
 def _successive_minima(lattice: np.ndarray, reach: int = 3) -> np.ndarray:
@@ -374,7 +369,7 @@ NOT_REDUCED = [
         id="bct c/a 1.7",
     ),
     pytest.param(
-        rhombohedral(5.0, 60.0),
+        STANDARD_CELLS["fcc primitive"],
         [[1, 0, 0], [0, 1, -1], [1, -1, 0]],
         (6, 6, 6),
         id="fcc",
@@ -401,7 +396,7 @@ def test_drawn_k_grid_of_a_basis_not_reduced_is_reduced(cell, change, kgrid):
     """A given basis that is not reduced or an obtuse superbase is never drawn as given, near
     reduced or far from it, even where no reduced basis is free of the row labels. Far from
     reduced, marching cubes on its long thin cells doubles the drawn area (#302). Within 16% of
-    reduced, it still put a model band's area tens of percent further off than a reduced basis
+    reduced, it still put a model band's area up to 40% off where a reduced basis was 7% off
     (#59). The drawn steps are as short as the successive minima of the k-point lattice."""
     given = reciprocal(np.array(change) @ cell)
     minima = _successive_minima(given / np.array(kgrid)[:, None], reach=6)
