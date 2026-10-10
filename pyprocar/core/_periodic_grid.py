@@ -315,8 +315,11 @@ _SIGNED_PERMUTATIONS = np.array(
 def _placement(basis: np.ndarray, gram: np.ndarray, unit: float) -> tuple[int, ...]:
     """The inner products of the drawn rows ``basis @ lattice`` with the given rows (``gram`` is
     ``lattice @ lattice.T``), in whole ``unit``s, least in row-major order over reordered and
-    negated rows and columns: the same for any labelling of either set of rows, for a turned
-    lattice and for rounding noise."""
+    negated rows and columns: the same for any labelling of either set of rows. A turn or
+    rounding noise changes it only where an inner product sits within rounding of a half
+    ``unit``. There it can split bases that a symmetry relates into separate groups, and the
+    drawn grid can depend on the turn, as for rhombohedral reciprocal rows whose cosine is
+    0.51505 on 6^3."""
     forms = np.rint(basis @ gram / unit).astype(np.int64) @ _SIGNED_PERMUTATIONS
     # Over reordered and negated rows, the least form is the rows, each with its first nonzero
     # entry negative, in sorted order.
