@@ -218,16 +218,21 @@ def _reducing_steps(lattice: np.ndarray, live: np.ndarray) -> np.ndarray:
 
 
 def _gauss_steps(rows: np.ndarray) -> np.ndarray:
-    """Integer 2x2 W with W @ rows Lagrange-Gauss reduced: the two shortest lattice vectors."""
+    """Integer 2x2 W with W @ rows Lagrange-Gauss reduced: the two shortest lattice vectors.
+
+    It stops once |u.v| <= u.u / 2 within a relative 1e-9, because at that tie v and v - u are
+    equally short, and a ratio u.v / u.u of 1/2 plus one ulp would step by u and back forever.
+    """
     steps = np.eye(2, dtype=int)
     u, v = rows[0].astype(np.float64), rows[1].astype(np.float64)
     while True:
         if u @ u > v @ v:
             u, v = v, u
             steps = steps[[1, 0]]
-        mu = int(np.rint((u @ v) / (u @ u)))
-        if mu == 0:
+        ratio = (u @ v) / (u @ u)
+        if abs(ratio) <= 0.5 * (1 + 1e-9):
             return steps
+        mu = int(np.rint(ratio))
         v = v - mu * u
         steps[1] = steps[1] - mu * steps[0]
 
