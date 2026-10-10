@@ -398,7 +398,7 @@ def test_doubly_sheared_basis_snaps_every_direction_with_cubic_indices_up_to_2()
 def test_snap_normal_answers_for_the_lattice_it_is_given_now():
     """One array holds the cubic, then the hexagonal, then the cubic reciprocal lattice again,
     changed in place. A normal 1e-4 rad from [1 2 3] snaps to [1 2 3] of the lattice the array
-    holds at that call, even after the caller overwrites the direction returned before."""
+    holds at that call, even after the caller scales the direction returned before."""
     cells = [cubic(3.84652), hexagonal(2.46, 6.7), cubic(3.84652)]
     lattice = reciprocal(cells[0])
 
@@ -411,7 +411,7 @@ def test_snap_normal_answers_for_the_lattice_it_is_given_now():
 
         assert uvw == (1, 2, 3)
         np.testing.assert_allclose(direction, exact, rtol=0, atol=1e-12)
-        direction[:] = 0.0
+        direction *= 2.0
 
 
 FCC_PRIMITIVE_RECIPROCAL = reciprocal(fcc_primitive(1.0))
