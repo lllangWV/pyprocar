@@ -14,15 +14,15 @@ _Avoid_: reciprocal cell, k-space lattice
 The lengths of the shortest three linearly independent vectors of a lattice. They depend only on the lattice.
 
 **Reduced basis**:
-A basis whose sorted row lengths equal the lattice's successive minima, within tolerance. A symmetric lattice has several that are not reorderings or negations of each other.
+A basis whose sorted row lengths equal the lattice's successive minima, within tolerance. Some symmetric lattices, such as hexagonal, fcc and rhombohedral, have several that are not reorderings or negations of each other.
 _Avoid_: canonical basis, Niggli basis (for the general idea)
 
 **Obtuse superbase**:
-A basis of the lattice together with minus the sum of its rows, where all four vectors meet pairwise at obtuse angles. Any three of them form a Selling-reduced basis.
+A basis of the lattice, with some of its rows negated, together with minus the sum of those rows, where all four vectors meet pairwise at obtuse angles. Any three of them form a Selling-reduced basis. A basis is an obtuse superbase when some choice of signs makes it one.
 _Avoid_: Selling basis
 
 **Basis variant**:
-One way to give the same lattice: a relabelling, a shear, or both.
+One way to give the same lattice, up to a rotation: a relabelling, a shear, or both.
 
 **Relabelling**:
 The same rows reordered, negated, turned, or changed by rounding noise. Each lattice vector keeps the same indices up to sign and order.
