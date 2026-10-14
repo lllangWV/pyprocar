@@ -5,6 +5,7 @@ __date__ = "March 31, 2020"
 
 import itertools
 import logging
+from pathlib import Path
 from typing import Any, cast
 
 import matplotlib.pyplot as plt
@@ -17,6 +18,7 @@ from pyprocar.core.atomic_orbital_index import orbital_indices
 from pyprocar.core.dos import DensityOfStates
 from pyprocar.core.property_store import Property
 from pyprocar.plotter.dos_plot import AxesOrientation, DOSPlotter
+from pyprocar.scripts._export import export_path, write_table
 from pyprocar.scripts._selection import (
     as_lim,
     per_channel,
@@ -65,6 +67,7 @@ def dosplot(
     print_plot_opts: bool = False,
     use_cache: bool = False,
     verbose: int = 1,
+    export_data_file: str | Path | None = None,
     **kwargs,
 ):
     """
@@ -269,6 +272,20 @@ def dosplot(
     verbose: int, optional
         Verbosity level
 
+    export_data_file : str or Path, optional
+        A file to write the plotted curves to, as one table. Its suffix sets the
+        format: ``.csv``, ``.txt`` (tab-separated), ``.dat`` (space-separated) or
+        ``.json`` (an object of column lists). The first column, ``energy``, holds
+        the energies as plotted, shifted by ``fermi``. Then come ``total`` when the
+        total DOS is drawn, and one column per drawn projection, named by its
+        selection: ``s``, ``p``, ``d``, ``f``, a species, an ``items`` key, or
+        ``projection`` for the parametric modes. With more than one spin channel,
+        each column has one per channel, suffixed ``_spin-0``, ``_spin-1``. The
+        values are the DOS before stacking, with ``normalize_dos_mode`` applied;
+        spin-down keeps its sign, although the plot mirrors it below zero.
+
+        e.g. ``export_data_file='dos_data.dat'``
+
     Returns
     -------
     fig : matplotlib figure
@@ -301,6 +318,7 @@ def dosplot(
 
     if mode not in DOS_MODES:
         raise ValueError(f"The mode needs to be one of {DOS_MODES}, got {mode!r}")
+    export = None if export_data_file is None else export_path(export_data_file)
 
     if dirname is None:
         raise ValueError("dirname is required")
@@ -340,6 +358,7 @@ def dosplot(
             metadata={**total.metadata, "label": ["Total"]},
         )
     n_channels = total.value.shape[-1]
+    columns = {"energy": dos.energies}
 
     plotter = DOSPlotter(orientation=orientation, ax=ax)
     line_style: dict[str, Any] = {
@@ -351,6 +370,7 @@ def dosplot(
     if mode == "plain" or (mode not in PARAMETRIC_MODES and config.plot_total):
         user_logger.info(f"Plotting DOS total for {mode} mode")
         plotter.plot(total, **line_style)
+        _add_columns(columns, "total", total.value, channels)
 
     if mode in PARAMETRIC_MODES:
         user_logger.info(f"Plotting DOS in {mode} mode")
@@ -372,6 +392,8 @@ def dosplot(
             scalars_clim=config.clim or signed_clim(scalars),
             **(line_style if mode == "parametric_line" else {}),
         )
+        _add_columns(columns, "total", total.value, channels)
+        _add_columns(columns, "projection", scalars.value, channels)
     elif mode != "plain":
         user_logger.info(f"Plotting DOS in {mode} mode")
         components = projection_components(
@@ -383,6 +405,8 @@ def dosplot(
             spins=projection_spins,
             norm_mode=normalize_dos_mode or "raw",
         )
+        for component in components:
+            _add_columns(columns, component.label, component.to_array(), channels)
         colors = config.colors
         if mode.startswith("stack"):
             _stack(plotter, components, colors)
@@ -416,10 +440,29 @@ def dosplot(
 
     if savefig is not None:
         plotter.fig.savefig(savefig, dpi=config.dpi, bbox_inches="tight")
+    if export is not None:
+        write_table(export, columns)
     if show:
         plotter.show()
 
     return plotter.fig, ax
+
+
+def _add_columns(
+    columns: dict[str, np.ndarray], name: str, values: np.ndarray, channels: list[int]
+) -> None:
+    """Add ``name`` for one channel, else ``name_spin-<c>`` per channel ``c``.
+
+    A repeated name, such as two ``items`` entries for one species, gets ``-2``,
+    ``-3`` appended, so no curve overwrites another.
+    """
+    values = np.asarray(values).reshape(len(values), -1)
+    names = [""] if values.shape[1] == 1 else [f"_spin-{c}" for c in channels]
+    unique, repeat = name, 1
+    while any(unique + suffix in columns for suffix in names):
+        repeat += 1
+        unique = f"{name}-{repeat}"
+    columns.update({unique + suffix: v for suffix, v in zip(names, values.T, strict=True)})
 
 
 def _stack(plotter: DOSPlotter, components, colors) -> None:

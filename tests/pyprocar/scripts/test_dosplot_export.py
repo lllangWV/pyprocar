@@ -96,8 +96,10 @@ def test_spin_channels_get_a_column_each(tmp_path: Path, suffix: str) -> None:
     table = read_table(out)
     names = ["total", "O", "Sr", "V"]
     assert list(table) == ["energy", *(f"{n}_spin-{c}" for n in names for c in (0, 1))]
+    # The plot mirrors spin-down below zero; the file keeps the DOS's own sign.
     for column, y in zip(list(table)[1:], drawn_lines(ax), strict=True):
-        np.testing.assert_array_equal(table[column], y)
+        np.testing.assert_array_equal(table[column], -y if column.endswith("spin-1") else y)
+    assert table["total_spin-1"].min() >= 0
 
 
 @pytest.mark.data
@@ -155,3 +157,23 @@ def test_unknown_suffix_raises_before_reading_or_plotting(tmp_path: Path) -> Non
 
     assert plt.get_fignums() == []
     assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.data
+def test_items_entries_for_one_species_keep_a_column_each(tmp_path: Path) -> None:
+    out = tmp_path / "dos.dat"
+
+    _, ax = pyprocar.dosplot(
+        code="vasp",
+        dirname=_calc("non-spin-polarized"),
+        mode="overlay",
+        fermi=FERMI,
+        items=[{"V": ["d"]}, {"V": ["p"]}],
+        export_data_file=str(out),
+        show=False,
+    )
+
+    table = read_table(out)
+    assert list(table) == ["energy", "total", "V", "V-2"]
+    for column, y in zip(list(table)[1:], drawn_lines(ax), strict=True):
+        np.testing.assert_array_equal(table[column], y)
