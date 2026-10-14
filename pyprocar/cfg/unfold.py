@@ -110,7 +110,11 @@ class UnfoldingConfig(BandStructureConfig):
     cmap: str, optional (default 'jet')
         Colormap used for the plot.
     clim: Tuple[float], optional
-        Color scale limits for the color bar.
+        Color scale limits for the color bar. Unset, a projection with negative
+        values, such as a spin component, gets a range centred on zero.
+    colorbar_title: str, optional (default 'Atomic Orbital Projections')
+        Title of the color bar of a projection. Unset, a non-collinear Sx, Sy or
+        Sz projection is titled 'Sx projection', 'Sy projection' or 'Sz projection'.
     opacity: List[float], optional
         Opacities for the plot lines, default is [0.3, 0.3].
     plot_color_bar: bool, optional (default True)
