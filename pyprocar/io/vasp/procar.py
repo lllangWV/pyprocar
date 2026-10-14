@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 _DATA_ROW = re.compile(r"\s*(?:\d+|tot)\s")
 
 
-class _HeaderRows(NamedTuple):
-    projection: list[str]
-    phase: list[str]
+class _RowCount(NamedTuple):
+    rows: int
+    has_tot_row: bool
 
 
 class Procar(Mapping[str, Any]):
@@ -150,15 +150,21 @@ class Procar(Mapping[str, Any]):
         # One projection header per k-point and band, over 4 spin components
         # (is_spin_polarized is False: no duplicate k-points)
         n_rows = 4 * self.n_kpoints * self.n_bands * self._n_projection_rows
-        return (not self.is_spin_polarized) and len(self._rows.projection) == n_rows
+        return (not self.is_spin_polarized) and self._projection_row_count.rows == n_rows
+
+    @cached_property
+    def _projection_row_count(self) -> _RowCount:
+        rows, has_tot_row = 0, False
+        for row in self._rows_under(projection=True):
+            rows += 1
+            has_tot_row = has_tot_row or row.lstrip().startswith("tot")
+        return _RowCount(rows, has_tot_row)
 
     @cached_property
     def _n_projection_rows(self) -> int:
         """Rows per spin component under a projection header: one per ion, then "tot"."""
         # VASP writes no "tot" row for a single ion; Abinit writes one anyway
-        has_tot_row = self.n_atoms > 1 or any(
-            row.lstrip().startswith("tot") for row in self._rows.projection
-        )
+        has_tot_row = self.n_atoms > 1 or self._projection_row_count.has_tot_row
         return self.n_atoms + 1 if has_tot_row else self.n_atoms
 
     @cached_property
@@ -235,22 +241,19 @@ class Procar(Mapping[str, Any]):
             return None
         return self._read_phases()
 
-    @cached_property
-    def _rows(self) -> _HeaderRows:
-        """The rows under each "ion" header, split by the kind of header.
+    def _rows_under(self, projection: bool) -> Iterator[str]:
+        """The rows under each projection header, or under each phase header.
 
         A projection header ends in "tot". VASP writes one phase block per band and spin
         channel (one per band when non-collinear), and puts blank lines between the four
         non-collinear spin components from VASP 6.5.
         """
-        rows = _HeaderRows([], [])
-        under = rows.projection
+        under = False
         for line in self.file_str.splitlines():
             if line.startswith("ion"):
-                under = rows.projection if line.rstrip().endswith("tot") else rows.phase
-            elif _DATA_ROW.match(line):
-                under.append(line)
-        return rows
+                under = line.rstrip().endswith("tot") == projection
+            elif under and _DATA_ROW.match(line):
+                yield line
 
     def _read_projections(self) -> np.ndarray | None:
         """
@@ -274,7 +277,8 @@ class Procar(Mapping[str, Any]):
         has_tot_row = n_projection_rows > self.n_atoms
 
         spd = np.array(
-            [line.replace("tot", "0").split() for line in self._rows.projection], dtype=float
+            [line.replace("tot", "0").split() for line in self._rows_under(projection=True)],
+            dtype=float,
         )
 
         # handling collinear polarized case
@@ -335,7 +339,7 @@ class Procar(Mapping[str, Any]):
         """
         real_parts: list[list[str]] = []
         imaginary_parts: list[list[str]] = []
-        for line in self._rows.phase:
+        for line in self._rows_under(projection=False):
             projection_phases = line.split()[1:-1]
             real_parts.append(projection_phases[::2])
             imaginary_parts.append(projection_phases[1::2])
