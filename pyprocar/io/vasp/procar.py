@@ -279,7 +279,9 @@ class Procar(Mapping[str, Any]):
         has_tot_row = self.n_atoms > 1 or re.search(r"^\s*tot\s", self.file_str, re.M) is not None
         n_projection_rows = self.n_atoms + 1 if has_tot_row else self.n_atoms
 
-        spd = np.array([line.replace("tot", "0").split() for line in self._projection_rows], dtype=float)
+        spd = np.array(
+            [line.replace("tot", "0").split() for line in self._projection_rows], dtype=float
+        )
 
         # handling collinear polarized case
         if self.is_spin_polarized:

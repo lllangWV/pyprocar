@@ -1042,7 +1042,7 @@ ion          s             py             pz             px             dxy     
     2 -0.060  0.749  -0.016  0.020  -0.015  0.021  -0.015  0.020   0.000  0.000   0.000  0.000   0.000  0.000   0.000  0.000   0.000  0.000   0.567
 charge 0.750          0.032          0.032          0.031          0.008          0.008          0.000          0.008          0.000          0.868       
 
-"""
+"""  # noqa: E501
 
 
 def test_vasp65_non_collinear_phase_block_ends_before_the_next_band():
@@ -1089,7 +1089,7 @@ ion      s     py     pz     px    dxy    dyz    dz2    dxz  x2-y2    tot
 ion          s             py             pz             px             dxy            dyz            dz2            dxz          dx2-y2  
     1 -0.075  0.124   0.129  0.045   0.128  0.044   0.131  0.048   0.000  0.000   0.000  0.000   0.000  0.000   0.000  0.000   0.000  0.000   0.072
 
-"""
+"""  # noqa: E501
 
 
 def test_single_ion_phase_rows_are_not_read_as_projections():

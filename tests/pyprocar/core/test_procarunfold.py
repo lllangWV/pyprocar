@@ -793,4 +793,6 @@ def test_procar_unfolder_refuses_a_non_collinear_procar(tmp_path):
     poscar.write_text(INP_POSCAR)
 
     with pytest.raises(ValueError, match="non-collinear"):
-        ProcarUnfolder(procar=str(procar), poscar=str(poscar), supercell_matrix=np.eye(3, dtype=int))
+        ProcarUnfolder(
+            procar=str(procar), poscar=str(poscar), supercell_matrix=np.eye(3, dtype=int)
+        )
