@@ -10,6 +10,8 @@ import numpy as np
 import spglib
 from numpy.typing import NDArray
 
+from pyprocar.core.kpoints import KGRID_MODE, get_kpoints_from_kgrid
+
 logger = logging.getLogger(__name__)
 
 # VASP's Schoenflies point-group names and the international symbols spglib gives them.
@@ -41,8 +43,9 @@ _SHIFT = re.compile(
 class _MeshReduction:
     """What an OUTCAR states about how VASP reduced its automatic k-mesh.
 
-    Invariants: kpoints and multiplicities have one row per irreducible k-point, fewer rows
-    than prod(mesh), and the multiplicities are integers that sum to prod(mesh).
+    Invariants: kpoints and multiplicities have one row per irreducible k-point, and the
+    multiplicities are positive integers, not all 1. They sum to prod(mesh), or to more when
+    the operations carry the mesh off itself and VASP adds the images.
     """
 
     lattice: NDArray[np.float64]
@@ -58,8 +61,8 @@ class _MeshReduction:
 
 
 def _mesh_reduction(text: str) -> _MeshReduction | None:
-    """The record, or None when the OUTCAR shows no automatic mesh reduced to fewer points
-    (band paths, explicit lists, full meshes) or leaves out a fact the fit needs."""
+    """The record, or None when the OUTCAR shows no automatic mesh reduced by symmetry (band
+    paths, explicit lists, full meshes) or leaves out a fact the fit needs."""
     mesh_lines = re.findall(r"generate k-points for:\s+(\d+)\s+(\d+)\s+(\d+)", text)
     irreducible = list(_IRREDUCIBLE.finditer(text))
     shift = list(_SHIFT.finditer(text))
@@ -72,9 +75,10 @@ def _mesh_reduction(text: str) -> _MeshReduction | None:
     listed = np.array([row.split()[:4] for row in rows], dtype=float)
     multiplicities = np.rint(listed[:, 3]).astype(int)
     if (
-        len(listed) >= np.prod(mesh)
-        or np.any(np.abs(listed[:, 3] - multiplicities) > 1e-3)
-        or multiplicities.sum() != np.prod(mesh)
+        np.any(np.abs(listed[:, 3] - multiplicities) > 1e-3)
+        or np.any(multiplicities < 1)
+        or np.all(multiplicities == 1)
+        or multiplicities.sum() < np.prod(mesh)
     ):
         return None
 
@@ -152,25 +156,46 @@ def _subgroups(rotations: NDArray[np.int_]) -> list[NDArray[np.int_]]:
 def _reproduces_irreducible_kpoints(
     k_rotations: NDArray[np.int_], reduction: _MeshReduction
 ) -> bool:
-    """Whether the orbits of the listed k-points, counting only images on the mesh, have
-    exactly the listed multiplicities, are disjoint, and cover the mesh.
+    """Whether the orbits of the listed k-points have exactly the listed multiplicities, are
+    disjoint, and hold every mesh point.
 
-    VASP adds time reversal (k -> -k) to the operations of a collinear run only.
+    VASP reduces with the operations that map the k-point lattice onto itself, and adds time
+    reversal (k -> -k) for a collinear run only. When those operations carry a shifted mesh
+    off itself, VASP adds the images, so an orbit counts every distinct image, on the mesh or
+    not.
     """
-    operations = k_rotations.astype(float)
+    n = reduction.mesh
+    scaled = n[:, np.newaxis] * k_rotations / n[np.newaxis, :]
+    keeps_lattice = np.all(np.abs(scaled - np.rint(scaled)) < 1e-9, axis=(1, 2))
+    operations = k_rotations[keeps_lattice].astype(float)
     if reduction.time_reversal:
         operations = np.concatenate([operations, -operations])
-    n = reduction.mesh
+    # Mesh points and their images under integer rotations are multiples of 1/(2 L).
+    grain = 2 * int(np.lcm.reduce(reduction.mesh))
+    mesh = get_kpoints_from_kgrid(
+        kgrid=tuple(reduction.mesh), kshift=tuple(reduction.shift), mode=KGRID_MODE.GAMMA
+    )
+    mesh_keys = _snapped_keys(mesh, grain)
+    image_keys = _snapped_keys(np.einsum("oij,kj->koi", operations, reduction.kpoints), grain)
+    if mesh_keys is None or image_keys is None:
+        return False
     covered: set[int] = set()
-    for kpoint, multiplicity in zip(reduction.kpoints, reduction.multiplicities, strict=True):
-        steps = operations @ kpoint * n - reduction.shift
-        on_mesh = np.all(np.abs(steps - np.rint(steps)) < 1e-3, axis=1)
-        cells = np.mod(np.rint(steps[on_mesh]).astype(int), n)
-        orbit = set(np.ravel_multi_index(cells.T, n).tolist())
+    for orbit_keys, multiplicity in zip(image_keys, reduction.multiplicities, strict=True):
+        orbit = set(orbit_keys.tolist())
         if len(orbit) != multiplicity or not covered.isdisjoint(orbit):
             return False
         covered |= orbit
-    return len(covered) == int(np.prod(n))
+    return covered.issuperset(mesh_keys.tolist())
+
+
+def _snapped_keys(kpoints: NDArray[np.float64], grain: int) -> NDArray[np.int64] | None:
+    """One integer per fractional k modulo reciprocal lattice vectors, or None when a k is not
+    a multiple of 1/grain (OUTCAR coordinates carry 6 decimals)."""
+    steps = np.asarray(kpoints) * grain
+    if np.any(np.abs(steps - np.rint(steps)) > 0.05):
+        return None
+    cells = np.mod(np.rint(steps).astype(np.int64), grain)
+    return cells @ np.array([grain * grain, grain, 1], dtype=np.int64)
 
 
 def _fitting_operations(reduction: _MeshReduction) -> list[NDArray[np.int_]]:

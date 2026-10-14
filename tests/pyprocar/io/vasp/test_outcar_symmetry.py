@@ -214,6 +214,8 @@ def synthetic_procar(irreducible, n_ions: int = 1) -> str:
     ion_rows = "".join(
         f"{ion:5d}  1.000" + "  0.000" * 8 + "  1.000\n" for ion in range(1, n_ions + 1)
     )
+    if n_ions > 1:
+        ion_rows += f"tot  {n_ions:5.3f}" + "  0.000" * 8 + f"  {n_ions:5.3f}\n"
     blocks = [
         f"PROCAR lm decomposed\n# of k-points:  {len(irreducible)}"
         + f"         # of bands:    1         # of ions:    {n_ions}\n"
