@@ -2007,14 +2007,19 @@ def parse_final_structure_element():
     assert False
 
 
-def test_fermi_is_the_efermi_of_the_last_dos_block() -> None:
+def test_fermi_comes_from_the_dos_block_the_total_dos_is_read_from() -> None:
     vaspxml = VaspXML.from_str(
         """<modeling>
- <calculation><dos><i name="efermi">      1.25000000 </i></dos></calculation>
- <calculation><dos><i name="efermi">      4.96063322 </i></dos></calculation>
+ <calculation><dos><i name="efermi">      4.96063322 </i>
+  <total><array><set><set comment="spin 1"><r> -1.0 2.0 0.0 </r></set></set></array></total>
+ </dos></calculation>
+ <calculation><dos><i name="efermi">      1.25000000 </i>
+  <total><array><set><set comment="spin 1"><r> -1.0 7.0 0.0 </r></set></set></array></total>
+ </dos></calculation>
 </modeling>"""
     )
 
+    assert vaspxml.total is not None and vaspxml.total[0, 0] == 2.0
     assert vaspxml.fermi == 4.96063322
 
 
