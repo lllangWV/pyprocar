@@ -431,7 +431,21 @@ def test_plot_warns_when_the_named_field_is_missing(scalars_name, vectors_name, 
     plt.close("all")
 
 
-def test_export_data_reads_the_suffix_of_a_path_in_a_dotted_directory(tmp_path):
+def test_export_data_takes_a_pathlib_path(tmp_path):
+    from pyprocar.plotter.fs_slice_plot import FermiSlicePlotter
+
+    out = tmp_path / "fs.csv"
+    plotter = FermiSlicePlotter(_make_mock_fermi_surface())
+    plotter.plot(scalars_name="scalars")
+
+    plotter.export_data(out)
+
+    assert out.read_text().splitlines()[0].split(",")[:2] == ["points_u", "points_v"]
+    plt.close("all")
+
+
+@pytest.mark.guards_existing_behaviour(reason="export_data read a str path's suffix before")
+def test_export_data_reads_the_suffix_of_a_str_path_in_a_dotted_directory(tmp_path):
     from pyprocar.plotter.fs_slice_plot import FermiSlicePlotter
 
     out = tmp_path / "slice.d" / "fs.csv"
@@ -439,7 +453,7 @@ def test_export_data_reads_the_suffix_of_a_path_in_a_dotted_directory(tmp_path):
     plotter = FermiSlicePlotter(_make_mock_fermi_surface())
     plotter.plot(scalars_name="scalars")
 
-    plotter.export_data(out)
+    plotter.export_data(str(out))
 
     assert out.read_text().splitlines()[0].split(",")[:2] == ["points_u", "points_v"]
     plt.close("all")
