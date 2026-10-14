@@ -162,49 +162,49 @@ class TestDoscar:
         assert non_spin_doscar.integrated_dos.shape == (non_spin_doscar.nedos, 1)
 
     def test_doscar_projected_dos_spin_available(self, spin_doscar: vasp.Doscar) -> None:
-        assert spin_doscar.projected_dos is not None
+        assert spin_doscar.projected() is not None
 
     def test_doscar_projected_dos_non_spin_available(self, non_spin_doscar: vasp.Doscar) -> None:
-        assert non_spin_doscar.projected_dos is not None
+        assert non_spin_doscar.projected() is not None
 
     def test_doscar_projected_dos_non_colinear_available(
         self, non_colinear_doscar: vasp.Doscar
     ) -> None:
-        pdos = non_colinear_doscar.projected_dos
+        pdos = non_colinear_doscar.projected()
         assert isinstance(pdos, np.ndarray)
         assert pdos is not None
 
     def test_doscar_projected_dos_spin_channels(self, spin_doscar: vasp.Doscar) -> None:
-        pdos = spin_doscar.projected_dos
+        pdos = spin_doscar.projected()
         assert isinstance(pdos, np.ndarray)
         assert pdos.shape[1] == 2
 
     def test_doscar_projected_dos_non_spin_channels(self, non_spin_doscar: vasp.Doscar) -> None:
-        pdos = non_spin_doscar.projected_dos
+        pdos = non_spin_doscar.projected()
         assert isinstance(pdos, np.ndarray)
         assert pdos.shape[1] == 1
 
     def test_doscar_projected_dos_non_colinear_channels(
         self, non_colinear_doscar: vasp.Doscar
     ) -> None:
-        pdos = non_colinear_doscar.projected_dos
+        pdos = non_colinear_doscar.projected()
         assert isinstance(pdos, np.ndarray)
         assert pdos.shape[1] == 4
 
     def test_doscar_projected_dos_matches_atom_count(self, spin_doscar: vasp.Doscar) -> None:
-        pdos = spin_doscar.projected_dos
+        pdos = spin_doscar.projected()
         assert isinstance(pdos, np.ndarray)
         assert pdos.shape[2] == spin_doscar.natoms
 
     def test_doscar_projected_dos_matches_energy_count(self, non_spin_doscar: vasp.Doscar) -> None:
-        pdos = non_spin_doscar.projected_dos
+        pdos = non_spin_doscar.projected()
         assert isinstance(pdos, np.ndarray)
         assert pdos.shape[0] == non_spin_doscar.nedos
 
     def test_doscar_projected_dos_missing_returns_none(
         self, total_dos_only_doscar: vasp.Doscar
     ) -> None:
-        assert total_dos_only_doscar.projected_dos is None
+        assert total_dos_only_doscar.projected() is None
 
 
 VASP_LM_NAMES = ["s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz", "x2-y2"]
@@ -320,6 +320,14 @@ class TestDosFromDoscarOnly:
     def test_truncated_projected_block_raises(self) -> None:
         with pytest.raises(ValueError, match="DOSCAR"):
             _ = VaspParser.from_str(doscar=_doscar_text(1, 9, n_atom_rows=2)).dos
+
+    def test_atoms_with_different_column_counts_raise(self) -> None:
+        nine, three = _doscar_text(1, 9).splitlines(), _doscar_text(1, 3).splitlines()
+        second_atom = 6 + 2 * DOSCAR_NEDOS + 1
+        doscar = "\n".join(nine[:second_atom] + three[second_atom:]) + "\n"
+
+        with pytest.raises(ValueError, match="3 projected columns for atom 2 and 9 for atom 1"):
+            _ = VaspParser.from_str(doscar=doscar).dos
 
     def test_atoms_select_without_a_structure_and_species_raise(self) -> None:
         dos = _dos_from(_doscar_text(1, 9))
