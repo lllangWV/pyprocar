@@ -42,6 +42,11 @@ def resolve_spins(
             "Non-collinear calculations take one spin component"
             + f" (0 total, 1-3 Sx, Sy, Sz); got spins={list(spins)}"
         )
+    if spins is not None and spins[0] not in range(4):
+        raise ValueError(
+            "A non-collinear spin component is 0 total, 1-3 Sx, Sy, Sz"
+            + f"; got spins={list(spins)}"
+        )
     return SpinSelection([0], [0] if spins is None else list(spins))
 
 
