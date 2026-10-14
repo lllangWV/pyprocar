@@ -1,13 +1,206 @@
 import logging
 import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
 from typing import Any, override
 
 import numpy as np
+import spglib
+from numpy.typing import NDArray
 
 logger = logging.getLogger(__name__)
+
+# VASP's Schoenflies point-group names and the international symbols spglib gives them.
+_POINT_GROUP_SYMBOLS = {
+    "C_1": "1", "S_2": "-1", "C_2": "2", "C_1h": "m", "C_2h": "2/m", "D_2": "222",
+    "C_2v": "mm2", "D_2h": "mmm", "C_4": "4", "S_4": "-4", "C_4h": "4/m", "D_4": "422",
+    "C_4v": "4mm", "D_2d": "-42m", "D_4h": "4/mmm", "C_3": "3", "S_6": "-3", "D_3": "32",
+    "C_3v": "3m", "D_3d": "-3m", "C_6": "6", "C_3h": "-6", "C_6h": "6/m", "D_6": "622",
+    "C_6v": "6mm", "D_3h": "-6m2", "D_6h": "6/mmm", "T": "23", "T_h": "m-3", "O": "432",
+    "T_d": "-43m", "O_h": "m-3m",
+}  # fmt: skip
+
+_FLOAT = r"[-+]?\d+\.\d+"
+_POINT_GROUP = re.compile(
+    r"point symmetry\s+(?P<site>\S+?)\s*\."
+    + r"(?:\s*\n\s*The point group associated with its full space group is\s+(?P<full>\S+?)\s*\.)?"
+    + r"|NOSYMM:.*point group\s+(?P<none>\S+?)\s*\."
+)
+_IRREDUCIBLE = re.compile(
+    r"Found\s+(\d+)\s+irreducible k-points:\s*\n\s*\n\s*Following reciprocal coordinates:\s*\n.*\n"
+)
+_SHIFT = re.compile(
+    r"Shift w\.r\.t\. Gamma in fractional coordinates \(k-lattice\)\s*\n"
+    + rf"\s*({_FLOAT})\s+({_FLOAT})\s+({_FLOAT})"
+)
+
+
+@dataclass(frozen=True)
+class _MeshReduction:
+    """What an OUTCAR states about how VASP reduced its automatic k-mesh.
+
+    Invariants: kpoints and multiplicities have one row per irreducible k-point, fewer rows
+    than prod(mesh), and the multiplicities are integers that sum to prod(mesh).
+    """
+
+    lattice: NDArray[np.float64]
+    positions: NDArray[np.float64]
+    types: NDArray[np.int_]
+    point_group: str | None
+    n_operations: int | None
+    time_reversal: bool
+    mesh: NDArray[np.int_]
+    shift: NDArray[np.float64]
+    kpoints: NDArray[np.float64]
+    multiplicities: NDArray[np.int_]
+
+
+def _mesh_reduction(text: str) -> _MeshReduction | None:
+    """The record, or None when the OUTCAR shows no automatic mesh reduced to fewer points
+    (band paths, explicit lists, full meshes) or leaves out a fact the fit needs."""
+    mesh_lines = re.findall(r"generate k-points for:\s+(\d+)\s+(\d+)\s+(\d+)", text)
+    irreducible = list(_IRREDUCIBLE.finditer(text))
+    shift = list(_SHIFT.finditer(text))
+    noncollinear = re.findall(r"LNONCOLLINEAR\s*=\s*([TF])\s", text)
+    per_type = re.search(r"ions per type\s*=\s*([\d\s]+?)\n", text)
+    if not (mesh_lines and irreducible and shift and noncollinear and per_type):
+        return None
+    mesh = np.array(mesh_lines[-1], dtype=int)
+    rows = text[irreducible[-1].end() :].splitlines()[: int(irreducible[-1].group(1))]
+    listed = np.array([row.split()[:4] for row in rows], dtype=float)
+    multiplicities = np.rint(listed[:, 3]).astype(int)
+    if (
+        len(listed) >= np.prod(mesh)
+        or np.any(np.abs(listed[:, 3] - multiplicities) > 1e-3)
+        or multiplicities.sum() != np.prod(mesh)
+    ):
+        return None
+
+    # The cell VASP analysed is printed after "ions per type"; earlier blocks can be the
+    # primitive cell PRICEL found.
+    counts = [int(n) for n in per_type.group(1).split()]
+    lattice_block = re.compile(r"direct lattice vectors.*\n((?:.*\n){3})").search(
+        text, per_type.end()
+    )
+    position_block = re.compile(
+        rf"position of ions in fractional coordinates \(direct lattice\)\s*\n((?:.*\n){{{sum(counts)}}})"
+    ).search(text, per_type.end())
+    if lattice_block is None or position_block is None:
+        return None
+    lattice = np.array(
+        [re.findall(_FLOAT, line)[:3] for line in lattice_block.group(1).splitlines()], dtype=float
+    )
+    positions = np.array(
+        [re.findall(_FLOAT, line)[:3] for line in position_block.group(1).splitlines()], dtype=float
+    )
+
+    named = list(_POINT_GROUP.finditer(text))
+    point_group = None
+    if named:
+        name = named[-1].group("full") or named[-1].group("site") or named[-1].group("none")
+        if name not in _POINT_GROUP_SYMBOLS:
+            logger.info("Unknown point group %s in the OUTCAR", name)
+            return None
+        point_group = _POINT_GROUP_SYMBOLS[name]
+    count = re.findall(r"INISYM returns: Found\s+(\d+)\s+space group operations", text)
+
+    return _MeshReduction(
+        lattice=lattice,
+        positions=positions,
+        types=np.repeat(np.arange(len(counts)), counts),
+        point_group=point_group,
+        n_operations=int(count[-1]) if count else None,
+        time_reversal=noncollinear[-1] == "F",
+        mesh=mesh,
+        shift=np.array(shift[-1].groups(), dtype=float),
+        kpoints=listed[:, :3],
+        multiplicities=multiplicities,
+    )
+
+
+def _subgroups(rotations: NDArray[np.int_]) -> list[NDArray[np.int_]]:
+    """Every subgroup of a finite group of integer matrices, each with the identity first."""
+    keys = [rotation.tobytes() for rotation in rotations]
+    index = {key: i for i, key in enumerate(keys)}
+    product = [[index[(a @ b).tobytes()] for b in rotations] for a in rotations]
+    identity = index[np.eye(3, dtype=rotations.dtype).tobytes()]
+
+    def closure(members: frozenset[int]) -> frozenset[int]:
+        group, frontier = set(members), list(members)
+        while frontier:
+            a = frontier.pop()
+            for b in list(group):
+                for c in (product[a][b], product[b][a]):
+                    if c not in group:
+                        group.add(c)
+                        frontier.append(c)
+        return frozenset(group)
+
+    found = {frozenset({identity})}
+    frontier = list(found)
+    while frontier:
+        group = frontier.pop()
+        for g in range(len(rotations)):
+            if g not in group and (bigger := closure(group | {g})) not in found:
+                found.add(bigger)
+                frontier.append(bigger)
+    return [rotations[sorted(group, key=lambda i: (i != identity, i))] for group in found]
+
+
+def _reproduces_irreducible_kpoints(
+    k_rotations: NDArray[np.int_], reduction: _MeshReduction
+) -> bool:
+    """Whether the orbits of the listed k-points, counting only images on the mesh, have
+    exactly the listed multiplicities, are disjoint, and cover the mesh.
+
+    VASP adds time reversal (k -> -k) to the operations of a collinear run only.
+    """
+    operations = k_rotations.astype(float)
+    if reduction.time_reversal:
+        operations = np.concatenate([operations, -operations])
+    n = reduction.mesh
+    covered: set[int] = set()
+    for kpoint, multiplicity in zip(reduction.kpoints, reduction.multiplicities, strict=True):
+        steps = operations @ kpoint * n - reduction.shift
+        on_mesh = np.all(np.abs(steps - np.rint(steps)) < 1e-3, axis=1)
+        cells = np.mod(np.rint(steps[on_mesh]).astype(int), n)
+        orbit = set(np.ravel_multi_index(cells.T, n).tolist())
+        if len(orbit) != multiplicity or not covered.isdisjoint(orbit):
+            return False
+        covered |= orbit
+    return len(covered) == int(np.prod(n))
+
+
+def _fitting_operations(reduction: _MeshReduction) -> list[NDArray[np.int_]]:
+    """Every subgroup of the crystal's point operations that fits all the OUTCAR states, as
+    k-space rotations (k' = R k with R = inv(W).T for the real-space W), identity first.
+
+    A subgroup fits when spglib names its point group as VASP did, it has VASP's operation
+    count, and its orbits reproduce the irreducible k-points and their multiplicities. The
+    crystal's operations come from spglib on the cell VASP analysed, coloured by POTCAR type,
+    at VASP's default SYMPREC of 1e-5.
+    """
+    dataset = spglib.get_symmetry_dataset(
+        (reduction.lattice, reduction.positions, reduction.types), symprec=1e-5
+    )
+    if dataset is None:
+        return []
+    crystal = np.unique(np.asarray(dataset.rotations, dtype=int), axis=0)
+    fitting: list[NDArray[np.int_]] = []
+    for group in _subgroups(crystal):
+        if reduction.n_operations is not None and len(group) != reduction.n_operations:
+            continue
+        if (
+            reduction.point_group is not None
+            and spglib.get_pointgroup(group)[0].strip() != reduction.point_group
+        ):
+            continue
+        k_rotations = np.rint(np.linalg.inv(group).transpose(0, 2, 1)).astype(int)
+        if _reproduces_irreducible_kpoints(k_rotations, reduction):
+            fitting.append(k_rotations)
+    return fitting
 
 
 class Outcar(Mapping[str, Any]):
@@ -152,26 +345,30 @@ class Outcar(Mapping[str, Any]):
 
     @cached_property
     def rotations(self) -> np.ndarray:
-        """
-        Finds the point symmetry operations included in the OUTCAR file
-        and returns them in matrix form.
+        """The operations VASP reduced the k-mesh with, as rotations of fractional k
+        (k' = R k), shape (n, 3, 3).
 
-        Returns
-        -------
-        np.ndarray
-            The rotation matrices
+        Read from the operator table when the OUTCAR prints one (VASP 5.4 "Space group
+        operators", VASP 6 "irot" blocks at NWRITE = 3). Otherwise recovered: the one subgroup
+        of the crystal's operations whose point group, size and orbits on the mesh match what
+        the OUTCAR states. Empty when the OUTCAR shows no reduced mesh, or when not exactly one
+        subgroup fits.
         """
-
         sym_ops = self.get_symmetry_operations()
+        if sym_ops:
+            return np.array([sym_op["rotation"] for sym_op in sym_ops])
 
-        if not sym_ops:
+        reduction = _mesh_reduction(self.file_str)
+        if reduction is None:
             return np.empty((0, 3, 3))
-
-        rotations: list[np.ndarray] = []
-        for sym_op in sym_ops:
-            rotations.append(sym_op["rotation"])
-
-        return np.array(rotations)
+        fitting = _fitting_operations(reduction)
+        if len(fitting) != 1:
+            logger.info(
+                "%d sets of the crystal's operations fit the reduced k-mesh in the OUTCAR",
+                len(fitting),
+            )
+            return np.empty((0, 3, 3))
+        return fitting[0].astype(float)
 
     def get_symmetry_operations(self) -> list[dict[str, Any]]:
         raw_spg_ops = re.search(r"Found\s+(\d+)\s+space group operations", self.file_str)
