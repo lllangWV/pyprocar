@@ -50,6 +50,12 @@ def projection_components(source, kind: str, atoms=None, orbitals=None, items=No
     ``n_orbitals``: an electronic band structure or a density of states.
     """
     if kind == "species":
+        if source.structure is None:
+            raise ValueError(
+                "The species modes need the structure to know each atom's species, and this"
+                + " calculation has none: keep its POSCAR (or vasprun.xml) next to it, or"
+                + " select atoms by index with atoms=[...] in an orbitals mode."
+            )
         selections = [(s, {"species": [s], "orbitals": orbitals}) for s in source.structure.species]
     elif kind == "orbitals":
         shells = present_shells(source)
