@@ -24,6 +24,7 @@ from pyprocar.core import (
     FermiSurface,
 )
 from pyprocar.core.property_store import Property
+from pyprocar.scripts._selection import SpinSelection, resolve_spins
 from tests.utils import DATA_DIR, ROOT_DIR, writable_copy
 
 FERMI = 5.3017
@@ -74,6 +75,45 @@ def _lines_of_length(ax, n):
 def close_figures():
     yield
     plt.close("all")
+
+
+class TestResolveSpins:
+    @pytest.mark.parametrize(
+        ("is_non_collinear", "n_channels", "spins", "message"),
+        [
+            (False, 2, [2], r"has 2 spin channels \(0 up, 1 down\); got spins=\[2\]"),
+            (False, 2, [0, 5], r"has 2 spin channels \(0 up, 1 down\); got spins=\[0, 5\]"),
+            (False, 2, [-1], r"has 2 spin channels \(0 up, 1 down\); got spins=\[-1\]"),
+            (False, 1, [1], r"has 1 spin channel \(0\); got spins=\[1\]"),
+            (True, 1, [5], r"spin component is 0 total, 1-3 Sx, Sy, Sz; got spins=\[5\]"),
+        ],
+    )
+    def test_rejects_a_spin_outside_the_calculation(
+        self, is_non_collinear, n_channels, spins, message
+    ):
+        with pytest.raises(ValueError, match=message):
+            resolve_spins(is_non_collinear, n_channels, spins)
+
+    @pytest.mark.guards_existing_behaviour(
+        reason="valid spins resolve to the same channels and projection spins as before"
+    )
+    @pytest.mark.parametrize(
+        ("is_non_collinear", "n_channels", "spins", "plain", "expected"),
+        [
+            (False, 2, None, True, SpinSelection([0, 1], [0, 1])),
+            (False, 2, [1], False, SpinSelection([1], [1])),
+            (False, 2, (0, 1), False, SpinSelection([0, 1], [0, 1])),
+            (False, 2, [-1, 1], True, SpinSelection([0, 1], [0, 1], joined=True)),
+            (False, 1, None, False, SpinSelection([0], [0])),
+            (False, 1, [0], False, SpinSelection([0], [0])),
+            (True, 1, None, False, SpinSelection([0], [0])),
+            (True, 1, [3], False, SpinSelection([0], [3])),
+        ],
+    )
+    def test_resolves_a_valid_spin_selection(
+        self, is_non_collinear, n_channels, spins, plain, expected
+    ):
+        assert resolve_spins(is_non_collinear, n_channels, spins, plain=plain) == expected
 
 
 @pytest.mark.data
@@ -366,6 +406,21 @@ class TestBandsplot:
         calc = _calc(tmp_path, "bands/non-colinear")
 
         with pytest.raises(ValueError, match="spin component is 0 total, 1-3 Sx, Sy, Sz"):
+            pyprocar.bandsplot(
+                code="vasp", dirname=calc, mode="parametric", fermi=FERMI, spins=spins, show=False
+            )
+
+    @pytest.mark.parametrize(
+        ("relpath", "spins", "message"),
+        [
+            ("bands/spin-polarized", [2], r"has 2 spin channels \(0 up, 1 down\); got spins=\[2\]"),
+            ("bands/non-spin-polarized", [1], r"has 1 spin channel \(0\); got spins=\[1\]"),
+        ],
+    )
+    def test_collinear_rejects_an_unknown_spin_channel(self, tmp_path, relpath, spins, message):
+        calc = _calc(tmp_path, relpath)
+
+        with pytest.raises(ValueError, match=message):
             pyprocar.bandsplot(
                 code="vasp", dirname=calc, mode="parametric", fermi=FERMI, spins=spins, show=False
             )
