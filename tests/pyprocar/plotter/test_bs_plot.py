@@ -654,3 +654,16 @@ class TestBandStructurePlotterEdgeCases:
         assert "bands__band-0_spinChannel-0" in plotter.values_dict
         plt.close(plotter.fig)
 
+
+def test_export_data_reads_the_suffix_of_a_path_in_a_dotted_directory(
+    tmp_path, mock_property_single_spin
+):
+    out = tmp_path / "bands.d" / "bands.csv"
+    out.parent.mkdir()
+    plotter = BandStructurePlotter()
+    plotter.plot(mock_property_single_spin, scalars_mode="none")
+
+    plotter.export_data(out)
+
+    assert "bands__band-0_spinChannel-0" in out.read_text().splitlines()[0].split(",")
+    plt.close(plotter.fig)
