@@ -2005,3 +2005,20 @@ FINAL_STRUCTURE_ELEMENT = """ <structure name="finalpos" >
 def parse_final_structure_element():
     parser = VaspXML.from_str(FINAL_STRUCTURE_ELEMENT)
     assert False
+
+
+def test_fermi_is_the_efermi_of_the_last_dos_block() -> None:
+    vaspxml = VaspXML.from_str(
+        """<modeling>
+ <calculation><dos><i name="efermi">      1.25000000 </i></dos></calculation>
+ <calculation><dos><i name="efermi">      4.96063322 </i></dos></calculation>
+</modeling>"""
+    )
+
+    assert vaspxml.fermi == 4.96063322
+
+
+def test_fermi_is_none_when_no_dos_block_gives_an_efermi() -> None:
+    vaspxml = VaspXML.from_str("<modeling><calculation><dos/></calculation></modeling>")
+
+    assert vaspxml.fermi is None

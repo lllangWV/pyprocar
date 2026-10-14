@@ -3,10 +3,13 @@
 VASP wrote both files in each fixture, so the vasprun.xml DOS of the same run is
 an independent reference. The DOSCAR prints energies to 3 decimals and DOS values
 to 4 significant digits; vasprun.xml prints both to 4 decimals.
+
+The Fermi energy comes from the OUTCAR, else the DOSCAR header, else vasprun.xml (#75).
 """
 
 import re
 from pathlib import Path
+from xml.etree import ElementTree
 
 import numpy as np
 import pytest
@@ -214,10 +217,69 @@ def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_doscar(
     assert dos.fermi == 5.69903164
 
 
+def _vasprun_efermi(vasprun: Path) -> float:
+    """The efermi VASP writes in the <dos> block, read with the standard library's XML parser."""
+    (dos,) = ElementTree.parse(vasprun).getroot().iter("dos")
+    efermi = dos.find("i[@name='efermi']")
+    assert efermi is not None and efermi.text is not None
+    return float(efermi.text)
+
+
+def _without_efermi(vasprun: Path) -> Path:
+    text = vasprun.read_text()
+    edited = re.sub(r'\s*<i name="efermi">[^<]*</i>', "", text)
+    assert edited != text
+    _ = vasprun.write_text(edited)
+    return vasprun
+
+
 @pytest.mark.data
-def test_an_outcar_cut_before_e_fermi_without_a_doscar_raises_naming_it(tmp_path: Path) -> None:
+@pytest.mark.parametrize("name", ["non-spin-polarized", "spin-polarized", "non-colinear"])
+def test_a_vasprun_without_outcar_or_doscar_gives_its_own_fermi_energy(
+    tmp_path: Path, name: str
+) -> None:
+    calc = _doscar_only(tmp_path, name, keep=("POSCAR", "vasprun.xml"))
+    efermi = _vasprun_efermi(calc / "vasprun.xml")
+    # VASP writes the same value in the DOSCAR header of the run, 4th field of line 6.
+    doscar_header = (DOS_DIR / name / "DOSCAR").read_text().splitlines()[5].split()
+    assert efermi == float(doscar_header[3])
+
+    dos = DensityOfStates.from_code("vasp", str(calc))
+
+    assert dos.fermi == efermi
+
+
+@pytest.mark.data
+def test_a_vasprun_without_efermi_and_no_other_source_raises_naming_the_directory(
+    tmp_path: Path,
+) -> None:
+    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("POSCAR", "vasprun.xml"))
+    _ = _without_efermi(calc / "vasprun.xml")
+
+    with pytest.raises(ValueError, match="Fermi energy in " + re.escape(str(calc))):
+        _ = DensityOfStates.from_code("vasp", str(calc))
+
+
+@pytest.mark.data
+def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_vasprun(
+    tmp_path: Path,
+) -> None:
+    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("OUTCAR", "POSCAR", "vasprun.xml"))
+    _ = _cut_before_e_fermi(calc / "OUTCAR")
+
+    dos = DensityOfStates.from_code("vasp", str(calc))
+
+    # The vasprun.xml of this run: <i name="efermi">      5.69903164 </i>.
+    assert dos.fermi == 5.69903164
+
+
+@pytest.mark.data
+def test_an_outcar_cut_before_e_fermi_with_no_other_source_raises_naming_it(
+    tmp_path: Path,
+) -> None:
     calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("OUTCAR", "POSCAR", "vasprun.xml"))
     outcar = _cut_before_e_fermi(calc / "OUTCAR")
+    _ = _without_efermi(calc / "vasprun.xml")
 
     with pytest.raises(ValueError, match=re.escape(str(outcar)) + ".*E-fermi"):
         _ = DensityOfStates.from_code("vasp", str(calc))
