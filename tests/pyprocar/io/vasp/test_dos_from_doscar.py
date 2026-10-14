@@ -5,6 +5,7 @@ an independent reference. The DOSCAR prints energies to 3 decimals and DOS value
 to 4 significant digits; vasprun.xml prints both to 4 decimals.
 """
 
+import re
 from pathlib import Path
 
 import numpy as np
@@ -200,3 +201,14 @@ def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_doscar(
 
     # The DOSCAR header of this run: "12.62318812 -31.06108337 6000 5.69903164 1.0".
     assert dos.fermi == 5.69903164
+
+
+@pytest.mark.data
+def test_an_outcar_cut_before_e_fermi_without_a_doscar_raises_naming_it(tmp_path: Path) -> None:
+    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("OUTCAR", "POSCAR", "vasprun.xml"))
+    outcar = calc / "OUTCAR"
+    text = outcar.read_text()
+    _ = outcar.write_text(text[: text.index(" E-fermi :")])
+
+    with pytest.raises(ValueError, match=re.escape(str(outcar)) + ".*E-fermi"):
+        _ = DensityOfStates.from_code("vasp", str(calc))
