@@ -648,7 +648,7 @@ class ProcarParser:
         lines = iter(f.readlines())
         last_iband = -1
         for line in lines:
-            # Each "ion" header below consumes its ion rows, so another ion row is a Sx, Sy or Sz one
+            # Each "ion" header below consumes its ion rows; any other one is an Sx, Sy or Sz row
             if re.match(r"\s*\d+\s", line):
                 raise ValueError(
                     f"{procar} is non-collinear: its phases sum the up and down spinor"
