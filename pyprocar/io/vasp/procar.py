@@ -9,9 +9,14 @@ from typing import Any, override
 
 import numpy as np
 
+from pyprocar.utils.log_utils import warn_user
+
 # from pyprocar.utils import np_utils
 
 logger = logging.getLogger(__name__)
+
+# A row under an "ion" header starts with the ion number or "tot"; blank and "charge" lines do not.
+_DATA_ROW = re.compile(r"\s*(?:\d+|tot)\s")
 
 
 class Procar(Mapping[str, Any]):
@@ -145,8 +150,7 @@ class Procar(Mapping[str, Any]):
         expected_base = self.n_kpoints * self.n_bands
         if len(tot_lines) == 0:
             # VASP writes no "tot" row for a single ion, so count the ion rows instead
-            ion_rows = re.findall(r"^\s*\d+\s+-?\d*\.\d+", self.file_str, re.MULTILINE)
-            four_rows_per_ion = len(ion_rows) == expected_base * 4 * self.n_atoms
+            four_rows_per_ion = len(self._projection_rows) == expected_base * 4 * self.n_atoms
             return (not self.is_spin_polarized) and four_rows_per_ion
         actual_count = len(tot_lines)
         # Non-colinear has 4 "tot" lines per k-point/band
@@ -218,13 +222,40 @@ class Procar(Mapping[str, Any]):
         [n_kpoints, n_bands, n_spins, n_atoms, n_orbitals]"""
         if not self.has_phase:
             return None
+        if self.is_non_colinear:
+            warn_user(
+                "projected_phase is dropped: a non-collinear PROCAR holds one phase block per band,"
+                + " the sum of the up and down spinor projections, so the phase of each spinor"
+                + " component is lost and the bands cannot be unfolded."
+            )
+            return None
         return self._read_phases()
 
-    def _projection_blocks(self, n_rows: int) -> list[str]:
-        # VASP 6.5 puts a blank line between the four non-collinear spin components.
-        pattern = r"^ion.*\n(" + r"\n*.+\n" * n_rows + ")"
-        blocks = re.findall(pattern, self.file_str, re.MULTILINE)
-        return ["\n".join(line for line in block.splitlines() if line.strip()) for block in blocks]
+    @cached_property
+    def _rows_by_header(self) -> tuple[list[str], list[str]]:
+        """The rows under each "ion" header: projection rows, then phase rows.
+
+        A projection header ends in "tot". VASP writes one phase block per band and spin
+        channel (one per band when non-collinear), and puts blank lines between the four
+        non-collinear spin components from VASP 6.5.
+        """
+        projection_rows: list[str] = []
+        phase_rows: list[str] = []
+        rows = projection_rows
+        for line in self.file_str.splitlines():
+            if line.startswith("ion"):
+                rows = projection_rows if line.rstrip().endswith("tot") else phase_rows
+            elif _DATA_ROW.match(line):
+                rows.append(line)
+        return projection_rows, phase_rows
+
+    @property
+    def _projection_rows(self) -> list[str]:
+        return self._rows_by_header[0]
+
+    @property
+    def _phase_rows(self) -> list[str]:
+        return self._rows_by_header[1]
 
     def _read_projections(self) -> np.ndarray | None:
         """
@@ -247,18 +278,8 @@ class Procar(Mapping[str, Any]):
         # VASP writes no "tot" row for a single ion; Abinit writes one anyway
         has_tot_row = self.n_atoms > 1 or re.search(r"^\s*tot\s", self.file_str, re.M) is not None
         n_projection_rows = self.n_atoms + 1 if has_tot_row else self.n_atoms
-        n_spd_rows = n_projection_rows
-        if self.is_non_colinear:
-            n_spd_rows *= 4
 
-        spd = []
-        for block in self._projection_blocks(n_spd_rows):
-            if "charge" in block:
-                continue
-            for line in block.replace("tot", "0").splitlines():
-                spd.append(line.split())
-
-        spd = np.array(spd, dtype=float)
+        spd = np.array([line.replace("tot", "0").split() for line in self._projection_rows], dtype=float)
 
         # handling collinear polarized case
         if self.is_spin_polarized:
@@ -316,30 +337,14 @@ class Procar(Mapping[str, Any]):
         """
         Helped method to parse the projection phases
         """
-        # Vasp format different for 1 atom
-        n_spd_rows = self.n_atoms + 1
-        # n_projection_rows = self.n_atoms + 1
-        if self.is_non_colinear:
-            n_spd_rows *= 4
+        real_parts: list[list[str]] = []
+        imaginary_parts: list[list[str]] = []
+        for line in self._phase_rows:
+            projection_phases = line.split()[1:-1]
+            real_parts.append(projection_phases[::2])
+            imaginary_parts.append(projection_phases[1::2])
 
-        spd_phase = []
-        real_parts = []
-        imaginary_parts = []
-        for block in self._projection_blocks(n_spd_rows):
-            if "charge" not in block:
-                continue
-            for line in block.replace("tot", "0").splitlines():
-                if "charge" in line:
-                    continue
-                projection_phases_with_tot_with_ion = line.strip().split()
-                projection_phases = projection_phases_with_tot_with_ion[1:-1]
-
-                real_parts.append(projection_phases[::2])  # pyright: ignore[reportUnknownMemberType]
-                imaginary_parts.append(projection_phases[1::2])  # pyright: ignore[reportUnknownMemberType]
-
-        real_parts = np.array(real_parts, dtype=float)
-        imaginary_parts = np.array(imaginary_parts, dtype=float)
-        spd_phase = real_parts + 1j * imaginary_parts
+        spd_phase = np.array(real_parts, dtype=float) + 1j * np.array(imaginary_parts, dtype=float)
 
         # handling collinear polarized case
         if self.is_spin_polarized:
