@@ -4,7 +4,7 @@ One file per user-facing feature. Each lists every entry point a user can reach 
 
 Each feature has a reusable driver in `scripts/examples/<feature>.py`. It runs every entry point as an isolated step, records each step's result or crash in `summary.json`, and exits 1 if any step failed. Read `summary.json` per step instead of trusting the exit code alone.
 
-| Feature | File | Driver / fixture | Status (dev @ d6d4aaa7, re-driven 2026-10-04) |
+| Feature | File | Driver / fixture | Status (main @ d6d4aaa7, re-driven 2026-10-04) |
 |---|---|---|---|
 | Band structure along a k-path | [bands.md](bands.md) | `bands.py` / `data/examples/bands/non-spin-polarized` | Object API plain/parametric/scatter/`plot_quiver`/flip and legacy `bandsplot` plain/parametric/scatter/overlay_species and `bandsdosplot` work; `plot(vectors_mode=)` and `plot_overlay` crash |
 | Density of states | [dos.md](dos.md) | `dos.py` / `data/examples/dos/non-spin-polarized` | Object API and legacy `dosplot` plain/parametric work; other `dosplot` modes not driven |
