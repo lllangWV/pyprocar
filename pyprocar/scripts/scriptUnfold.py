@@ -217,8 +217,7 @@ def unfold(
                 ebs.is_non_collinear,
                 projection_spins,
             )
-            user_clim = config.clim if "clim" in kwargs else None
-            clim = user_clim or signed_clim(scalars) or config.clim
+            clim = config.clim if "clim" in kwargs else signed_clim(scalars) or config.clim
         plotter.plot(
             bands,
             scalars_data=scalars,
