@@ -6,12 +6,11 @@ from typing import overload
 import numpy as np
 
 import pyprocar.core.kpoints as kpoints_core
-from pyprocar.core.atomic_orbital_index import OrbitalIndexer
 from pyprocar.core.dos import DensityOfStates
 from pyprocar.core.ebs import ElectronicBandStructure, get_ebs_from_data
 from pyprocar.core.structure import Structure
 from pyprocar.io.base import BaseParser
-from pyprocar.io.vasp.doscar import Doscar
+from pyprocar.io.vasp.doscar import Doscar, dos_orbital_names
 from pyprocar.io.vasp.kpoints import Kpoints
 from pyprocar.io.vasp.outcar import Outcar
 from pyprocar.io.vasp.poscar import Poscar
@@ -20,14 +19,6 @@ from pyprocar.io.vasp.vasprun import VaspXML
 from pyprocar.utils.log_utils import warn_user
 
 logger = logging.getLogger(__name__)
-
-ORBITAL_ORDERING = OrbitalIndexer()
-VASP_DOS_ORBITALS = {
-    3: ("s", "p", "d"),
-    4: ("s", "p", "d", "f"),
-    9: tuple(ORBITAL_ORDERING.flat_conventional[:9]),
-    16: tuple(ORBITAL_ORDERING.flat_conventional[:16]),
-}
 
 
 class VaspParser(BaseParser):
@@ -355,10 +346,4 @@ class VaspParser(BaseParser):
     def _orbital_names(projected: np.ndarray | None) -> list[str] | None:
         if projected is None:
             return None
-        n_orbitals = projected.shape[-1]
-        if n_orbitals not in VASP_DOS_ORBITALS:
-            raise ValueError(
-                f"The DOS projects onto {n_orbitals} orbitals; VASP projects onto s, p, d"
-                + " (and f) with LORBIT=10, or onto the 9 (16) lm orbitals with LORBIT=11."
-            )
-        return list(VASP_DOS_ORBITALS[n_orbitals])
+        return list(dos_orbital_names(projected.shape[-1]))

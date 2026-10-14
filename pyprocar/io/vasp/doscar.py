@@ -5,11 +5,31 @@ from typing import TypedDict
 
 import numpy as np
 
+from pyprocar.core.atomic_orbital_index import SHELL_LETTERS, OrbitalIndexer
+
 logger = logging.getLogger(__name__)
 
-# Orbitals per atom in a VASP DOSCAR: s, p, d (and f) with LORBIT=10, or the 9 (16) lm
-# orbitals with LORBIT=11.
-ORBITAL_COUNTS = (3, 4, 9, 16)
+_LM_ORBITALS = OrbitalIndexer().flat_conventional
+# The orbitals a VASP DOS projects onto, by their count per atom: s, p, d (and f)
+# with LORBIT=10, or the 9 (16) lm orbitals with LORBIT=11.
+DOS_ORBITAL_NAMES: dict[int, tuple[str, ...]] = {
+    3: SHELL_LETTERS[:3],
+    4: SHELL_LETTERS,
+    9: tuple(_LM_ORBITALS[:9]),
+    16: tuple(_LM_ORBITALS[:16]),
+}
+ORBITAL_COUNTS = tuple(DOS_ORBITAL_NAMES)
+_VASP_ORBITALS = (
+    "VASP projects onto s, p, d (and f) with LORBIT=10, or onto the 9 (16) lm orbitals"
+    + " with LORBIT=11"
+)
+
+
+def dos_orbital_names(n_orbitals: int) -> tuple[str, ...]:
+    """The names of the ``n_orbitals`` orbitals a VASP DOS projects onto per atom."""
+    if n_orbitals not in DOS_ORBITAL_NAMES:
+        raise ValueError(f"The DOS projects onto {n_orbitals} orbitals per atom; {_VASP_ORBITALS}.")
+    return DOS_ORBITAL_NAMES[n_orbitals]
 
 
 class HeaderLine1(TypedDict):
@@ -240,6 +260,5 @@ class Doscar:
         raise ValueError(
             f"The DOSCAR has {n_columns} projected columns per atom, which no"
             + f" {'non-collinear' if non_collinear else 'non-spin-polarized'} VASP run writes:"
-            + f" it writes {', '.join(map(str, ORBITAL_COUNTS))} orbitals per atom, times 4"
-            + " (total, mx, my, mz) when non-collinear."
+            + f" {_VASP_ORBITALS}, times 4 (total, mx, my, mz) when non-collinear."
         )
