@@ -303,6 +303,56 @@ class TestBandsplot:
         assert data_min < 0
         assert collections[0].get_clim()[0] <= data_min
 
+    @pytest.mark.parametrize(
+        ("mode", "spin", "label"),
+        [
+            ("parametric", 1, "Sx projection"),
+            ("parametric", 2, "Sy projection"),
+            ("parametric", 3, "Sz projection"),
+            ("scatter", 3, "Sz projection"),
+        ],
+    )
+    def test_spin_component_labels_the_colorbar(self, tmp_path, mode, spin, label):
+        calc = _calc(tmp_path, "bands/non-colinear")
+
+        fig, _ = pyprocar.bandsplot(
+            code="vasp", dirname=calc, mode=mode, fermi=FERMI, spins=[spin], show=False
+        )
+
+        assert fig.axes[1].get_ylabel() == label
+
+    @pytest.mark.guards_existing_behaviour(reason="an explicit colorbar_title is drawn as given")
+    def test_explicit_colorbar_title_wins_over_the_spin_component(self, tmp_path):
+        calc = _calc(tmp_path, "bands/non-colinear")
+
+        fig, _ = pyprocar.bandsplot(
+            code="vasp",
+            dirname=calc,
+            mode="parametric",
+            fermi=FERMI,
+            spins=[3],
+            colorbar_title="$S_z$",
+            show=False,
+        )
+
+        assert fig.axes[1].get_ylabel() == "$S_z$"
+
+    @pytest.mark.guards_existing_behaviour(
+        reason="total and collinear projections keep the configured colorbar title"
+    )
+    @pytest.mark.parametrize(
+        ("relpath", "spins"),
+        [("bands/non-colinear", None), ("bands/non-colinear", [0]), ("bands/spin-polarized", [1])],
+    )
+    def test_orbital_projection_keeps_the_configured_label(self, tmp_path, relpath, spins):
+        calc = _calc(tmp_path, relpath)
+
+        fig, _ = pyprocar.bandsplot(
+            code="vasp", dirname=calc, mode="parametric", fermi=FERMI, spins=spins, show=False
+        )
+
+        assert fig.axes[1].get_ylabel() == "Atomic Orbital Projections"
+
     def test_non_collinear_rejects_several_spin_components(self, tmp_path):
         calc = _calc(tmp_path, "bands/non-colinear")
 
@@ -554,6 +604,41 @@ class TestDosplot:
             pyprocar.dosplot(
                 code="vasp", dirname=calc, mode="parametric", fermi=FERMI, spins=[1, 2], show=False
             )
+
+    @pytest.mark.parametrize("mode", ["parametric", "parametric_line"])
+    def test_spin_component_labels_the_colorbar(self, tmp_path, mode):
+        calc = _calc(tmp_path, "dos/non-colinear")
+
+        fig, _ = pyprocar.dosplot(
+            code="vasp", dirname=calc, mode=mode, fermi=FERMI, spins=[3], show=False
+        )
+
+        assert fig.axes[1].get_ylabel() == "Sz projection"
+
+    @pytest.mark.guards_existing_behaviour(
+        reason="an explicit colorbar_title and the total component keep their colorbar title"
+    )
+    @pytest.mark.parametrize(
+        ("spins", "settings", "label"),
+        [
+            ([3], {"colorbar_title": "$S_z$"}, "$S_z$"),
+            (None, {}, "Atomic Orbital Projections"),
+        ],
+    )
+    def test_colorbar_title_and_total_keep_their_label(self, tmp_path, spins, settings, label):
+        calc = _calc(tmp_path, "dos/non-colinear")
+
+        fig, _ = pyprocar.dosplot(
+            code="vasp",
+            dirname=calc,
+            mode="parametric",
+            fermi=FERMI,
+            spins=spins,
+            show=False,
+            **settings,
+        )
+
+        assert fig.axes[1].get_ylabel() == label
 
     def test_vertical_overlay_orbitals(self, tmp_path):
         calc = _calc(tmp_path, "dos/non-spin-polarized")
