@@ -9,6 +9,12 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+_PARAMETER_LISTING = "Startparameter for this run:"
+_LISTED_FLAG = re.compile(
+    r"^[ \t]*(LNONCOLLINEAR|LSORBIT)[ \t]*=[ \t]*(T|F|\.TRUE\.|\.FALSE\.)(?![\w.])",
+    re.MULTILINE | re.IGNORECASE,
+)
+
 
 class Outcar(Mapping[str, Any]):
     """
@@ -131,9 +137,22 @@ class Outcar(Mapping[str, Any]):
 
     @cached_property
     def is_non_collinear(self) -> bool | None:
-        """LNONCOLLINEAR as VASP lists it among the run's parameters, or None if absent."""
-        match = re.search(r"^\s*LNONCOLLINEAR\s*=\s*([TF])\b", self.file_str, re.MULTILINE)
-        return None if match is None else match.group(1) == "T"
+        """Whether the run was non-collinear, from the parameters VASP lists after
+        "Startparameter for this run:", or None when the OUTCAR stops before them.
+
+        The INCAR echo at the top of the OUTCAR is what the user wrote, not what VASP
+        ran with: LSORBIT turns LNONCOLLINEAR on whatever the INCAR says.
+        """
+        start = self.file_str.find(_PARAMETER_LISTING)
+        if start == -1:
+            return None
+        listed = {
+            match.group(1).upper(): match.group(2).upper() in ("T", ".TRUE.")
+            for match in _LISTED_FLAG.finditer(self.file_str, start)
+        }
+        if not listed:
+            return None
+        return listed.get("LNONCOLLINEAR", False) or listed.get("LSORBIT", False)
 
     @cached_property
     def reciprocal_lattice(self) -> np.ndarray:
