@@ -213,10 +213,10 @@ class VaspXML(Mapping[str, Any]):
         VASP 6 with KPOINTS_OPT writes a <dos comment="kpoints_opt"> block for the
         extra k-points first; the DOS never comes from it.
         """
-        blocks = self.root.xpath("//dos[not(@comment='kpoints_opt')]")
-        assert isinstance(blocks, list)
-        block = blocks[0] if blocks else None
-        return block if isinstance(block, etree._Element) else None
+        # iter, not an XPath predicate over "//", which exceeds libxml2's limits on a
+        # vasprun.xml of hundreds of MB.
+        blocks = (block for block in self.root.iter("dos") if block.get("comment") != "kpoints_opt")
+        return next(blocks, None)
 
     def _dos_child(self, tag: str) -> etree._Element | None:
         return self.dos_element.find(tag) if self.dos_element is not None else None
