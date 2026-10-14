@@ -407,14 +407,27 @@ class TestDoscarWithoutDos:
         doscar = "".join(_doscar_text(1, 9).splitlines(keepends=True)[:n_lines])
         calc = _calc_dir(tmp_path, DOSCAR=doscar, OUTCAR=COLLINEAR_OUTCAR)
 
-        with pytest.raises(ValueError, match=re.escape(str(tmp_path / "DOSCAR")) + " holds no DOS"):
+        with pytest.raises(
+            ValueError, match=re.escape(str(tmp_path / "DOSCAR")) + " holds no DOS.*vasprun.xml"
+        ):
             DensityOfStates.from_code("vasp", calc)
 
 
-def test_an_outcar_without_e_fermi_raises_naming_it(tmp_path: Path) -> None:
-    # An interrupted run's OUTCAR stops before VASP writes "E-fermi :".
-    outcar = "   LNONCOLLINEAR =      F non collinear calculations\n"
-    calc = _calc_dir(tmp_path, DOSCAR=_doscar_text(1, 9), OUTCAR=outcar)
+def test_an_outcar_without_e_fermi_takes_the_fermi_energy_from_the_doscar(
+    tmp_path: Path,
+) -> None:
+    # An interrupted run's OUTCAR stops before VASP writes "E-fermi :"; the DOSCAR
+    # header holds the Fermi energy too (0.5 in _doscar_text).
+    calc = _calc_dir(tmp_path, DOSCAR=_doscar_text(1, 9), OUTCAR=_LISTED.format("F"))
 
-    with pytest.raises(ValueError, match=re.escape(str(tmp_path / "OUTCAR")) + ".*E-fermi"):
-        DensityOfStates.from_code("vasp", calc)
+    dos = DensityOfStates.from_code("vasp", calc)
+
+    assert dos.fermi == 0.5
+
+
+def test_an_outcar_without_e_fermi_raises_naming_it(tmp_path: Path) -> None:
+    outcar = tmp_path / "OUTCAR"
+    _ = outcar.write_text(_LISTED.format("F"))
+
+    with pytest.raises(ValueError, match=re.escape(str(outcar)) + ".*E-fermi"):
+        _ = vasp.Outcar(outcar).fermi

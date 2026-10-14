@@ -183,3 +183,20 @@ def test_sixteen_columns_follow_the_run_parameters_not_the_incar_echo(tmp_path: 
         rtol=DOS_RTOL,
         atol=5 * DOS_ATOL,
     )
+
+
+@pytest.mark.data
+def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_doscar(
+    tmp_path: Path,
+) -> None:
+    calc = _doscar_only(
+        tmp_path, "non-spin-polarized", keep=("DOSCAR", "OUTCAR", "POSCAR", "vasprun.xml")
+    )
+    outcar = calc / "OUTCAR"
+    text = outcar.read_text()
+    _ = outcar.write_text(text[: text.index(" E-fermi :")])
+
+    dos = DensityOfStates.from_code("vasp", str(calc))
+
+    # The DOSCAR header of this run: "12.62318812 -31.06108337 6000 5.69903164 1.0".
+    assert dos.fermi == 5.69903164
