@@ -20,7 +20,7 @@ from matplotlib.lines import Line2D
 from matplotlib.ticker import MultipleLocator
 
 from pyprocar.core.kpoints import KPath
-from pyprocar.plotter._export import write_table
+from pyprocar.plotter._export import recorded_columns, write_table
 from pyprocar.plotter._series import LineSeries, channel_lims, line_series, resolve_clim
 
 logger = logging.getLogger(__name__)
@@ -919,17 +919,7 @@ class BandStructurePlotter:
         filename : str or Path
             Output path; extension defines format.
         """
-        if not self.values_dict:
-            raise ValueError("No values recorded. Plot first before exporting.")
-
-        values = {}
-        for key, value in self.values_dict.items():
-            if value is None:
-                continue
-            arr = np.atleast_1d(value)
-            if arr.size > 0:
-                values[key] = arr
-
+        values = recorded_columns(self.values_dict)
         order = [key for key in ["kpath_values", "kpath_tick_names", "k_current"] if key in values]
         for ispin in range(2):
             order += [

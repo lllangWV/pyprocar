@@ -222,7 +222,9 @@ class Doscar:
             return self._read_block(first_row, f"atom {atom + 1} projected DOS")[:, 1:]
 
         first = columns(0)
-        projected = np.empty((natoms, nedos, first.shape[1]))
+        n_columns = first.shape[1]
+        n_spins = self._projected_spins(n_columns, non_collinear)
+        projected = np.empty((natoms, nedos, n_columns))
         projected[0] = first
         for atom in range(1, natoms):
             block = columns(atom)
@@ -232,8 +234,6 @@ class Doscar:
                     + f" and {first.shape[1]} for atom 1; VASP writes the same for every atom."
                 )
             projected[atom] = block
-        n_columns = first.shape[1]
-        n_spins = self._projected_spins(n_columns, non_collinear)
         # VASP writes each orbital's spin columns together: s_up s_down py_up ... for
         # ISPIN=2 and s_tot s_mx s_my s_mz py_tot ... for non-collinear runs.
         return projected.reshape(natoms, nedos, n_columns // n_spins, n_spins).transpose(1, 3, 0, 2)

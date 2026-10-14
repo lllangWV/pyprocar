@@ -17,7 +17,7 @@ from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 
 from pyprocar.core.property_store import Property
-from pyprocar.plotter._export import write_table
+from pyprocar.plotter._export import recorded_columns, write_table
 from pyprocar.plotter._series import ShowColorbar
 from pyprocar.utils.log_utils import warn_user
 
@@ -677,15 +677,7 @@ class FermiSlicePlotter:
         filename : str or Path
             Output path. Extension determines format (csv, txt, json, dat).
         """
-        if not self.values_dict:
-            raise ValueError("No values recorded. Plot first before exporting.")
-
-        values = {}
-        for key, value in self.values_dict.items():
-            arr = np.atleast_1d(value)
-            if arr.size > 0:
-                values[key] = arr
-        write_table(filename, values)
+        write_table(filename, recorded_columns(self.values_dict))
 
     def show(self) -> None:
         """Display the plot."""

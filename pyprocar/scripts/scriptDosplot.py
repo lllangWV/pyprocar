@@ -371,9 +371,9 @@ def dosplot(
     draws_total = mode in ("plain", *PARAMETRIC_MODES) or config.plot_total
     if draws_total:
         _add_columns(columns, "total", total.value, channels)
-    if draws_total and mode not in PARAMETRIC_MODES:
-        user_logger.info(f"Plotting DOS total for {mode} mode")
-        plotter.plot(total, **line_style)
+        if mode not in PARAMETRIC_MODES:
+            user_logger.info(f"Plotting DOS total for {mode} mode")
+            plotter.plot(total, **line_style)
 
     if mode in PARAMETRIC_MODES:
         user_logger.info(f"Plotting DOS in {mode} mode")

@@ -22,6 +22,14 @@ def export_path(path: str | Path) -> Path:
     return path
 
 
+def recorded_columns(values: Mapping[str, object]) -> dict[str, np.ndarray]:
+    """The non-empty arrays a plotter recorded, or a ValueError when it recorded none."""
+    if not values:
+        raise ValueError("No values recorded. Plot first before exporting.")
+    arrays = {key: np.atleast_1d(value) for key, value in values.items() if value is not None}
+    return {key: array for key, array in arrays.items() if array.size > 0}
+
+
 def write_table(path: str | Path, columns: Mapping[str, npt.ArrayLike]) -> None:
     """Write equal-length ``columns`` in order: a JSON object of lists, or a delimited table."""
     path = export_path(path)
