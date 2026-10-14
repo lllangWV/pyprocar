@@ -5,6 +5,7 @@ __date__ = "March 31, 2020"
 
 import logging
 from enum import Enum
+from pathlib import Path
 from typing import Any, cast
 
 import matplotlib.pyplot as plt
@@ -103,7 +104,7 @@ def bandsplot(
     show: bool = True,
     savefig: str | None = None,
     print_plot_opts: bool = False,
-    export_data_file: str | None = None,
+    export_data_file: str | Path | None = None,
     export_append_mode: bool = True,
     x_limit: list[float] | None = None,
     plot_kwargs: dict | None = None,
@@ -151,12 +152,12 @@ def bandsplot(
         Boolean if to show the plot, by default True
     savefig : str, optional
         String to save the plot, by default None
-    export_data_file : str, optional
-        The file name to export the data to. If not provided the
-        data will not be exported.
+    export_data_file : str or Path, optional
+        The file name to export the data to. Its suffix sets the format: .csv,
+        .txt, .dat or .json. If not provided the data will not be exported.
     export_append_mode : bool, optional
-        Boolean to append the mode to the file name. If not provided the
-        data will be overwritten.
+        Boolean to append the mode to the file name, so ``bands.dat`` becomes
+        ``bands_plain.dat``. If False the data goes to ``export_data_file``.
     x_limit : List[float], optional
         The k-distance window to plot, by default None
     plot_kwargs, scatter_kwargs, parametric_kwargs : dict, optional
@@ -346,11 +347,9 @@ def bandsplot(
         plotter.show()
 
     if export_data_file is not None:
+        filename = Path(export_data_file)
         if export_append_mode:
-            file_basename, file_type = export_data_file.split(".")
-            filename = f"{file_basename}_{plot_mode.value}.{file_type}"
-        else:
-            filename = export_data_file
+            filename = filename.with_name(f"{filename.stem}_{plot_mode.value}{filename.suffix}")
         plotter.export_data(filename)
 
     return plotter.fig, plotter.ax

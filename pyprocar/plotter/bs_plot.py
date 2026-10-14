@@ -7,6 +7,7 @@ import json
 import logging
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any
 
 import matplotlib.cm as cm
@@ -911,16 +912,16 @@ class BandStructurePlotter:
         """Save the current figure to disk."""
         self.fig.savefig(filename, dpi=(dpi or self.dpi), bbox_inches=bbox_inches)
 
-    def export_data(self, filename: str):
+    def export_data(self, filename: str | Path):
         """Export recorded plot arrays to CSV/TXT/JSON/DAT.
 
         Parameters
         ----
-        filename : str
+        filename : str or Path
             Output path; extension defines format.
         """
         possible_file_types = ["csv", "txt", "json", "dat"]
-        file_type = filename.split(".")[-1]
+        file_type = Path(filename).suffix.removeprefix(".")
         if file_type not in possible_file_types:
             raise ValueError(f"The file type must be {possible_file_types}")
         if not self.values_dict:

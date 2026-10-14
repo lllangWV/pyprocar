@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 import matplotlib.pyplot as plt
@@ -667,12 +668,12 @@ class FermiSlicePlotter:
     # Export methods (Phase 7)
     # ------------------------------------------------------------------
 
-    def export_data(self, filename: str) -> None:
+    def export_data(self, filename: str | Path) -> None:
         """Export recorded plot arrays to file.
 
         Parameters
         ----------
-        filename : str
+        filename : str or Path
             Output path. Extension determines format (csv, txt, json, dat).
         """
         import json
@@ -680,7 +681,7 @@ class FermiSlicePlotter:
         import pandas as pd
 
         possible_file_types = ["csv", "txt", "json", "dat"]
-        file_type = filename.split(".")[-1]
+        file_type = Path(filename).suffix.removeprefix(".")
         if file_type not in possible_file_types:
             raise ValueError(f"File type must be one of {possible_file_types}")
         if not self.values_dict:
