@@ -15,10 +15,8 @@ from pyprocar.plotter.bs_plot import BandStructurePlotter
 from pyprocar.scripts._selection import (
     as_lim,
     per_channel,
-    projection_colorbar_title,
     projection_components,
     resolve_spins,
-    signed_clim,
     take_channels,
 )
 from pyprocar.utils.log_utils import set_verbose_level, warn_user
@@ -104,8 +102,7 @@ def unfold(
     fermi_shift : float
         Where the Fermi energy sits after the shift.
     vmin, vmax : float, optional
-        The color range. The default is 0 to 1, or a range centred on zero
-        for a projection with negative values, such as a spin component.
+        The color range. The default is 0 to 1.
     kticks, knames : list, optional
         The k-point indices and names of the x ticks. The KPOINTS file sets
         them when omitted.
@@ -205,26 +202,19 @@ def unfold(
         if plot_mode is UnfoldPlotMode.PLAIN:
             scalars = weights if weight_mode is not UnfoldMode.THICKNESS else None
             colorbar_title = "Unfolding weight"
-            clim = config.clim
         else:
             projection = ebs.compute_projected_sum(
                 atoms=atoms, orbitals=orbitals, spins=projection_spins
             )
             scalars = take_channels(projection, channels)
-            colorbar_title = projection_colorbar_title(
-                config.colorbar_title,
-                "colorbar_title" in kwargs,
-                ebs.is_non_collinear,
-                projection_spins,
-            )
-            clim = config.clim if "clim" in kwargs else signed_clim(scalars) or config.clim
+            colorbar_title = config.colorbar_title
         plotter.plot(
             bands,
             scalars_data=scalars,
             widths_data=weights if weight_mode is not UnfoldMode.COLOR else None,
             scalars_mode="scatter" if plot_mode is UnfoldPlotMode.SCATTER else "parametric",
             scalars_cmap=config.cmap,
-            scalars_clim=clim,
+            scalars_clim=config.clim,
             color=per_channel(config.spin_colors, n_channels) if scalars is None else None,
             linestyle=linestyle,
         )
