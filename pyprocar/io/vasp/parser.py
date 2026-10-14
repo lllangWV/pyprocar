@@ -257,6 +257,18 @@ class VaspParser(BaseParser):
                 + " index i selects the i-th group, and species selections raise."
             )
 
+        kgrid_info = self.kgrid_info
+        n_mesh = int(np.prod(kgrid_info.kgrid)) if kgrid_info is not None else 0
+        if self.procar.n_kpoints < n_mesh and (structure is None or len(structure.rotations) == 0):
+            raise ValueError(
+                f"The PROCAR holds {self.procar.n_kpoints} of the {n_mesh} k-points of the"
+                + f" {'x'.join(str(n) for n in kgrid_info.kgrid)} mesh, which VASP reduced by"
+                + " symmetry, and pyprocar cannot tell which symmetry operations VASP used. The"
+                + " OUTCAR lists them only with NWRITE = 3, and what it states otherwise does not"
+                + " single out one set of the crystal's operations. Rerun VASP with NWRITE = 3,"
+                + " or with ISYM = -1 to compute the full mesh."
+            )
+
         return get_ebs_from_data(
             kpoints=self.procar.kpoints,
             bands=self.procar.bands,
