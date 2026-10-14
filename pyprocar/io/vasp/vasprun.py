@@ -695,15 +695,10 @@ class VaspXML(Mapping[str, Any]):
 
     @cached_property
     def fermi(self) -> float | None:
-        """The efermi VASP writes in the <dos> block (the last one if several), else None."""
-        tag_list = self.root.xpath("//dos/i[@name='efermi']")
-        assert isinstance(tag_list, list)
-        if not tag_list:
-            return None
-        element = tag_list[-1]
-        assert isinstance(element, etree._Element)
-        text = (element.text or "").strip()
-        return float(text) if text else None
+        """The efermi of the <dos> block that ``total`` reads, else None."""
+        texts = self.root.xpath("(//total)[1]/parent::dos/i[@name='efermi']/text()")
+        assert isinstance(texts, list)
+        return float(str(texts[0])) if texts and str(texts[0]).strip() else None
 
     @cached_property
     def dos_energies(self) -> np.ndarray | None:
