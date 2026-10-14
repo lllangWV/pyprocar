@@ -652,27 +652,7 @@ class VaspXML(Mapping[str, Any]):
 
         Returns array with shape (n_energies, n_spins)
         """
-        element = self._dos_child("total")
-        if element is None:
-            return None
-
-        # Find the array element
-        array_elem = None
-        for child in element:
-            if child.tag == "array":
-                array_elem = child
-                break
-
-        if array_elem is None:
-            return None
-
-        # Find the set element
-        set_elem = None
-        for child in array_elem:
-            if child.tag == "set":
-                set_elem = child
-                break
-
+        set_elem = self._dos_child("total/array/set")
         if set_elem is None:
             return None
 
@@ -709,27 +689,7 @@ class VaspXML(Mapping[str, Any]):
 
         Returns array with shape (n_energies,)
         """
-        element = self._dos_child("total")
-        if element is None:
-            return None
-
-        # Find the array element
-        array_elem = None
-        for child in element:
-            if child.tag == "array":
-                array_elem = child
-                break
-
-        if array_elem is None:
-            return None
-
-        # Find the set element
-        set_elem = None
-        for child in array_elem:
-            if child.tag == "set":
-                set_elem = child
-                break
-
+        set_elem = self._dos_child("total/array/set")
         if set_elem is None:
             return None
 
@@ -751,27 +711,7 @@ class VaspXML(Mapping[str, Any]):
 
         Returns array with shape (n_energies, n_spins, n_ions, n_orbitals)
         """
-        element = self._dos_child("partial")
-        if element is None:
-            return None
-
-        # Find the array element
-        array_elem = None
-        for child in element:
-            if child.tag == "array":
-                array_elem = child
-                break
-
-        if array_elem is None:
-            return None
-
-        # Find the set element
-        set_elem = None
-        for child in array_elem:
-            if child.tag == "set":
-                set_elem = child
-                break
-
+        set_elem = self._dos_child("partial/array/set")
         if set_elem is None:
             return None
 

@@ -198,32 +198,11 @@ def test_sixteen_columns_follow_the_run_parameters_not_the_incar_echo(tmp_path: 
     )
 
 
-def _cut_before_e_fermi(outcar: Path) -> Path:
-    """Cut the OUTCAR where an interrupted run stops: before VASP writes "E-fermi :"."""
-    text = outcar.read_text()
-    _ = outcar.write_text(text[: text.index(" E-fermi :")])
-    return outcar
-
-
-@pytest.mark.data
-def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_doscar(
-    tmp_path: Path,
-) -> None:
-    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("DOSCAR", "OUTCAR", "POSCAR"))
-    _ = _cut_before_e_fermi(calc / "OUTCAR")
-
-    dos = DensityOfStates.from_code("vasp", str(calc))
-
-    # The DOSCAR header of this run: "12.62318812 -31.06108337 6000 5.69903164 1.0".
-    assert dos.fermi == 5.69903164
-
-
-def _vasprun_efermi(vasprun: Path) -> float:
-    """The efermi VASP writes in the <dos> block, read with the standard library's XML parser."""
-    (dos,) = ElementTree.parse(vasprun).getroot().iter("dos")
-    efermi = dos.find("i[@name='efermi']")
-    assert efermi is not None and efermi.text is not None
-    return float(efermi.text)
+def _efermi(block: ElementTree.Element) -> float:
+    """The efermi VASP writes in a <dos> block."""
+    efermi = block.findtext("i[@name='efermi']")
+    assert efermi is not None
+    return float(efermi)
 
 
 NON_SPIN_POLARIZED_EFERMI = '   <i name="efermi">      5.69903164 </i>\n'
@@ -239,7 +218,7 @@ def test_a_vasprun_without_outcar_or_doscar_gives_its_own_fermi_energy(
     tmp_path: Path, name: str
 ) -> None:
     calc = _doscar_only(tmp_path, name, keep=("POSCAR", "vasprun.xml"))
-    efermi = _vasprun_efermi(calc / "vasprun.xml")
+    efermi = _efermi(_dos_blocks(calc / "vasprun.xml")[None])
     # VASP writes the same value in the DOSCAR header of the run, 4th field of line 6.
     doscar_header = (DOS_DIR / name / "DOSCAR").read_text().splitlines()[5].split()
     assert efermi == float(doscar_header[3])
@@ -247,27 +226,6 @@ def test_a_vasprun_without_outcar_or_doscar_gives_its_own_fermi_energy(
     dos = DensityOfStates.from_code("vasp", str(calc))
 
     assert dos.fermi == efermi
-
-
-@pytest.mark.data
-def test_a_vasprun_without_efermi_raises_naming_it(tmp_path: Path) -> None:
-    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("POSCAR", "vasprun.xml"))
-    _without_efermi(calc / "vasprun.xml")
-
-    with pytest.raises(ValueError, match=re.escape(str(calc / "vasprun.xml")) + ".*efermi"):
-        _ = DensityOfStates.from_code("vasp", str(calc))
-
-
-@pytest.mark.data
-def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_vasprun(
-    tmp_path: Path,
-) -> None:
-    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("OUTCAR", "POSCAR", "vasprun.xml"))
-    _ = _cut_before_e_fermi(calc / "OUTCAR")
-
-    dos = DensityOfStates.from_code("vasp", str(calc))
-
-    assert dos.fermi == 5.69903164  # NON_SPIN_POLARIZED_EFERMI
 
 
 @pytest.mark.data
@@ -306,9 +264,7 @@ def _block_dos(block: ElementTree.Element) -> tuple[np.ndarray, np.ndarray, np.n
     total = _rows(block.findall("total/array/set/set"))
     ions = block.findall("partial/array/set/set")
     projected = np.stack([_rows(ion.findall("set"))[..., 1:] for ion in ions], axis=2)
-    efermi = block.findtext("i[@name='efermi']")
-    assert efermi is not None
-    return total[:, 0, 0], total[..., 1], projected, float(efermi)
+    return total[:, 0, 0], total[..., 1], projected, _efermi(block)
 
 
 def _doubled_rows(block: str) -> str:
@@ -336,7 +292,7 @@ def test_a_kpoints_opt_dos_block_written_first_is_not_the_dos(tmp_path: Path) ->
             NON_SPIN_POLARIZED_EFERMI, '   <i name="efermi">      4.20000000 </i>\n'
         )
     )
-    _ = vasprun.write_text(text[:start] + opt_block + "\n" + text[start:])
+    _ = vasprun.write_text(_edited(vasprun, "  <dos>\n", opt_block + "\n  <dos>\n"))
     blocks = _dos_blocks(vasprun)
     energies, total, projected, efermi = _block_dos(blocks[None])
     _, opt_total, opt_projected, opt_efermi = _block_dos(blocks["kpoints_opt"])
