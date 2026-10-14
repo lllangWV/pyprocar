@@ -172,6 +172,7 @@ Automatic generation of k-mesh.
    k-points           NKPTS = {len(irreducible):6d}
    ions per type =               {per_type}
 --------------------------------------------------------------------------------------------------------
+ Startparameter for this run:
    ISPIN  =      1    spin polarized calculation?
    LNONCOLLINEAR =      {flag} non collinear calculations
 
