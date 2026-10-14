@@ -20,6 +20,7 @@ from pyprocar.core.property_store import Property
 from pyprocar.plotter.bs_plot import BandStructurePlotter
 from pyprocar.scripts._selection import (
     per_channel,
+    projection_colorbar_title,
     projection_components,
     resolve_spins,
     signed_clim,
@@ -237,6 +238,9 @@ def bandsplot(
     orbitals = orbital_indices(orbitals, ebs)
 
     user_clim = config.clim if "clim" in kwargs else None
+    projection_title = projection_colorbar_title(
+        config.colorbar_title, "colorbar_title" in kwargs, ebs.is_non_collinear, projection_spins
+    )
 
     plotter = BandStructurePlotter(ax=ax)
     n_channels = len(channels)
@@ -259,7 +263,7 @@ def bandsplot(
             **(atomic_levels_kwargs or {}),
         }
         plotter.plot_atomic_levels(**levels)
-        plotter.set_colorbar_title(config.colorbar_title)
+        plotter.set_colorbar_title(projection_title)
     elif plot_mode in BandStructureMode.get_overlay_modes():
         user_logger.info(f"Plotting bands in {plot_mode.value} mode")
         kind = plot_mode.value.split("_", 1)[1] if "_" in plot_mode.value else "items"
@@ -297,7 +301,7 @@ def bandsplot(
                 scalars = ebs.compute_projected_sum(
                     atoms=atoms, orbitals=orbitals, spins=projection_spins
                 )
-                colorbar_title = config.colorbar_title
+                colorbar_title = projection_title
                 artist_kwargs = {
                     "collection_kwargs": parametric_kwargs,
                     "scatter_kwargs": scatter_kwargs,

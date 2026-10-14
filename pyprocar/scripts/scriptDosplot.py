@@ -20,6 +20,7 @@ from pyprocar.plotter.dos_plot import AxesOrientation, DOSPlotter
 from pyprocar.scripts._selection import (
     as_lim,
     per_channel,
+    projection_colorbar_title,
     projection_components,
     resolve_spins,
     signed_clim,
@@ -354,6 +355,12 @@ def dosplot(
 
     if mode in PARAMETRIC_MODES:
         user_logger.info(f"Plotting DOS in {mode} mode")
+        colorbar_title = projection_colorbar_title(
+            config.colorbar_title,
+            "colorbar_title" in kwargs,
+            dos.is_non_collinear,
+            projection_spins,
+        )
         scalars = cast(
             Property,
             dos.compute_projected_sum(
@@ -361,7 +368,7 @@ def dosplot(
                 orbitals=orbitals,
                 spins=projection_spins,
                 norm_mode="total_projection",
-                label=config.colorbar_title,
+                label=colorbar_title,
             ),
         )
         plotter.plot(

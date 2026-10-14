@@ -9,6 +9,7 @@ Plot total and projected DOS versus energy. The `dos-rewrite` branch is rebuildi
 - Total colored by projection: `plotter.plot(total, scalars_data=projected_sum, scalars_mode="line")`.
 - Orientation: `DOSPlotter(orientation="horizontal"|"vertical")`.
 - Spin: `channel_mode="flip"|"normal"`, plus `scalars_show_colorbar="per_channel"`, using the `spin-polarized` fixture. Not driven.
+- Spin components (#2): on `dos/non-colinear`, `dosplot(mode="parametric"|"parametric_line", spins=[3])` labels the colorbar `Sz projection` (`Sx`, `Sy` for 1, 2); an explicit `colorbar_title` wins, and `spins=None` keeps `Atomic Orbital Projections`. `TestDosplot::test_spin_component_labels_the_colorbar` checks it.
 
 ## How to get to it (user POV)
 
