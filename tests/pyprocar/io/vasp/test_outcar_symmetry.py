@@ -6,6 +6,7 @@ from those (issue #5).
 """
 
 import re
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -27,6 +28,18 @@ E = np.eye(3, dtype=int)
 INVERSION = -E
 C2_B = np.diag([-1, 1, -1])
 
+
+@dataclass(frozen=True)
+class Mesh:
+    kind: str
+    size: tuple[int, int, int]
+    shift: tuple[float, float, float]  # as VASP prints it: Gamma's offset, in mesh steps
+
+
+GAMMA_331 = Mesh("Gamma", (3, 3, 1), (0.0, 0.0, 0.0))
+# An even Monkhorst-Pack mesh: VASP 6.5.0 prints the shift 0.5 along each even axis.
+MONKHORST_PACK_221 = Mesh("Monkhorst-Pack", (2, 2, 1), (0.5, 0.5, 0.0))
+
 THIRD = 1 / 3
 # Gamma 3x3x1 reduced by {E, I}, which time reversal alone also gives: each k pairs with -k.
 PAIRED_WITH_MINUS_K = [
@@ -36,6 +49,8 @@ PAIRED_WITH_MINUS_K = [
     ((THIRD, THIRD, 0), 2),
     ((-THIRD, THIRD, 0), 2),
 ]
+# Monkhorst-Pack 2x2x1, k = (+-1/4, +-1/4, 0), reduced by {E, I}.
+QUARTERS_PAIRED_WITH_MINUS_K = [((0.25, 0.25, 0), 2), ((-0.25, 0.25, 0), 2)]
 # Gamma 3x3x1 reduced by {E, C2_b} alone: (k1, k2, 0) pairs with (-k1, k2, 0).
 TURNED_ABOUT_B = [
     ((0, 0, 0), 1),
@@ -62,8 +77,10 @@ def _rows(matrix: np.ndarray) -> str:
     return "\n".join("  " + "  ".join(f"{x:13.9f}" for x in row) for row in matrix)
 
 
-def synthetic_outcar(symmetry: str, irreducible, noncollinear: bool = False) -> str:
-    """An NWRITE = 2 OUTCAR of the one-atom monoclinic cell on a Gamma 3x3x1 mesh."""
+def synthetic_outcar(
+    symmetry: str, irreducible, noncollinear: bool = False, mesh: Mesh = GAMMA_331
+) -> str:
+    """An NWRITE = 2 OUTCAR of the one-atom monoclinic cell."""
     lattices = "\n".join(
         "  " + "  ".join(f"{x:13.9f}" for x in (*a, *b)) for a, b in zip(LATTICE, RECIPROCAL)
     )
@@ -71,6 +88,8 @@ def synthetic_outcar(symmetry: str, irreducible, noncollinear: bool = False) -> 
         f"  {k[0]:9.6f} {k[1]:9.6f} {k[2]:9.6f}      {w:8.6f}" for k, w in irreducible
     )
     flag = "T" if noncollinear else "F"
+    grid = "".join(f"{n:5d}" for n in mesh.size)
+    shift = "  ".join(f"{s:.9f}" for s in mesh.shift)
     return f""" vasp.6.4.2 20Jul23 (build Apr  3 2024 16:30:41) complex
  POSCAR = monoclinic
 
@@ -78,16 +97,16 @@ Analysis of structural, dynamic, and magnetic symmetry:
 =====================================================================
 {symmetry}
 
- KPOINTS: Gamma 3x3x1
+ KPOINTS: {mesh.kind}
 
 Automatic generation of k-mesh.
  Grid dimensions read from file:
- generate k-points for:    3    3    1
+ generate k-points for:{grid}
 
  Generating k-lattice:
 
   Shift w.r.t. Gamma in fractional coordinates (k-lattice)
-     0.000000000  0.000000000  0.000000000
+     {shift}
 
 
  Subroutine IBZKPT returns following result:
@@ -128,16 +147,13 @@ Direct
   0.0  0.0  0.0
 """
 
-KPOINTS = """Gamma 3x3x1
-0
-Gamma
- 3 3 1
- 0 0 0
-"""
+def kpoints_file(mesh: Mesh = GAMMA_331) -> str:
+    return f"{mesh.kind}\n0\n{mesh.kind}\n {' '.join(str(n) for n in mesh.size)}\n 0 0 0\n"
 
 
 def synthetic_procar(irreducible) -> str:
     """One band whose energy is the irreducible k-point's 1-based index."""
+    total = sum(weight for _, weight in irreducible)
     blocks = [
         f"PROCAR lm decomposed\n# of k-points:  {len(irreducible)}"
         + "         # of bands:    1         # of ions:    1\n"
@@ -145,7 +161,7 @@ def synthetic_procar(irreducible) -> str:
     for index, (k, weight) in enumerate(irreducible, start=1):
         blocks.append(
             f"\n k-point {index:5d} :    {k[0]:.8f} {k[1]:.8f} {k[2]:.8f}"
-            + f"     weight = {weight / 9:.8f}\n\n"
+            + f"     weight = {weight / total:.8f}\n\n"
             + f"band     1 # energy {index:13.8f} # occ.  1.00000000\n \n"
             + "ion      s     py     pz     px    dxy    dyz    dz2    dxz  x2-y2    tot\n"
             + "    1  1.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  1.000\n \n"
@@ -182,23 +198,29 @@ def test_nosymm_outcar_recovers_the_identity():
 
 
 @pytest.mark.parametrize(
-    "symmetry",
-    [pytest.param(OVERALL_S2, id="S_2-group"), pytest.param(NOSYMM, id="ISYM=0")],
+    ("symmetry", "irreducible", "mesh"),
+    [
+        pytest.param(OVERALL_S2, PAIRED_WITH_MINUS_K, GAMMA_331, id="S_2-group"),
+        pytest.param(NOSYMM, PAIRED_WITH_MINUS_K, GAMMA_331, id="ISYM=0"),
+        pytest.param(
+            OVERALL_S2, QUARTERS_PAIRED_WITH_MINUS_K, MONKHORST_PACK_221, id="Monkhorst-Pack"
+        ),
+    ],
 )
-def test_reporter_shaped_mesh_unfolds_to_the_full_grid(symmetry):
+def test_reporter_shaped_mesh_unfolds_to_the_full_grid(symmetry, irreducible, mesh):
     """Each grid point gets the energy of the irreducible k-point it pairs with, k or -k."""
     parser = VaspParser.from_str(
-        outcar=synthetic_outcar(symmetry, PAIRED_WITH_MINUS_K),
-        procar=synthetic_procar(PAIRED_WITH_MINUS_K),
-        kpoints=KPOINTS,
+        outcar=synthetic_outcar(symmetry, irreducible, mesh=mesh),
+        procar=synthetic_procar(irreducible),
+        kpoints=kpoints_file(mesh),
         poscar=POSCAR,
     )
 
     ebs = parser.ebs
 
     assert ebs is not None
-    assert ebs.n_kpoints == 9
-    sources = np.array([k for k, _ in PAIRED_WITH_MINUS_K])
+    assert ebs.n_kpoints == np.prod(mesh.size)
+    sources = np.array([k for k, _ in irreducible])
     for kpoint, energy in zip(ebs.kpoints, ebs.bands[:, 0, 0], strict=True):
         steps = np.stack([kpoint - sources, kpoint + sources])
         paired = np.all(np.abs(steps - np.rint(steps)) < 1e-6, axis=2).any(axis=0)
@@ -220,7 +242,7 @@ def test_named_group_that_does_not_fit_the_list_raises_from_ebs():
     parser = VaspParser.from_str(
         outcar=synthetic_outcar(OVERALL_C2, PAIRED_WITH_MINUS_K),
         procar=synthetic_procar(PAIRED_WITH_MINUS_K),
-        kpoints=KPOINTS,
+        kpoints=kpoints_file(),
         poscar=POSCAR,
     )
 
