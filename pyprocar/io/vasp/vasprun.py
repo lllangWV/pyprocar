@@ -204,18 +204,22 @@ class VaspXML(Mapping[str, Any]):
 
     @property
     def has_dos(self) -> bool:
-        return self.dos_element is not None
+        return self._dos_child("total") is not None
 
-    @property
+    @cached_property
     def dos_element(self) -> etree._Element | None:
-        # for chil in self.root
-        path_list = self.root.xpath("//dos")
-        assert isinstance(path_list, Iterable)
+        """The <dos> block of the run's own k-mesh, which every DOS reader reads.
 
-        element = path_list[0] if path_list else None
+        VASP 6 with KPOINTS_OPT writes a <dos comment="kpoints_opt"> block for the
+        extra k-points first; the DOS never comes from it.
+        """
+        blocks = self.root.xpath("//dos[not(@comment='kpoints_opt')]")
+        assert isinstance(blocks, list)
+        block = blocks[0] if blocks else None
+        return block if isinstance(block, etree._Element) else None
 
-        assert isinstance(element, etree._Element)
-        return element[0] if element else None
+    def _dos_child(self, tag: str) -> etree._Element | None:
+        return self.dos_element.find(tag) if self.dos_element is not None else None
 
     #     @property
     #     def spins_dict(self) -> dict[str, str]:
@@ -648,13 +652,9 @@ class VaspXML(Mapping[str, Any]):
 
         Returns array with shape (n_energies, n_spins)
         """
-        tag_list = self.root.xpath("//total")
-        assert isinstance(tag_list, Iterable)
-        if not tag_list:
+        element = self._dos_child("total")
+        if element is None:
             return None
-
-        element = tag_list[0]
-        assert isinstance(element, etree._Element)
 
         # Find the array element
         array_elem = None
@@ -695,10 +695,13 @@ class VaspXML(Mapping[str, Any]):
 
     @cached_property
     def fermi(self) -> float | None:
-        """The efermi of the <dos> block that ``total`` reads, else None."""
-        texts = self.root.xpath("(//total)[1]/parent::dos/i[@name='efermi']/text()")
-        assert isinstance(texts, list)
-        return float(str(texts[0])) if texts and str(texts[0]).strip() else None
+        """The efermi of ``dos_element``, else None."""
+        efermi = self._dos_child("i[@name='efermi']")
+        return (
+            float(efermi.text)
+            if efermi is not None and efermi.text and efermi.text.strip()
+            else None
+        )
 
     @cached_property
     def dos_energies(self) -> np.ndarray | None:
@@ -706,13 +709,9 @@ class VaspXML(Mapping[str, Any]):
 
         Returns array with shape (n_energies,)
         """
-        tag_list = self.root.xpath("//total")
-        assert isinstance(tag_list, Iterable)
-        if not tag_list:
+        element = self._dos_child("total")
+        if element is None:
             return None
-
-        element = tag_list[0]
-        assert isinstance(element, etree._Element)
 
         # Find the array element
         array_elem = None
@@ -752,13 +751,9 @@ class VaspXML(Mapping[str, Any]):
 
         Returns array with shape (n_energies, n_spins, n_ions, n_orbitals)
         """
-        tag_list = self.root.xpath("//partial")
-        assert isinstance(tag_list, Iterable)
-        if not tag_list:
+        element = self._dos_child("partial")
+        if element is None:
             return None
-
-        element = tag_list[0]
-        assert isinstance(element, etree._Element)
 
         # Find the array element
         array_elem = None

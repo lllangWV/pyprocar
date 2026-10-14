@@ -230,15 +230,12 @@ class VaspParser(BaseParser):
 
     @cached_property
     def fermi(self) -> float | None:
-        """The OUTCAR's E-fermi, else the DOSCAR header's, else vasprun.xml's efermi."""
+        """The OUTCAR's E-fermi, which ``ebs`` carries, else None.
+
+        ``dos`` carries the Fermi energy of the file its DOS comes from instead.
+        """
         if self.outcar is not None and self.outcar.has_fermi:
             return self.outcar.fermi
-        if self.doscar is not None and self.doscar.has_dos:
-            return self.doscar.efermi
-        if self.vasprun is not None and self.vasprun.fermi is not None:
-            return self.vasprun.fermi
-        if self.outcar is not None:
-            return self.outcar.fermi  # raises, naming the OUTCAR that has no E-fermi
         return None
 
     @property
@@ -293,17 +290,26 @@ class VaspParser(BaseParser):
         )
 
     @cached_property
+    def _dos_vasprun(self) -> VaspXML | None:
+        """vasprun.xml when it holds a DOS of the run's k-mesh.
+
+        The DOS (energies, total, projected and Fermi energy) comes from this file
+        alone, else from the DOSCAR alone, so pieces of two runs never mix.
+        """
+        return self.vasprun if self.vasprun is not None and self.vasprun.has_dos else None
+
+    @cached_property
     def energies(self) -> np.ndarray | None:
-        if self.vasprun is not None and self.vasprun.has_dos:
-            return self.vasprun.dos_energies
+        if self._dos_vasprun is not None:
+            return self._dos_vasprun.dos_energies
         if self.doscar is not None:
             return self.doscar.energies
         return None
 
     @cached_property
     def total_dos(self) -> np.ndarray | None:
-        if self.vasprun is not None and self.vasprun.has_dos:
-            total_dos = self.vasprun.total  # shape: (n_energies, n_spins)
+        if self._dos_vasprun is not None:
+            total_dos = self._dos_vasprun.total  # shape: (n_energies, n_spins)
         elif self.doscar is not None:
             total_dos = self.doscar.total_dos
         else:
@@ -314,9 +320,9 @@ class VaspParser(BaseParser):
 
     @cached_property
     def projected_dos(self) -> np.ndarray | None:
-        if self.vasprun is not None and self.vasprun.has_dos:
+        if self._dos_vasprun is not None:
             logger.info("Using vasprun projected dos")
-            return self.vasprun.partial  # shape: (n_energies, n_spins, n_atoms, n_orbitals)
+            return self._dos_vasprun.partial  # shape: (n_energies, n_spins, n_atoms, n_orbitals)
         if self.doscar is not None:
             logger.info("Using doscar projected dos")
             return self.doscar.projected(non_collinear=lambda: self.is_non_collinear)
@@ -326,19 +332,30 @@ class VaspParser(BaseParser):
     def dos(self) -> DensityOfStates | None:
         if self.energies is None or self.total_dos is None:
             return None
-        fermi = self.fermi
-        if fermi is None:
-            raise ValueError(
-                f"No OUTCAR, vasprun.xml or DOSCAR gives a Fermi energy in {self.dirpath}."
-            )
         return DensityOfStates(
             energies=self.energies,
             total=self.total_dos,
-            fermi=fermi,
+            fermi=self._dos_fermi,
             projected=self.projected_dos,
             orbital_names=self._orbital_names(self.projected_dos),
             structure=self.structure,
         )
+
+    @property
+    def _dos_fermi(self) -> float:
+        """The Fermi energy of the file the DOS comes from; no other file's stands in."""
+        if self._dos_vasprun is None:
+            assert self.doscar is not None, "the DOS comes from the DOSCAR"
+            return self.doscar.efermi
+        fermi = self._dos_vasprun.fermi
+        if fermi is None:
+            raise ValueError(
+                f"The vasprun.xml {self._dos_vasprun.filepath} holds a DOS but no efermi in"
+                + " its <dos> block, and a DOS takes its Fermi energy only from the file it"
+                + " comes from. Restore the efermi line, or read the DOSCAR's DOS with"
+                + " VaspParser(dirpath, vasprun=None)."
+            )
+        return fermi
 
     @property
     def structure(self) -> Structure | None:
