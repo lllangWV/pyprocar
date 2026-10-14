@@ -138,8 +138,8 @@ class Outcar(Mapping[str, Any]):
         values = self._fermi_values
         if not values:
             raise ValueError(
-                f"The OUTCAR {self.filepath or 'text'} has no 'E-fermi :' line, so it gives no Fermi energy;"
-                + " the run stopped before VASP wrote one."
+                f"The OUTCAR {self.filepath or 'text'} has no 'E-fermi :' line, so it gives no"
+                + " Fermi energy; the run stopped before VASP wrote one."
             )
         return float(values[-1])
 

@@ -238,7 +238,8 @@ class VaspParser(BaseParser):
         if self.outcar is not None:
             return self.outcar.fermi  # raises, naming the OUTCAR that has no E-fermi
         if self.vasprun is not None:
-            return self.vasprun.fermi
+            fermi = self.vasprun.fermi  # VaspXML has no fermi yet (#75)
+            return fermi
         return None
 
     @property
