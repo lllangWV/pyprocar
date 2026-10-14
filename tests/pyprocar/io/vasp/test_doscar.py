@@ -338,6 +338,21 @@ class TestDosFromDoscarOnly:
         )
 
     @pytest.mark.parametrize(
+        ("n_total", "n_columns", "n_spins"),
+        [(1, 9, 1), (2, 18, 2), (1, 36, 4), (1, 3, 1)],
+    )
+    def test_only_sixteen_columns_read_the_procar_or_outcar(
+        self, n_total, n_columns, n_spins
+    ) -> None:
+        # A run killed while writing the PROCAR leaves its first line only.
+        killed_procar = "PROCAR lm decomposed\n"
+
+        dos = VaspParser.from_str(doscar=_doscar_text(n_total, n_columns), procar=killed_procar).dos
+
+        assert dos is not None and dos.projected is not None
+        assert dos.projected.value.shape[1] == n_spins
+
+    @pytest.mark.parametrize(
         ("n_total", "n_columns", "match"),
         [(1, 5, "5 projected columns"), (2, 7, "7 projected columns"), (2, 10, "5 orbitals")],
     )
