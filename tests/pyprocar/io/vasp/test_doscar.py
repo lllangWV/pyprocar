@@ -1,9 +1,11 @@
 import logging
+import re
 from pathlib import Path
 
 import numpy as np
 import pytest
 
+from pyprocar.core.dos import DensityOfStates
 from pyprocar.core.property_store import Property
 from pyprocar.io import vasp
 from pyprocar.io.vasp.parser import VaspParser
@@ -365,3 +367,28 @@ class TestDosFromDoscarOnly:
         )
         with pytest.raises(ValueError, match="structure"):
             dos.compute_projected_sum(species=["Zr"])
+
+
+def _calc_dir(directory: Path, **files: str) -> str:
+    for name, text in files.items():
+        (directory / name).write_text(text)
+    return str(directory)
+
+
+class TestDoscarWithoutDos:
+    """A DOSCAR that holds no DOS raises a ValueError naming the file, not an IndexError."""
+
+    @pytest.mark.parametrize(
+        "n_lines",
+        [
+            pytest.param(0, id="empty"),
+            pytest.param(3, id="truncated-header"),
+            pytest.param(6, id="header-only"),
+        ],
+    )
+    def test_raises_naming_the_doscar(self, tmp_path: Path, n_lines: int) -> None:
+        doscar = "".join(_doscar_text(1, 9).splitlines(keepends=True)[:n_lines])
+        calc = _calc_dir(tmp_path, DOSCAR=doscar, OUTCAR=COLLINEAR_OUTCAR)
+
+        with pytest.raises(ValueError, match=re.escape(str(tmp_path / "DOSCAR")) + " holds no DOS"):
+            DensityOfStates.from_code("vasp", calc)
