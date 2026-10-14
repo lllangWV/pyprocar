@@ -259,13 +259,17 @@ class TestDosFromDoscarOnly:
             pytest.param(1, 3, None, 1, ["s", "p", "d"], id="LORBIT=10"),
             pytest.param(1, 4, None, 1, ["s", "p", "d", "f"], id="LORBIT=10-f"),
             pytest.param(1, 9, None, 1, VASP_LM_NAMES, id="LORBIT=11"),
-            pytest.param(1, 16, COLLINEAR_OUTCAR, 1, VASP_LM_NAMES + VASP_F_NAMES, id="LORBIT=11-f"),
+            pytest.param(
+                1, 16, COLLINEAR_OUTCAR, 1, VASP_LM_NAMES + VASP_F_NAMES, id="LORBIT=11-f"
+            ),
             pytest.param(2, 6, None, 2, ["s", "p", "d"], id="ISPIN=2-LORBIT=10"),
             pytest.param(2, 18, None, 2, VASP_LM_NAMES, id="ISPIN=2"),
             pytest.param(2, 32, None, 2, VASP_LM_NAMES + VASP_F_NAMES, id="ISPIN=2-f"),
             pytest.param(1, 12, None, 4, ["s", "p", "d"], id="non-collinear-LORBIT=10"),
             pytest.param(1, 36, None, 4, VASP_LM_NAMES, id="non-collinear"),
-            pytest.param(1, 16, NON_COLLINEAR_OUTCAR, 4, ["s", "p", "d", "f"], id="non-collinear-spdf"),
+            pytest.param(
+                1, 16, NON_COLLINEAR_OUTCAR, 4, ["s", "p", "d", "f"], id="non-collinear-spdf"
+            ),
             pytest.param(1, 64, None, 4, VASP_LM_NAMES + VASP_F_NAMES, id="non-collinear-f"),
         ],
     )
@@ -324,7 +328,8 @@ class TestDosFromDoscarOnly:
         summed = dos.compute_projected_sum(atoms=[1], orbitals=[4, 5, 6, 7, 8])
         assert isinstance(summed, Property)
         np.testing.assert_allclose(
-            summed.value[:, 0], [sum(_projected_value(1, c, r) for c in range(5, 10)) for r in range(3)]
+            summed.value[:, 0],
+            [sum(_projected_value(1, c, r) for c in range(5, 10)) for r in range(3)],
         )
         with pytest.raises(ValueError, match="structure"):
             dos.compute_projected_sum(species=["Zr"])

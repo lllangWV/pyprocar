@@ -123,6 +123,12 @@ class Outcar(Mapping[str, Any]):
         return float(re.findall(r"E-fermi\s*:\s*(-?\d+.\d+)", self.file_str)[-1])
 
     @cached_property
+    def is_non_collinear(self) -> bool | None:
+        """LNONCOLLINEAR as VASP lists it among the run's parameters, or None if absent."""
+        match = re.search(r"^\s*LNONCOLLINEAR\s*=\s*([TF])\b", self.file_str, re.MULTILINE)
+        return None if match is None else match.group(1) == "T"
+
+    @cached_property
     def reciprocal_lattice(self) -> np.ndarray:
         """
         Finds and return the reciprocal lattice vectors, if more than

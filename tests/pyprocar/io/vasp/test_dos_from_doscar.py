@@ -65,7 +65,10 @@ def test_doscar_dos_without_a_poscar_selects_atoms_and_rejects_species(tmp_path:
     dos = DensityOfStates.from_code("vasp", str(calc))
 
     assert dos.structure is None
-    summed, expected = dos.compute_projected_sum(**selection), reference.compute_projected_sum(**selection)
+    summed, expected = (
+        dos.compute_projected_sum(**selection),
+        reference.compute_projected_sum(**selection),
+    )
     assert isinstance(summed, Property) and isinstance(expected, Property)
     np.testing.assert_allclose(
         summed.value,
@@ -75,4 +78,3 @@ def test_doscar_dos_without_a_poscar_selects_atoms_and_rejects_species(tmp_path:
     )
     with pytest.raises(ValueError, match="no structure"):
         dos.compute_projected_sum(species=["V"])
-

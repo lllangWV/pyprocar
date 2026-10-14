@@ -22,6 +22,12 @@ from pyprocar.utils.log_utils import warn_user
 logger = logging.getLogger(__name__)
 
 ORBITAL_ORDERING = OrbitalIndexer()
+VASP_DOS_ORBITALS = {
+    3: ("s", "p", "d"),
+    4: ("s", "p", "d", "f"),
+    9: tuple(ORBITAL_ORDERING.flat_conventional[:9]),
+    16: tuple(ORBITAL_ORDERING.flat_conventional[:16]),
+}
 
 
 class VaspParser(BaseParser):
@@ -229,6 +235,8 @@ class VaspParser(BaseParser):
             fermi = self.outcar.fermi
         elif self.vasprun is not None:
             fermi = self.vasprun.fermi
+        elif self.doscar is not None:
+            fermi = self.doscar.efermi
         else:
             fermi = None
 
@@ -274,23 +282,17 @@ class VaspParser(BaseParser):
     @cached_property
     def energies(self) -> np.ndarray | None:
         if self.vasprun is not None and self.vasprun.has_dos:
-            energies = self.vasprun.dos_energies
-
-        elif self.doscar is not None and self.doscar.has_dos:
-            energies = self.doscar.energies
-        else:
-            return None
-
-        # if self.is_spin_polarized:
-        #     energies = np.repeat(energies, 2, axis=0)
-        return energies
+            return self.vasprun.dos_energies
+        if self.doscar is not None:
+            return self.doscar.energies
+        return None
 
     @cached_property
     def total_dos(self) -> np.ndarray | None:
         if self.vasprun is not None and self.vasprun.has_dos:
             total_dos = self.vasprun.total  # shape: (n_energies, n_spins)
-        elif self.doscar is not None and self.doscar.has_dos:
-            total_dos = self.doscar.total
+        elif self.doscar is not None:
+            total_dos = self.doscar.total_dos
         else:
             return None
 
@@ -302,31 +304,24 @@ class VaspParser(BaseParser):
         if self.vasprun is not None and self.vasprun.has_dos:
             logger.info("Using vasprun projected dos")
             return self.vasprun.partial  # shape: (n_energies, n_spins, n_atoms, n_orbitals)
-        elif self.doscar is not None and self.doscar.has_dos:
+        if self.doscar is not None:
             logger.info("Using doscar projected dos")
-            return self.doscar.projected_dos
-        else:
-            return None
+            non_collinear = self.outcar.is_non_collinear if self.outcar else None
+            return self.doscar.projected(non_collinear=non_collinear)
+        return None
 
     @property
     def dos(self) -> DensityOfStates | None:
-        try:
-            dos = DensityOfStates(
-                energies=self.energies,
-                total=self.total_dos,
-                fermi=self.fermi,
-                projected=self.projected_dos,
-                orbital_names=self._orbital_names(self.projected_dos),
-                structure=self.structure,
-            )
-        except Exception:
-            msg = (
-                "Issue with parsing the DOS. "
-                "Either it was not found or there is an issue with the parser"
-            )
-            logger.warning(msg)
-            dos = None
-        return dos
+        if self.energies is None or self.total_dos is None:
+            return None
+        return DensityOfStates(
+            energies=self.energies,
+            total=self.total_dos,
+            fermi=self.fermi,
+            projected=self.projected_dos,
+            orbital_names=self._orbital_names(self.projected_dos),
+            structure=self.structure,
+        )
 
     @property
     def structure(self) -> Structure | None:
@@ -359,4 +354,10 @@ class VaspParser(BaseParser):
     def _orbital_names(projected: np.ndarray | None) -> list[str] | None:
         if projected is None:
             return None
-        return ORBITAL_ORDERING.flat_conventional[: projected.shape[-1]]
+        n_orbitals = projected.shape[-1]
+        if n_orbitals not in VASP_DOS_ORBITALS:
+            raise ValueError(
+                f"The DOS projects onto {n_orbitals} orbitals; VASP projects onto s, p, d"
+                + " (and f) with LORBIT=10, or onto the 9 (16) lm orbitals with LORBIT=11."
+            )
+        return list(VASP_DOS_ORBITALS[n_orbitals])
