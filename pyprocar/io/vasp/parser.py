@@ -312,12 +312,13 @@ class VaspParser(BaseParser):
 
     @property
     def dos(self) -> DensityOfStates | None:
-        if self.energies is None or self.total_dos is None:
+        fermi = self.fermi
+        if self.energies is None or self.total_dos is None or fermi is None:
             return None
         return DensityOfStates(
             energies=self.energies,
             total=self.total_dos,
-            fermi=self.fermi,
+            fermi=fermi,
             projected=self.projected_dos,
             orbital_names=self._orbital_names(self.projected_dos),
             structure=self.structure,

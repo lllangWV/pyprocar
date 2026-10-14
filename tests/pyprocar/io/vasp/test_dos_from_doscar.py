@@ -60,14 +60,14 @@ def test_doscar_dos_without_a_poscar_selects_atoms_and_rejects_species(tmp_path:
     # The reporter's directory held DOSCAR, OUTCAR, PROCAR and EIGENVAL only.
     calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("DOSCAR", "OUTCAR"))
     reference = DensityOfStates.from_code("vasp", str(DOS_DIR / "non-spin-polarized"))
-    selection = {"atoms": [1], "orbitals": [4, 5, 6, 7, 8]}
+    d_orbitals = [4, 5, 6, 7, 8]
 
     dos = DensityOfStates.from_code("vasp", str(calc))
 
     assert dos.structure is None
     summed, expected = (
-        dos.compute_projected_sum(**selection),
-        reference.compute_projected_sum(**selection),
+        dos.compute_projected_sum(atoms=[1], orbitals=d_orbitals),
+        reference.compute_projected_sum(atoms=[1], orbitals=d_orbitals),
     )
     assert isinstance(summed, Property) and isinstance(expected, Property)
     np.testing.assert_allclose(

@@ -54,7 +54,7 @@ def dosplot(
     spins: list[int] | None = None,
     atoms: list[int] | None = None,
     orbitals: list[int] | None = None,
-    items: dict | None = None,
+    items: dict | list[dict] | None = None,
     normalize_dos_mode: str | None = None,
     fermi: float | None = None,
     fermi_shift: float = 0,
@@ -234,7 +234,8 @@ def dosplot(
         examples are equivalent to each other. This will plot the
         following curves stacked on top of each other. projection of s
         orbital in Sr, projection of p orbitals in O and projection of
-        d orbitals in V.
+        d orbitals in V. A list of such dictionaries, such as
+        ``items=[{'V': ['d']}, {'V': ['p']}]``, draws one curve per entry.
         The default is set to take every atom and every orbital. Which
         will be equivalent to ``mode='stack_species'``
 

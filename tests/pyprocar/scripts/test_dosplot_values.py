@@ -44,7 +44,7 @@ def read_doscar(path: Path) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.flo
 
 
 def summed(atoms: list, atom_indices: list[int], columns: list[int]) -> npt.NDArray[np.float64]:
-    return sum(atoms[a][:, columns].sum(axis=1) for a in atom_indices)
+    return np.sum([atoms[a][:, columns].sum(axis=1) for a in atom_indices], axis=0)
 
 
 def assert_curve(y, expected, n_terms: int) -> None:
