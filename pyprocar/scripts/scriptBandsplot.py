@@ -18,6 +18,7 @@ from pyprocar.core.atomic_orbital_index import orbital_indices
 from pyprocar.core.ebs import ElectronicBandStructureMesh, ElectronicBandStructurePath
 from pyprocar.core.projection import selection_resolver
 from pyprocar.core.property_store import Property
+from pyprocar.plotter._export import export_path
 from pyprocar.plotter.bs_plot import BandStructurePlotter
 from pyprocar.scripts._selection import (
     per_channel,
@@ -191,6 +192,7 @@ def bandsplot(
     user_logger.info("_" * 100)
 
     plot_mode = BandStructureMode.from_str(mode)
+    export = None if export_data_file is None else export_path(export_data_file)
 
     loaded = ElectronicBandStructurePath.from_code(code, dirname, use_cache=use_cache)
     if plot_mode != BandStructureMode.ATOMIC and not isinstance(
@@ -346,10 +348,9 @@ def bandsplot(
     if show:
         plotter.show()
 
-    if export_data_file is not None:
-        filename = Path(export_data_file)
+    if export is not None:
         if export_append_mode:
-            filename = filename.with_name(f"{filename.stem}_{plot_mode.value}{filename.suffix}")
-        plotter.export_data(filename)
+            export = export.with_name(f"{export.stem}_{plot_mode.value}{export.suffix}")
+        plotter.export_data(export)
 
     return plotter.fig, plotter.ax
