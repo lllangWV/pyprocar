@@ -162,8 +162,8 @@ def unfold(
     )
     if ebs.is_non_collinear:
         raise ValueError(
-            f"{dirname} is non-collinear, and VASP's non-collinear PROCAR sums the up and down"
-            + " spinor phases, so its bands cannot be unfolded"
+            f"{dirname} is non-collinear, so it has no phase per spinor (VASP's PROCAR sums"
+            + " the up and down spinor phases), and the bands cannot be unfolded"
         )
     if ebs.projected_phase is None:
         raise ValueError(

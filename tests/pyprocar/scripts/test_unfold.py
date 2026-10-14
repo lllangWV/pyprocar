@@ -41,13 +41,14 @@ INDEPENDENT_WEIGHTS = {
     (49, 1): 0.500521,
     (75, 30): 0.999997,
 }
-# The two OUTCAR fields from_code reads, for fcc InP with a = 5.869 Angstrom.
+# The two OUTCAR fields from_code reads, for the fcc InP cell (a = 5.8686 Angstrom)
+# of INP_POSCAR in tests/pyprocar/core/test_procarunfold.py.
 INP_OUTCAR = """ E-fermi :   5.0000
 
       direct lattice vectors                 reciprocal lattice vectors
-     0.000000000  2.934500000  2.934500000    -0.170386778  0.170386778  0.170386778
-     2.934500000  0.000000000  2.934500000     0.170386778 -0.170386778  0.170386778
-     2.934500000  2.934500000  0.000000000     0.170386778  0.170386778 -0.170386778
+     0.000000000  2.934300000  2.934300000    -0.170398391  0.170398391  0.170398391
+     2.934300000  0.000000000  2.934300000     0.170398391 -0.170398391  0.170398391
+     2.934300000  2.934300000  0.000000000     0.170398391  0.170398391 -0.170398391
 
 """
 
