@@ -225,12 +225,11 @@ def _vasprun_efermi(vasprun: Path) -> float:
     return float(efermi.text)
 
 
-def _without_efermi(vasprun: Path) -> Path:
-    text = vasprun.read_text()
-    edited = re.sub(r'\s*<i name="efermi">[^<]*</i>', "", text)
-    assert edited != text
-    _ = vasprun.write_text(edited)
-    return vasprun
+NON_SPIN_POLARIZED_EFERMI = '   <i name="efermi">      5.69903164 </i>\n'
+
+
+def _without_efermi(vasprun: Path) -> None:
+    _ = vasprun.write_text(_edited(vasprun, NON_SPIN_POLARIZED_EFERMI, ""))
 
 
 @pytest.mark.data
@@ -254,7 +253,7 @@ def test_a_vasprun_without_efermi_and_no_other_source_raises_naming_the_director
     tmp_path: Path,
 ) -> None:
     calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("POSCAR", "vasprun.xml"))
-    _ = _without_efermi(calc / "vasprun.xml")
+    _without_efermi(calc / "vasprun.xml")
 
     with pytest.raises(ValueError, match="Fermi energy in " + re.escape(str(calc))):
         _ = DensityOfStates.from_code("vasp", str(calc))
@@ -269,8 +268,7 @@ def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_vasprun(
 
     dos = DensityOfStates.from_code("vasp", str(calc))
 
-    # The vasprun.xml of this run: <i name="efermi">      5.69903164 </i>.
-    assert dos.fermi == 5.69903164
+    assert dos.fermi == 5.69903164  # NON_SPIN_POLARIZED_EFERMI
 
 
 @pytest.mark.data
@@ -279,7 +277,7 @@ def test_an_outcar_cut_before_e_fermi_with_no_other_source_raises_naming_it(
 ) -> None:
     calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("OUTCAR", "POSCAR", "vasprun.xml"))
     outcar = _cut_before_e_fermi(calc / "OUTCAR")
-    _ = _without_efermi(calc / "vasprun.xml")
+    _without_efermi(calc / "vasprun.xml")
 
     with pytest.raises(ValueError, match=re.escape(str(outcar)) + ".*E-fermi"):
         _ = DensityOfStates.from_code("vasp", str(calc))
