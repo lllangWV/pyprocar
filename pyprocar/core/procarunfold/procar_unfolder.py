@@ -2,6 +2,7 @@ import numpy as np
 from ase.io import read
 
 from ...io import ProcarParser
+from ...io.vasp.procar import Procar
 from .fatband import plot_band_weight
 from .unfolder import Unfolder
 
@@ -16,6 +17,11 @@ class ProcarUnfolder:
         self.positions = []
 
     def _parse_procar(self, ispin=None):
+        if Procar(self.fname).is_non_colinear:
+            raise ValueError(
+                f"{self.fname} is non-collinear: its phases sum the up and down spinor projections,"
+                + " so its bands cannot be unfolded"
+            )
         self.procar = ProcarParser()
         self.procar.readFile2(self.fname, phase=True, ispin=ispin)
 
