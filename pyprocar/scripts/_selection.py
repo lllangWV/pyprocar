@@ -21,9 +21,9 @@ def resolve_spins(
 ) -> SpinSelection:
     """Return the channels to draw and the spins to project, one policy for every script.
 
-    Collinear data draws the requested spin channels (all by default) and projects
-    those same channels. ``spins=[-1, 1]`` joins both collinear channels into one,
-    which only plain plots support. Non-collinear data has one channel; ``spins``
+    Collinear data draws the requested spin channels (all by default), projects
+    those same channels, and rejects a channel the calculation lacks. ``spins=[-1, 1]``
+    joins both collinear channels into one, which only plain plots support. Non-collinear data has one channel; ``spins``
     picks one spin component (0 total, 1-3 Sx, Sy, Sz) and defaults to the total.
     """
     if spins is not None and sorted(spins) == [-1, 1]:
@@ -36,6 +36,12 @@ def resolve_spins(
         return SpinSelection([0, 1], [0, 1], joined=True)
     if not is_non_collinear:
         channels = list(range(n_channels)) if spins is None else list(spins)
+        if any(c not in range(n_channels) for c in channels):
+            named = "0 up, 1 down" if n_channels == 2 else ", ".join(map(str, range(n_channels)))
+            raise ValueError(
+                f"This calculation has {n_channels} spin channel{'' if n_channels == 1 else 's'}"
+                + f" ({named}); got spins={channels}"
+            )
         return SpinSelection(channels, channels)
     if spins is not None and len(spins) != 1:
         raise ValueError(
