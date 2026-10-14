@@ -10,7 +10,7 @@ The Brillouin zone of a supercell shrinks respect to the primitive cell. For ins
 
 
 Usage:
-First, calculate the band structure of the supercell along the primitive cell's :math:`k`-path, with the :math:`k`-points written in the supercell's reciprocal basis. Set ``LORBIT=12`` in VASP so that the PROCAR includes the phase factors.
+First, calculate the band structure of the supercell along the primitive cell's :math:`k`-path, with the :math:`k`-points written in the supercell's reciprocal basis. Set ``LORBIT=12`` in VASP so that the PROCAR includes the phase factors. The calculation must be collinear: a non-collinear PROCAR holds the sum of the up and down spinor phases, so its bands cannot be unfolded.
 
 Then plot the unfolded bands::
 
