@@ -310,9 +310,13 @@ class VaspParser(BaseParser):
 
     @property
     def dos(self) -> DensityOfStates | None:
-        fermi = self.fermi
-        if self.energies is None or self.total_dos is None or fermi is None:
+        if self.energies is None or self.total_dos is None:
             return None
+        fermi = self.fermi
+        if fermi is None:
+            raise ValueError(
+                f"No OUTCAR, vasprun.xml or DOSCAR gives a Fermi energy in {self.dirpath}."
+            )
         return DensityOfStates(
             energies=self.energies,
             total=self.total_dos,
