@@ -17,6 +17,7 @@ from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 
 from pyprocar.core.property_store import Property
+from pyprocar.plotter._export import write_table
 from pyprocar.plotter._series import ShowColorbar
 from pyprocar.utils.log_utils import warn_user
 
@@ -676,14 +677,6 @@ class FermiSlicePlotter:
         filename : str or Path
             Output path. Extension determines format (csv, txt, json, dat).
         """
-        import json
-
-        import pandas as pd
-
-        possible_file_types = ["csv", "txt", "json", "dat"]
-        file_type = Path(filename).suffix.removeprefix(".")
-        if file_type not in possible_file_types:
-            raise ValueError(f"File type must be one of {possible_file_types}")
         if not self.values_dict:
             raise ValueError("No values recorded. Plot first before exporting.")
 
@@ -692,15 +685,7 @@ class FermiSlicePlotter:
             arr = np.atleast_1d(value)
             if arr.size > 0:
                 values[key] = arr
-
-        if file_type in ["csv", "txt", "dat"]:
-            df = pd.DataFrame(values)
-            sep = "," if file_type == "csv" else "\t" if file_type == "txt" else " "
-            df.to_csv(filename, sep=sep, index=False)
-        else:  # json
-            serializable = {k: np.asarray(v).tolist() for k, v in values.items()}
-            with open(filename, "w") as f:
-                json.dump(serializable, f)
+        write_table(filename, values)
 
     def show(self) -> None:
         """Display the plot."""

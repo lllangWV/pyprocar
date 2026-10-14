@@ -1,4 +1,4 @@
-"""Write the curves a one-call plotting function drew as one table."""
+"""Write plotted curves as one table, in the format the file's suffix names."""
 
 import json
 from collections.abc import Mapping
@@ -16,14 +16,15 @@ def export_path(path: str | Path) -> Path:
     path = Path(path)
     if path.suffix not in (*DELIMITERS, ".json"):
         raise ValueError(
-            "export_data_file must end in .csv, .txt, .dat or .json, which sets its format;"
+            "An export file must end in .csv, .txt, .dat or .json, which sets its format;"
             + f" got {str(path)!r}."
         )
     return path
 
 
-def write_table(path: Path, columns: Mapping[str, npt.ArrayLike]) -> None:
+def write_table(path: str | Path, columns: Mapping[str, npt.ArrayLike]) -> None:
     """Write equal-length ``columns`` in order: a JSON object of lists, or a delimited table."""
+    path = export_path(path)
     if path.suffix == ".json":
         lists = {name: np.asarray(values).tolist() for name, values in columns.items()}
         path.write_text(json.dumps(lists), encoding="utf-8")

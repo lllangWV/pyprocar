@@ -17,8 +17,8 @@ from pyprocar.cfg.dos import DensityOfStatesConfig
 from pyprocar.core.atomic_orbital_index import orbital_indices
 from pyprocar.core.dos import DensityOfStates
 from pyprocar.core.property_store import Property
+from pyprocar.plotter._export import export_path, write_table
 from pyprocar.plotter.dos_plot import AxesOrientation, DOSPlotter
-from pyprocar.scripts._export import export_path, write_table
 from pyprocar.scripts._selection import (
     as_lim,
     per_channel,
@@ -367,10 +367,12 @@ def dosplot(
         "linewidth": per_channel(config.linewidth, n_channels),
     }
 
-    if mode == "plain" or (mode not in PARAMETRIC_MODES and config.plot_total):
+    draws_total = mode in ("plain", *PARAMETRIC_MODES) or config.plot_total
+    if draws_total:
+        _add_columns(columns, "total", total.value, channels)
+    if draws_total and mode not in PARAMETRIC_MODES:
         user_logger.info(f"Plotting DOS total for {mode} mode")
         plotter.plot(total, **line_style)
-        _add_columns(columns, "total", total.value, channels)
 
     if mode in PARAMETRIC_MODES:
         user_logger.info(f"Plotting DOS in {mode} mode")
@@ -392,7 +394,6 @@ def dosplot(
             scalars_clim=config.clim or signed_clim(scalars),
             **(line_style if mode == "parametric_line" else {}),
         )
-        _add_columns(columns, "total", total.value, channels)
         _add_columns(columns, "projection", scalars.value, channels)
     elif mode != "plain":
         user_logger.info(f"Plotting DOS in {mode} mode")
