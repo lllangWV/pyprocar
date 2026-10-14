@@ -26,6 +26,14 @@ _VASP_ORBITALS = (
 )
 
 
+def _fits_collinear(n_columns: int) -> bool:
+    return n_columns in ORBITAL_COUNTS
+
+
+def _fits_noncollinear(n_columns: int) -> bool:
+    return n_columns % 4 == 0 and n_columns // 4 in ORBITAL_COUNTS
+
+
 def dos_orbital_names(n_orbitals: int) -> tuple[str, ...]:
     """The names of the ``n_orbitals`` orbitals a VASP DOS projects onto per atom."""
     if n_orbitals not in DOS_ORBITAL_NAMES:
@@ -251,6 +259,17 @@ class Doscar:
         # ISPIN=2 and s_tot s_mx s_my s_mz py_tot ... for non-collinear runs.
         return projected.reshape(natoms, nedos, n_columns // n_spins, n_spins).transpose(1, 3, 0, 2)
 
+    @cached_property
+    def needs_lnoncollinear(self) -> bool:
+        """Whether the projected columns read as both a collinear and a non-collinear
+        layout (16 per atom with one total DOS channel), so that ``projected`` needs
+        LNONCOLLINEAR to tell them apart."""
+        first_row = self.lines[HEADER_LINES + self.nedos + 1 : HEADER_LINES + self.nedos + 2]
+        if self.is_spin_pol or not first_row:
+            return False
+        n_columns = len(first_row[0].split()) - 1
+        return _fits_collinear(n_columns) and _fits_noncollinear(n_columns)
+
     def _projected_spins(self, n_columns: int, non_collinear: bool | None) -> int:
         if self.is_spin_pol:
             if n_columns % 2:
@@ -259,8 +278,8 @@ class Doscar:
                     + " spin-polarized run writes an up and a down column per orbital."
                 )
             return 2
-        fits_collinear = n_columns in ORBITAL_COUNTS
-        fits_noncollinear = n_columns % 4 == 0 and n_columns // 4 in ORBITAL_COUNTS
+        fits_collinear = _fits_collinear(n_columns)
+        fits_noncollinear = _fits_noncollinear(n_columns)
         if non_collinear is None:
             if fits_collinear and fits_noncollinear:
                 raise ValueError(
