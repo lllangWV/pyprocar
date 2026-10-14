@@ -103,15 +103,24 @@ class Doscar:
         return str(self.filepath) if self.filepath is not None else "text"
 
     @cached_property
+    def _all_lines(self) -> list[str]:
+        return self.file_str.splitlines()
+
+    @cached_property
+    def has_dos(self) -> bool:
+        """Whether a DOS follows the header; a run killed early leaves none."""
+        return any(line.strip() for line in self._all_lines[HEADER_LINES:])
+
+    @cached_property
     def lines(self) -> list[str]:
         """The file's lines, or a ValueError naming it when no DOS follows its header."""
-        lines = self.file_str.splitlines()
-        if not any(line.strip() for line in lines[HEADER_LINES:]):
+        if not self.has_dos:
             raise ValueError(
-                f"The DOSCAR {self._source} holds no DOS: it has {len(lines)} lines, and VASP"
-                + f" writes the DOS after a {HEADER_LINES}-line header."
+                f"The DOSCAR {self._source} holds no DOS: it has {len(self._all_lines)} lines,"
+                + f" and VASP writes the DOS after a {HEADER_LINES}-line header at the end of"
+                + " a run. Rerun the calculation, or keep its vasprun.xml next to the DOSCAR."
             )
-        return lines
+        return self._all_lines
 
     # ---------------------------
     # === HEADER SECTION ===

@@ -116,6 +116,15 @@ class Outcar(Mapping[str, Any]):
         return tuple(int(x) for x in self.version.split("."))
 
     @cached_property
+    def _fermi_values(self) -> list[str]:
+        return re.findall(r"E-fermi\s*:\s*(-?\d+.\d+)", self.file_str)
+
+    @property
+    def has_fermi(self) -> bool:
+        """Whether VASP wrote an "E-fermi :" line; a run killed early leaves none."""
+        return bool(self._fermi_values)
+
+    @cached_property
     def fermi(self) -> float:
         """
         Just finds all E-fermi fields in the outcar file and keeps the
@@ -126,7 +135,7 @@ class Outcar(Mapping[str, Any]):
         fermi
             the fermi energy
         """
-        values = re.findall(r"E-fermi\s*:\s*(-?\d+.\d+)", self.file_str)
+        values = self._fermi_values
         if not values:
             source = self.filepath if self.filepath is not None else "text"
             raise ValueError(
