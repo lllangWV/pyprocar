@@ -4,7 +4,9 @@ VASP wrote both files in each fixture, so the vasprun.xml DOS of the same run is
 an independent reference. The DOSCAR prints energies to 3 decimals and DOS values
 to 4 significant digits; vasprun.xml prints both to 4 decimals.
 
-The Fermi energy comes from the OUTCAR, else the DOSCAR header, else vasprun.xml (#75).
+A DOS comes from one source: the <dos> block of vasprun.xml for the run's k-mesh,
+else the DOSCAR. Its energies, total and projected DOS and its Fermi energy all come
+from that source; the OUTCAR's E-fermi never feeds it (#75).
 """
 
 import re
@@ -206,9 +208,7 @@ def _cut_before_e_fermi(outcar: Path) -> Path:
 def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_doscar(
     tmp_path: Path,
 ) -> None:
-    calc = _doscar_only(
-        tmp_path, "non-spin-polarized", keep=("DOSCAR", "OUTCAR", "POSCAR", "vasprun.xml")
-    )
+    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("DOSCAR", "OUTCAR", "POSCAR"))
     _ = _cut_before_e_fermi(calc / "OUTCAR")
 
     dos = DensityOfStates.from_code("vasp", str(calc))
@@ -249,13 +249,11 @@ def test_a_vasprun_without_outcar_or_doscar_gives_its_own_fermi_energy(
 
 
 @pytest.mark.data
-def test_a_vasprun_without_efermi_and_no_other_source_raises_naming_the_directory(
-    tmp_path: Path,
-) -> None:
+def test_a_vasprun_without_efermi_raises_naming_it(tmp_path: Path) -> None:
     calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("POSCAR", "vasprun.xml"))
     _without_efermi(calc / "vasprun.xml")
 
-    with pytest.raises(ValueError, match="Fermi energy in " + re.escape(str(calc))):
+    with pytest.raises(ValueError, match=re.escape(str(calc / "vasprun.xml")) + ".*efermi"):
         _ = DensityOfStates.from_code("vasp", str(calc))
 
 
@@ -272,12 +270,122 @@ def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_vasprun(
 
 
 @pytest.mark.data
-def test_an_outcar_cut_before_e_fermi_with_no_other_source_raises_naming_it(
+def test_a_vasprun_without_efermi_borrows_no_fermi_energy_from_the_outcar_or_doscar(
     tmp_path: Path,
 ) -> None:
-    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("OUTCAR", "POSCAR", "vasprun.xml"))
-    outcar = _cut_before_e_fermi(calc / "OUTCAR")
+    # The OUTCAR (E-fermi 5.6990) and DOSCAR (header 5.69903164) of the same run both
+    # hold a Fermi energy, but the DOS comes from vasprun.xml, whose <dos> block lost it.
+    calc = _doscar_only(
+        tmp_path, "non-spin-polarized", keep=("DOSCAR", "OUTCAR", "POSCAR", "vasprun.xml")
+    )
     _without_efermi(calc / "vasprun.xml")
 
-    with pytest.raises(ValueError, match=re.escape(str(outcar)) + ".*E-fermi"):
+    with pytest.raises(ValueError, match=re.escape(str(calc / "vasprun.xml")) + ".*efermi"):
         _ = DensityOfStates.from_code("vasp", str(calc))
+
+
+def _dos_blocks(vasprun: Path) -> dict[str | None, ElementTree.Element]:
+    """The <dos> blocks of a vasprun.xml by their comment, read with the standard library."""
+    return {block.get("comment"): block for block in ElementTree.parse(vasprun).iter("dos")}
+
+
+def _rows(spin_sets: list[ElementTree.Element]) -> np.ndarray:
+    """(energy, spin, column) from the <set> of each spin; column 0 is the energy."""
+    return np.stack(
+        [
+            np.array([[float(x) for x in (r.text or "").split()] for r in s.iter("r")])
+            for s in spin_sets
+        ],
+        axis=1,
+    )
+
+
+def _block_dos(block: ElementTree.Element) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+    """Energies, total (energy, spin), projected (energy, spin, ion, orbital) and efermi."""
+    total = _rows(block.findall("total/array/set/set"))
+    ions = block.findall("partial/array/set/set")
+    projected = np.stack([_rows(ion.findall("set"))[..., 1:] for ion in ions], axis=2)
+    efermi = block.findtext("i[@name='efermi']")
+    assert efermi is not None
+    return total[:, 0, 0], total[..., 1], projected, float(efermi)
+
+
+def _doubled_rows(block: str) -> str:
+    """The block with every DOS value doubled; the energy column stays."""
+
+    def double(row: re.Match[str]) -> str:
+        energy, *values = row[1].split()
+        return "<r>" + " ".join([energy, *(f"{2 * float(v):.4f}" for v in values)]) + "</r>"
+
+    return re.sub(r"<r>(.*?)</r>", double, block)
+
+
+@pytest.mark.data
+def test_a_kpoints_opt_dos_block_written_first_is_not_the_dos(tmp_path: Path) -> None:
+    # VASP 6 with KPOINTS_OPT writes a <dos comment="kpoints_opt"> block for the extra
+    # k-points before the <dos> block of the run's own k-mesh, in the same calculation.
+    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("POSCAR", "vasprun.xml"))
+    vasprun = calc / "vasprun.xml"
+    text = vasprun.read_text()
+    start = text.index("  <dos>")
+    block = text[start : text.index("</dos>") + len("</dos>")]
+    assert block.count(NON_SPIN_POLARIZED_EFERMI) == 1
+    opt_block = _doubled_rows(
+        block.replace("<dos>", '<dos comment="kpoints_opt">').replace(
+            NON_SPIN_POLARIZED_EFERMI, '   <i name="efermi">      4.20000000 </i>\n'
+        )
+    )
+    _ = vasprun.write_text(text[:start] + opt_block + "\n" + text[start:])
+    blocks = _dos_blocks(vasprun)
+    energies, total, projected, efermi = _block_dos(blocks[None])
+    _, opt_total, opt_projected, opt_efermi = _block_dos(blocks["kpoints_opt"])
+    assert (efermi, opt_efermi) == (5.69903164, 4.2)
+    assert not np.allclose(opt_total, total) and not np.allclose(opt_projected, projected)
+
+    dos = DensityOfStates.from_code("vasp", str(calc))
+
+    np.testing.assert_array_equal(dos.energies, energies)
+    np.testing.assert_array_equal(dos.total.value, total)
+    assert dos.projected is not None
+    np.testing.assert_array_equal(dos.projected.value, projected)
+    assert dos.fermi == efermi
+
+
+def _add_other_run_file(calc: Path, name: str) -> None:
+    """Put the spin-polarized run's ``name`` into ``calc``. Its DOSCAR header and
+    vasprun.xml give the Fermi energy 4.96110661, its OUTCAR 4.9611."""
+    src = DOS_DIR / "spin-polarized"
+    if not src.exists():
+        pytest.skip("fixture dos/spin-polarized not downloaded")
+    _ = writable_copy(src / name, calc / name)
+
+
+@pytest.mark.data
+def test_a_vasprun_next_to_another_runs_doscar_gives_its_own_dos_and_fermi_energy(
+    tmp_path: Path,
+) -> None:
+    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("POSCAR", "vasprun.xml"))
+    _add_other_run_file(calc, "DOSCAR")
+    energies, total, projected, efermi = _block_dos(_dos_blocks(calc / "vasprun.xml")[None])
+    assert efermi == 5.69903164
+
+    dos = DensityOfStates.from_code("vasp", str(calc))
+
+    np.testing.assert_array_equal(dos.energies, energies)
+    np.testing.assert_array_equal(dos.total.value, total)
+    assert dos.projected is not None
+    np.testing.assert_array_equal(dos.projected.value, projected)
+    assert dos.fermi == efermi
+
+
+@pytest.mark.data
+def test_a_doscar_next_to_another_runs_outcar_gives_its_own_fermi_energy(
+    tmp_path: Path,
+) -> None:
+    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("DOSCAR", "POSCAR"))
+    _add_other_run_file(calc, "OUTCAR")
+
+    dos = DensityOfStates.from_code("vasp", str(calc))
+
+    # The DOSCAR header of this run: "12.62318812 -31.06108337 6000 5.69903164 1.0".
+    assert dos.fermi == 5.69903164
