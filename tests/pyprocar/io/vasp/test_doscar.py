@@ -413,16 +413,10 @@ class TestDoscarWithoutDos:
             DensityOfStates.from_code("vasp", calc)
 
 
-def test_an_outcar_without_e_fermi_takes_the_fermi_energy_from_the_doscar(
-    tmp_path: Path,
-) -> None:
+def test_an_outcar_without_e_fermi_takes_the_fermi_energy_from_the_doscar() -> None:
     # An interrupted run's OUTCAR stops before VASP writes "E-fermi :"; the DOSCAR
     # header holds the Fermi energy too (0.5 in _doscar_text).
-    calc = _calc_dir(tmp_path, DOSCAR=_doscar_text(1, 9), OUTCAR=_LISTED.format("F"))
-
-    dos = DensityOfStates.from_code("vasp", calc)
-
-    assert dos.fermi == 0.5
+    assert _dos_from(_doscar_text(1, 9), _LISTED.format("F")).fermi == 0.5
 
 
 def test_an_outcar_without_e_fermi_raises_naming_it(tmp_path: Path) -> None:

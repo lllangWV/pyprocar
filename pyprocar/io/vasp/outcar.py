@@ -137,9 +137,8 @@ class Outcar(Mapping[str, Any]):
         """
         values = self._fermi_values
         if not values:
-            source = self.filepath if self.filepath is not None else "text"
             raise ValueError(
-                f"The OUTCAR {source} has no 'E-fermi :' line, so it gives no Fermi energy;"
+                f"The OUTCAR {self.filepath or 'text'} has no 'E-fermi :' line, so it gives no Fermi energy;"
                 + " the run stopped before VASP wrote one."
             )
         return float(values[-1])
@@ -155,10 +154,11 @@ class Outcar(Mapping[str, Any]):
         start = self.file_str.find(_PARAMETER_LISTING)
         if start == -1:
             return None
-        listed = {
-            match.group(1).upper(): match.group(2).upper() in ("T", ".TRUE.")
-            for match in _LISTED_FLAG.finditer(self.file_str, start)
-        }
+        listed: dict[str, bool] = {}
+        for match in _LISTED_FLAG.finditer(self.file_str, start):
+            listed.setdefault(match.group(1).upper(), match.group(2).upper() in ("T", ".TRUE."))
+            if len(listed) == 2:
+                break
         if not listed:
             return None
         return listed.get("LNONCOLLINEAR", False) or listed.get("LSORBIT", False)

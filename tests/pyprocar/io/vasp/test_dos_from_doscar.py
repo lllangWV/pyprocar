@@ -85,7 +85,13 @@ def test_doscar_dos_without_a_poscar_selects_atoms_and_rejects_species(tmp_path:
 # The OUTCAR echoes the INCAR verbatim at its top and lists the parameters VASP ran
 # with after "Startparameter for this run:". LSORBIT turns LNONCOLLINEAR on.
 NON_COLINEAR_ECHO = "   LNONCOLLINEAR = .TRUE.\n"
-NON_COLINEAR_LISTED = "   LNONCOLLINEAR =      T non collinear calculations\n"
+
+
+def _listed(value: str) -> str:
+    return f"   LNONCOLLINEAR = {value:>6} non collinear calculations\n"
+
+
+NON_COLINEAR_LISTED = _listed("T")
 
 
 def _edited(path: Path, old: str, new: str) -> str:
@@ -113,21 +119,21 @@ def _fixture_outcar(name: str) -> Path:
         pytest.param(
             "non-colinear",
             NON_COLINEAR_LISTED,
-            "   LNONCOLLINEAR =      F non collinear calculations\n",
+            _listed("F"),
             True,
             id="LSORBIT-listed-T",
         ),
         pytest.param(
             "non-colinear",
             NON_COLINEAR_LISTED,
-            "   LNONCOLLINEAR = .TRUE. non collinear calculations\n",
+            _listed(".TRUE."),
             True,
             id="listed-as-.TRUE.",
         ),
         pytest.param(
             "non-spin-polarized",
-            "   LNONCOLLINEAR =      F non collinear calculations\n",
-            "   LNONCOLLINEAR = .FALSE. non collinear calculations\n",
+            _listed("F"),
+            _listed(".FALSE."),
             False,
             id="listed-as-.FALSE.",
         ),
@@ -186,6 +192,13 @@ def test_sixteen_columns_follow_the_run_parameters_not_the_incar_echo(tmp_path: 
     )
 
 
+def _cut_before_e_fermi(outcar: Path) -> Path:
+    """Cut the OUTCAR where an interrupted run stops: before VASP writes "E-fermi :"."""
+    text = outcar.read_text()
+    _ = outcar.write_text(text[: text.index(" E-fermi :")])
+    return outcar
+
+
 @pytest.mark.data
 def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_doscar(
     tmp_path: Path,
@@ -193,9 +206,7 @@ def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_doscar(
     calc = _doscar_only(
         tmp_path, "non-spin-polarized", keep=("DOSCAR", "OUTCAR", "POSCAR", "vasprun.xml")
     )
-    outcar = calc / "OUTCAR"
-    text = outcar.read_text()
-    _ = outcar.write_text(text[: text.index(" E-fermi :")])
+    _ = _cut_before_e_fermi(calc / "OUTCAR")
 
     dos = DensityOfStates.from_code("vasp", str(calc))
 
@@ -206,9 +217,7 @@ def test_an_outcar_cut_before_e_fermi_leaves_the_fermi_energy_to_the_doscar(
 @pytest.mark.data
 def test_an_outcar_cut_before_e_fermi_without_a_doscar_raises_naming_it(tmp_path: Path) -> None:
     calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("OUTCAR", "POSCAR", "vasprun.xml"))
-    outcar = calc / "OUTCAR"
-    text = outcar.read_text()
-    _ = outcar.write_text(text[: text.index(" E-fermi :")])
+    outcar = _cut_before_e_fermi(calc / "OUTCAR")
 
     with pytest.raises(ValueError, match=re.escape(str(outcar)) + ".*E-fermi"):
         _ = DensityOfStates.from_code("vasp", str(calc))

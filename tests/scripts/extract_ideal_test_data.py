@@ -28,20 +28,20 @@ for calc_test_case in ALL_TEST_CASES:
     # A parser returns None when the files hold no DOS or bands, and raises a
     # ValueError when they cannot be read correctly; neither writes a reference.
     if calc_type in DOS_CALC_TYPES:
-        kind, name = "DOS", "dos.pkl"
+        attr = "dos"
     elif calc_type in EBS_CALC_TYPES:
-        kind, name = "EBS", "ebs.pkl"
+        attr = "ebs"
     else:
         continue
     try:
-        result = parser.dos if kind == "DOS" else parser.ebs
+        result = getattr(parser, attr)
     except ValueError as exc:
         failed.append(f"{calc_test_case.get_id()}: {exc}")
         continue
     if result is None:
-        user_logger.warning(f"No {kind} found for {calc_test_case.get_id()}")
+        user_logger.warning(f"No {attr.upper()} found for {calc_test_case.get_id()}")
         continue
-    result.save(path / name)
+    result.save(path / f"{attr}.pkl")
 
 if failed:
     sys.exit("Could not read:\n" + "\n".join(failed))

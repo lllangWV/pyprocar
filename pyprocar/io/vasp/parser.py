@@ -305,8 +305,7 @@ class VaspParser(BaseParser):
             return self.vasprun.partial  # shape: (n_energies, n_spins, n_atoms, n_orbitals)
         if self.doscar is not None:
             logger.info("Using doscar projected dos")
-            needs = self.doscar.needs_lnoncollinear
-            return self.doscar.projected(non_collinear=self.is_non_collinear if needs else None)
+            return self.doscar.projected(non_collinear=lambda: self.is_non_collinear)
         return None
 
     @property

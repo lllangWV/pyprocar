@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from functools import cached_property
 from pathlib import Path
 from typing import TypedDict
@@ -24,14 +25,6 @@ _VASP_ORBITALS = (
     "VASP projects onto s, p, d (and f) with LORBIT=10, or onto the 9 (16) lm orbitals"
     + " with LORBIT=11"
 )
-
-
-def _fits_collinear(n_columns: int) -> bool:
-    return n_columns in ORBITAL_COUNTS
-
-
-def _fits_noncollinear(n_columns: int) -> bool:
-    return n_columns % 4 == 0 and n_columns // 4 in ORBITAL_COUNTS
 
 
 def dos_orbital_names(n_orbitals: int) -> tuple[str, ...]:
@@ -232,14 +225,17 @@ class Doscar:
     # === PROJECTED DOS (PDOS) ===
     # ---------------------------
 
-    def projected(self, non_collinear: bool | None = None) -> np.ndarray | None:
+    def projected(
+        self, non_collinear: Callable[[], bool | None] = lambda: None
+    ) -> np.ndarray | None:
         """
         Return PDOS in shape (n_energies, n_spins, n_atoms, n_orbitals), or None
         when the DOSCAR has no projected blocks (LORBIT unset).
 
-        ``non_collinear`` is LNONCOLLINEAR of the run (from the OUTCAR or PROCAR). It is
-        needed only to read 16 columns per atom, which are either the 16 lm orbitals of a
-        collinear run or s, p, d, f times (total, mx, my, mz) of a non-collinear one.
+        ``non_collinear`` returns LNONCOLLINEAR of the run (from the OUTCAR or PROCAR),
+        or None when unknown. It is called only for 16 columns per atom and one total
+        DOS channel, which are either the 16 lm orbitals of a collinear run or s, p, d,
+        f times (total, mx, my, mz) of a non-collinear one.
         """
         nedos, natoms = self.nedos, self.natoms
         start = HEADER_LINES + nedos
@@ -268,18 +264,7 @@ class Doscar:
         # ISPIN=2 and s_tot s_mx s_my s_mz py_tot ... for non-collinear runs.
         return projected.reshape(natoms, nedos, n_columns // n_spins, n_spins).transpose(1, 3, 0, 2)
 
-    @cached_property
-    def needs_lnoncollinear(self) -> bool:
-        """Whether the projected columns read as both a collinear and a non-collinear
-        layout (16 per atom with one total DOS channel), so that ``projected`` needs
-        LNONCOLLINEAR to tell them apart."""
-        first_row = self.lines[HEADER_LINES + self.nedos + 1 : HEADER_LINES + self.nedos + 2]
-        if self.is_spin_pol or not first_row:
-            return False
-        n_columns = len(first_row[0].split()) - 1
-        return _fits_collinear(n_columns) and _fits_noncollinear(n_columns)
-
-    def _projected_spins(self, n_columns: int, non_collinear: bool | None) -> int:
+    def _projected_spins(self, n_columns: int, non_collinear: Callable[[], bool | None]) -> int:
         if self.is_spin_pol:
             if n_columns % 2:
                 raise ValueError(
@@ -287,23 +272,23 @@ class Doscar:
                     + " spin-polarized run writes an up and a down column per orbital."
                 )
             return 2
-        fits_collinear = _fits_collinear(n_columns)
-        fits_noncollinear = _fits_noncollinear(n_columns)
-        if non_collinear is None:
-            if fits_collinear and fits_noncollinear:
+        fits_collinear = n_columns in ORBITAL_COUNTS
+        fits_noncollinear = n_columns % 4 == 0 and n_columns // 4 in ORBITAL_COUNTS
+        if fits_collinear and fits_noncollinear:
+            known = non_collinear()
+            if known is None:
                 raise ValueError(
                     f"The DOSCAR {self._source} has {n_columns} projected columns per atom:"
                     + f" {n_columns} orbitals of a collinear run or {n_columns // 4} orbitals"
                     + " times (total, mx, my, mz) of a non-collinear one. Keep the run's OUTCAR"
                     + " (LNONCOLLINEAR) or PROCAR, which tell them apart, next to the DOSCAR."
                 )
-            non_collinear = fits_noncollinear
-        if non_collinear and fits_noncollinear:
+            return 4 if known else 1
+        if fits_noncollinear:
             return 4
-        if not non_collinear and fits_collinear:
+        if fits_collinear:
             return 1
         raise ValueError(
             f"The DOSCAR {self._source} has {n_columns} projected columns per atom, which no"
-            + f" {'non-collinear' if non_collinear else 'non-spin-polarized'} VASP run writes:"
-            + f" {_VASP_ORBITALS}, times 4 (total, mx, my, mz) when non-collinear."
+            + f" VASP run writes: {_VASP_ORBITALS}, times 4 (total, mx, my, mz) when non-collinear."
         )
