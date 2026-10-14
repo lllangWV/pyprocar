@@ -10,15 +10,12 @@ import matplotlib.pyplot as plt
 
 from pyprocar.core.fermisurface import FermiSurface
 from pyprocar.plotter import FermiSlicePlotter
-from pyprocar.scripts._selection import resolve_spins, signed_clim
+from pyprocar.scripts._selection import SPIN_COMPONENT_LABELS, resolve_spins, signed_clim
 from pyprocar.utils import welcome
 from pyprocar.utils.log_utils import set_verbose_level, warn_user
 
 user_logger = logging.getLogger("user")
 logger = logging.getLogger(__name__)
-
-
-SPIN_COMPONENT_LABELS = ("Total projection", "Sx projection", "Sy projection", "Sz projection")
 
 
 class Fermi2DMode(Enum):

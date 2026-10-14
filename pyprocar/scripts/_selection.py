@@ -7,6 +7,8 @@ import numpy as np
 from pyprocar.core.atomic_orbital_index import orbital_indices, present_shells
 from pyprocar.core.property_store import Property
 
+SPIN_COMPONENT_LABELS = ("Total projection", "Sx projection", "Sy projection", "Sz projection")
+
 
 class SpinSelection(NamedTuple):
     channels: list[int]
@@ -19,10 +21,11 @@ def resolve_spins(
 ) -> SpinSelection:
     """Return the channels to draw and the spins to project, one policy for every script.
 
-    Collinear data draws the requested spin channels (all by default) and projects
-    those same channels. ``spins=[-1, 1]`` joins both collinear channels into one,
-    which only plain plots support. Non-collinear data has one channel; ``spins``
-    picks one spin component (0 total, 1-3 Sx, Sy, Sz) and defaults to the total.
+    Collinear data draws the requested spin channels (all by default), projects
+    those same channels, and rejects a channel the calculation lacks. ``spins=[-1, 1]``
+    joins both collinear channels into one, which only plain plots support.
+    Non-collinear data has one channel; ``spins`` picks one spin component
+    (0 total, 1-3 Sx, Sy, Sz) and defaults to the total.
     """
     if spins is not None and sorted(spins) == [-1, 1]:
         if is_non_collinear or n_channels != 2:
@@ -34,13 +37,30 @@ def resolve_spins(
         return SpinSelection([0, 1], [0, 1], joined=True)
     if not is_non_collinear:
         channels = list(range(n_channels)) if spins is None else list(spins)
+        if any(c not in range(n_channels) for c in channels):
+            named = "2 spin channels (0 up, 1 down)" if n_channels == 2 else "1 spin channel (0)"
+            raise ValueError(f"This calculation has {named}; got spins={channels}")
         return SpinSelection(channels, channels)
     if spins is not None and len(spins) != 1:
         raise ValueError(
             "Non-collinear calculations take one spin component"
             + f" (0 total, 1-3 Sx, Sy, Sz); got spins={list(spins)}"
         )
+    if spins is not None and spins[0] not in range(4):
+        raise ValueError(
+            "A non-collinear spin component is 0 total, 1-3 Sx, Sy, Sz"
+            + f"; got spins={list(spins)}"
+        )
     return SpinSelection([0], [0] if spins is None else list(spins))
+
+
+def projection_colorbar_title(
+    configured: str, user_set: bool, is_non_collinear: bool, projection_spins: list[int]
+) -> str:
+    """The user's colorbar title, else a non-collinear Sx, Sy or Sz label, else ``configured``."""
+    if user_set or not is_non_collinear or projection_spins == [0]:
+        return configured
+    return SPIN_COMPONENT_LABELS[projection_spins[0]]
 
 
 def projection_components(source, kind: str, atoms=None, orbitals=None, items=None, **kwargs):

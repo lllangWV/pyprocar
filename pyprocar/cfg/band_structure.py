@@ -61,7 +61,8 @@ class BandStructureConfig(BaseConfig):
     spin_colors : Tuple[str], optional
         Colors for the spin texture lines.
     colorbar_title : str, optional
-        Title of the colorbar.
+        Title of the colorbar. Unset, a non-collinear Sx, Sy or Sz projection is
+        titled 'Sx projection', 'Sy projection' or 'Sz projection'.
     colorbar_title_size : int, optional
         Font size of the title of the colorbar.
     colorbar_title_padding : int, optional
