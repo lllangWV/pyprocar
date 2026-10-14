@@ -230,15 +230,15 @@ class VaspParser(BaseParser):
 
     @cached_property
     def fermi(self) -> float | None:
-        """The OUTCAR's last E-fermi, else the DOSCAR header's, else the vasprun.xml's."""
+        """The OUTCAR's E-fermi, else the DOSCAR header's; without an OUTCAR, vasprun.xml's."""
         if self.outcar is not None and self.outcar.has_fermi:
             return self.outcar.fermi
         if self.doscar is not None and self.doscar.has_dos:
             return self.doscar.efermi
-        if self.vasprun is not None:
-            return self.vasprun.fermi
         if self.outcar is not None:
             return self.outcar.fermi  # raises, naming the OUTCAR that has no E-fermi
+        if self.vasprun is not None:
+            return self.vasprun.fermi
         return None
 
     @property
