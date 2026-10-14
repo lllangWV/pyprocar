@@ -8,6 +8,7 @@ from pyprocar.core.property_store import Property
 from pyprocar.io import vasp
 from pyprocar.io.vasp.parser import VaspParser
 from pyprocar.utils.log_utils import set_verbose_level
+from tests.pyprocar.io.vasp.test_procar import NON_COLINEAR_PROCAR, NON_SPIN_POLARIZED_PROCAR
 
 logger = logging.getLogger(__name__)
 
@@ -308,6 +309,29 @@ class TestDosFromDoscarOnly:
         # times (total, mx, my, mz) of a non-collinear one; only the OUTCAR tells.
         with pytest.raises(ValueError, match="LNONCOLLINEAR"):
             _ = VaspParser.from_str(doscar=_doscar_text(1, 16)).dos
+
+    @pytest.mark.parametrize(
+        ("procar", "n_spins", "orbital_names"),
+        [
+            pytest.param(
+                NON_SPIN_POLARIZED_PROCAR, 1, VASP_LM_NAMES + VASP_F_NAMES, id="collinear"
+            ),
+            pytest.param(NON_COLINEAR_PROCAR, 4, ["s", "p", "d", "f"], id="non-collinear"),
+        ],
+    )
+    def test_sixteen_columns_take_the_layout_from_the_procar_without_an_outcar(
+        self, procar, n_spins, orbital_names
+    ) -> None:
+        # A non-collinear PROCAR writes four rows (total, mx, my, mz) per ion and band.
+        dos = VaspParser.from_str(doscar=_doscar_text(1, 16), procar=procar).dos
+
+        assert dos is not None and dos.projected is not None
+        assert dos.orbital_names == orbital_names
+        assert dos.projected.value.shape[1] == n_spins
+        # Column 1 + o * n_spins + s of the DOSCAR holds orbital o, spin s.
+        np.testing.assert_allclose(
+            dos.projected.value[2, n_spins - 1, 1, 3], _projected_value(1, 4 * n_spins, 2)
+        )
 
     @pytest.mark.parametrize(
         ("n_total", "n_columns", "match"),
