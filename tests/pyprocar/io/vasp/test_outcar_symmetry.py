@@ -16,6 +16,8 @@ from pyprocar.core.dos import DensityOfStates
 from pyprocar.io.vasp.outcar import Outcar
 from pyprocar.io.vasp.parser import VaspParser
 from tests.utils import DATA_DIR
+from tests.utils.lattices import MONOCLINIC as MONOCLINIC_LATTICE
+from tests.utils.lattices import fcc_primitive
 
 EXAMPLES = DATA_DIR / "examples"
 
@@ -35,14 +37,10 @@ class Mesh:
 
 
 # A one-atom monoclinic cell, unique axis b: the crystal's point group is 2/m (C_2h).
-MONOCLINIC = Cell(
-    np.array([[4.0, 0.0, 0.0], [0.0, 5.0, 0.0], [-1.0, 0.0, 6.0]]), np.zeros((1, 3)), ("Pb",)
-)
-# InP as in VASP 6.5.0's testsuite: zinc blende, point group T_d.
+MONOCLINIC = Cell(MONOCLINIC_LATTICE, np.zeros((1, 3)), ("Pb",))
+# InP as in VASP 6.5.0's testsuite, rows in its POSCAR's order: zinc blende, point group T_d.
 ZINC_BLENDE = Cell(
-    2.9343 * np.array([[1.0, 0.0, 1.0], [1.0, 1.0, 0.0], [0.0, 1.0, 1.0]]),
-    np.array([[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]]),
-    ("In", "P"),
+    fcc_primitive(5.8686)[[1, 2, 0]], np.array([[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]]), ("In", "P")
 )
 
 GAMMA_331 = Mesh("Gamma", (3, 3, 1), (0.0, 0.0, 0.0))
@@ -104,24 +102,22 @@ ZINC_BLENDE_MONKHORST_PACK_444 = [
     ((-0.375, 0.375, 0.375), 24),
 ]
 
-OVERALL_S2 = """
-The overall configuration has the point symmetry S_2 .
+
+def symmetry_lines(configuration: str, group: str, n_operations: int) -> str:
+    return f"""
+The {configuration} configuration has the point symmetry {group} .
 
 
- Subroutine INISYM returns: Found  2 space group operations
- (whereof  2 operations are pure point group operations),
+ Subroutine INISYM returns: Found {n_operations:2d} space group operations
+ (whereof {n_operations:2d} operations are pure point group operations),
  and found     1 'primitive' translations
 """
-OVERALL_C2 = OVERALL_S2.replace("S_2", "C_2")
+
+
+OVERALL_S2 = symmetry_lines("overall", "S_2", 2)
+OVERALL_C2 = symmetry_lines("overall", "C_2", 2)
+DYNAMIC_T_D = symmetry_lines("dynamic", "T_d", 24)
 NOSYMM = "NOSYMM: (Re-)initialisation of all symmetry stuff for point group C_1.\n"
-DYNAMIC_T_D = """
-The dynamic configuration has the point symmetry T_d .
-
-
- Subroutine INISYM returns: Found 24 space group operations
- (whereof 24 operations are pure point group operations),
- and found     1 'primitive' translations
-"""
 
 
 def _rows(matrix: np.ndarray) -> str:
@@ -136,11 +132,7 @@ def synthetic_outcar(
     cell: Cell = MONOCLINIC,
 ) -> str:
     """An NWRITE = 2 OUTCAR."""
-    reciprocal = np.linalg.inv(cell.lattice).T
-    lattices = "\n".join(
-        "  " + "  ".join(f"{x:13.9f}" for x in (*a, *b))
-        for a, b in zip(cell.lattice, reciprocal, strict=True)
-    )
+    lattices = _rows(np.hstack([cell.lattice, np.linalg.inv(cell.lattice).T]))
     listed = "\n".join(
         f"  {k[0]:9.6f} {k[1]:9.6f} {k[2]:9.6f}      {w:8.6f}" for k, w in irreducible
     )
@@ -236,41 +228,34 @@ def as_set(rotations) -> set[tuple[int, ...]]:
     return {tuple(np.rint(rotation).astype(int).ravel()) for rotation in rotations}
 
 
-def test_reporter_shaped_outcar_recovers_inversion():
-    """2/m has one subgroup named S_2 (Ci): {E, I}."""
-    outcar = Outcar.from_str(synthetic_outcar(OVERALL_S2, PAIRED_WITH_MINUS_K))
-
-    assert as_set(outcar.rotations) == as_set([E, INVERSION])
-
-
-def test_noncollinear_outcar_reduced_without_time_reversal_recovers_the_twofold_axis():
-    """VASP reduces a non-collinear mesh by its operations alone, without k -> -k.
-
-    Only {E, C2_b} leaves (0, 1/3, 0) and (0, -1/3, 0) in separate orbits.
-    """
-    outcar = Outcar.from_str(synthetic_outcar(OVERALL_C2, TURNED_ABOUT_B, noncollinear=True))
-
-    assert as_set(outcar.rotations) == as_set([E, C2_B])
-
-
-def test_nosymm_outcar_recovers_the_identity():
-    """ISYM = 0: VASP names C_1 and pairs each k with -k by time reversal alone."""
-    outcar = Outcar.from_str(synthetic_outcar(NOSYMM, PAIRED_WITH_MINUS_K))
-
-    assert as_set(outcar.rotations) == as_set([E])
-
-
-def test_mesh_that_symmetry_carries_off_itself_recovers_the_printed_table():
-    outcar = Outcar.from_str(
-        synthetic_outcar(
-            DYNAMIC_T_D,
-            ZINC_BLENDE_MONKHORST_PACK_444,
-            mesh=MONKHORST_PACK_444,
-            cell=ZINC_BLENDE,
-        )
-    )
-
-    assert as_set(outcar.rotations) == as_set(T_D)
+@pytest.mark.parametrize(
+    ("outcar", "expected"),
+    [
+        # 2/m has one subgroup named S_2 (Ci).
+        pytest.param(synthetic_outcar(OVERALL_S2, PAIRED_WITH_MINUS_K), [E, INVERSION], id="S_2"),
+        # VASP reduces a non-collinear mesh by its operations alone, without k -> -k: only
+        # {E, C2_b} leaves (0, 1/3, 0) and (0, -1/3, 0) in separate orbits.
+        pytest.param(
+            synthetic_outcar(OVERALL_C2, TURNED_ABOUT_B, noncollinear=True),
+            [E, C2_B],
+            id="non-collinear-C_2",
+        ),
+        # ISYM = 0: VASP names C_1 and pairs each k with -k by time reversal alone.
+        pytest.param(synthetic_outcar(NOSYMM, PAIRED_WITH_MINUS_K), [E], id="ISYM=0"),
+        pytest.param(
+            synthetic_outcar(
+                DYNAMIC_T_D,
+                ZINC_BLENDE_MONKHORST_PACK_444,
+                mesh=MONKHORST_PACK_444,
+                cell=ZINC_BLENDE,
+            ),
+            T_D,
+            id="mesh-carried-off-itself",
+        ),
+    ],
+)
+def test_outcar_without_table_recovers_the_operations_vasp_used(outcar, expected):
+    assert as_set(Outcar.from_str(outcar).rotations) == as_set(expected)
 
 
 @pytest.mark.parametrize(
@@ -311,6 +296,7 @@ def test_reduced_mesh_unfolds_to_the_full_grid(symmetry, irreducible, mesh, cell
     ebs = parser.ebs
 
     assert ebs is not None
+    assert ebs.bands is not None
     assert ebs.n_kpoints == np.prod(mesh.size)
     signed = np.concatenate([operations, np.negative(operations)])
     for kpoint, energy in zip(ebs.kpoints, ebs.bands[:, 0, 0], strict=True):
@@ -366,7 +352,8 @@ def strip_operator_table(text: str) -> str:
 
 
 def printed_table(text: str) -> list[np.ndarray]:
-    """VASP's isymop matrices, transposed: the k-space rotations VASP 6 lists."""
+    """VASP's isymop matrices, transposed: the k-space rotations VASP 6 lists. Read here
+    rather than through Outcar, so the expected set does not come from the code under test."""
     rows = r"\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)"
     return [
         np.array(found, dtype=int).reshape(3, 3).T

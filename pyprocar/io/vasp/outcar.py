@@ -1,5 +1,6 @@
 import logging
 import re
+import warnings
 from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import cached_property
@@ -48,9 +49,7 @@ class _MeshReduction:
     the operations carry the mesh off itself and VASP adds the images.
     """
 
-    lattice: NDArray[np.float64]
-    positions: NDArray[np.float64]
-    types: NDArray[np.int_]
+    cell: tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.int_]]  # spglib's cell
     point_group: str | None
     n_operations: int | None
     time_reversal: bool
@@ -60,18 +59,24 @@ class _MeshReduction:
     multiplicities: NDArray[np.int_]
 
 
-def _mesh_reduction(text: str) -> _MeshReduction | None:
+def _last(pattern: str | re.Pattern[str], text: str) -> re.Match[str] | None:
+    last = None
+    for last in re.finditer(pattern, text):
+        pass
+    return last
+
+
+def _mesh_reduction(text: str, kgrid: tuple[int | None, ...]) -> _MeshReduction | None:
     """The record, or None when the OUTCAR shows no automatic mesh reduced by symmetry (band
     paths, explicit lists, full meshes) or leaves out a fact the fit needs."""
-    mesh_lines = re.findall(r"generate k-points for:\s+(\d+)\s+(\d+)\s+(\d+)", text)
-    irreducible = list(_IRREDUCIBLE.finditer(text))
-    shift = list(_SHIFT.finditer(text))
-    noncollinear = re.findall(r"LNONCOLLINEAR\s*=\s*([TF])\s", text)
+    irreducible = _last(_IRREDUCIBLE, text)
+    shift = _last(_SHIFT, text)
+    noncollinear = _last(r"LNONCOLLINEAR\s*=\s*([TF])\s", text)
     per_type = re.search(r"ions per type\s*=\s*([\d\s]+?)\n", text)
-    if not (mesh_lines and irreducible and shift and noncollinear and per_type):
+    if None in kgrid or not (irreducible and shift and noncollinear and per_type):
         return None
-    mesh = np.array(mesh_lines[-1], dtype=int)
-    rows = text[irreducible[-1].end() :].splitlines()[: int(irreducible[-1].group(1))]
+    mesh = np.array(kgrid, dtype=int)
+    rows = text[irreducible.end() :].splitlines()[: int(irreducible.group(1))]
     listed = np.array([row.split()[:4] for row in rows], dtype=float)
     multiplicities = np.rint(listed[:, 3]).astype(int)
     if (
@@ -93,43 +98,44 @@ def _mesh_reduction(text: str) -> _MeshReduction | None:
     ).search(text, per_type.end())
     if lattice_block is None or position_block is None:
         return None
-    lattice = np.array(
-        [re.findall(_FLOAT, line)[:3] for line in lattice_block.group(1).splitlines()], dtype=float
-    )
-    positions = np.array(
-        [re.findall(_FLOAT, line)[:3] for line in position_block.group(1).splitlines()], dtype=float
+    lattice, positions = (
+        np.array(
+            [re.findall(_FLOAT, line)[:3] for line in block.group(1).splitlines()], dtype=float
+        )
+        for block in (lattice_block, position_block)
     )
 
-    named = list(_POINT_GROUP.finditer(text))
     point_group = None
-    if named:
-        name = named[-1].group("full") or named[-1].group("site") or named[-1].group("none")
+    if named := _last(_POINT_GROUP, text):
+        name = named.group("full") or named.group("site") or named.group("none")
         if name not in _POINT_GROUP_SYMBOLS:
             logger.info("Unknown point group %s in the OUTCAR", name)
             return None
         point_group = _POINT_GROUP_SYMBOLS[name]
-    count = re.findall(r"INISYM returns: Found\s+(\d+)\s+space group operations", text)
+    count = _last(r"INISYM returns: Found\s+(\d+)\s+space group operations", text)
 
     return _MeshReduction(
-        lattice=lattice,
-        positions=positions,
-        types=np.repeat(np.arange(len(counts)), counts),
+        cell=(lattice, positions, np.repeat(np.arange(len(counts)), counts)),
         point_group=point_group,
-        n_operations=int(count[-1]) if count else None,
-        time_reversal=noncollinear[-1] == "F",
+        n_operations=int(count.group(1)) if count else None,
+        time_reversal=noncollinear.group(1) == "F",
         mesh=mesh,
-        shift=np.array(shift[-1].groups(), dtype=float),
+        shift=np.array(shift.groups(), dtype=float),
         kpoints=listed[:, :3],
         multiplicities=multiplicities,
     )
 
 
-def _subgroups(rotations: NDArray[np.int_]) -> list[NDArray[np.int_]]:
-    """Every subgroup of a finite group of integer matrices, each with the identity first."""
+def _subgroups(rotations: NDArray[np.int_], order: int | None) -> list[NDArray[np.int_]]:
+    """The subgroups of a finite group of integer matrices with ``order`` elements (all of
+    them for None), each with the identity first."""
     keys = [rotation.tobytes() for rotation in rotations]
     index = {key: i for i, key in enumerate(keys)}
     product = [[index[(a @ b).tobytes()] for b in rotations] for a in rotations]
     identity = index[np.eye(3, dtype=rotations.dtype).tobytes()]
+    first = sorted(range(len(rotations)), key=lambda i: (i != identity, i))
+    if order == len(rotations):
+        return [rotations[first]]
 
     def closure(members: frozenset[int]) -> frozenset[int]:
         group, frontier = set(members), list(members)
@@ -147,10 +153,18 @@ def _subgroups(rotations: NDArray[np.int_]) -> list[NDArray[np.int_]]:
     while frontier:
         group = frontier.pop()
         for g in range(len(rotations)):
-            if g not in group and (bigger := closure(group | {g})) not in found:
+            if g in group:
+                continue
+            bigger = closure(group | {g})
+            # A subgroup's subgroups have orders dividing its own (Lagrange).
+            if (order is None or order % len(bigger) == 0) and bigger not in found:
                 found.add(bigger)
                 frontier.append(bigger)
-    return [rotations[sorted(group, key=lambda i: (i != identity, i))] for group in found]
+    return [
+        rotations[[i for i in first if i in group]]
+        for group in found
+        if order is None or len(group) == order
+    ]
 
 
 def _reproduces_irreducible_kpoints(
@@ -188,10 +202,10 @@ def _reproduces_irreducible_kpoints(
     return covered.issuperset(mesh_keys.tolist())
 
 
-def _snapped_keys(kpoints: NDArray[np.float64], grain: int) -> NDArray[np.int64] | None:
+def _snapped_keys(kpoints: NDArray[np.floating], grain: int) -> NDArray[np.int64] | None:
     """One integer per fractional k modulo reciprocal lattice vectors, or None when a k is not
     a multiple of 1/grain (OUTCAR coordinates carry 6 decimals)."""
-    steps = np.asarray(kpoints) * grain
+    steps = kpoints * grain
     if np.any(np.abs(steps - np.rint(steps)) > 0.05):
         return None
     cells = np.mod(np.rint(steps).astype(np.int64), grain)
@@ -207,21 +221,24 @@ def _fitting_operations(reduction: _MeshReduction) -> list[NDArray[np.int_]]:
     crystal's operations come from spglib on the cell VASP analysed, coloured by POTCAR type,
     at VASP's default SYMPREC of 1e-5.
     """
-    dataset = spglib.get_symmetry_dataset(
-        (reduction.lattice, reduction.positions, reduction.types), symprec=1e-5
-    )
+    with warnings.catch_warnings():
+        # spglib warns on every call while its process-wide OLD_ERROR_HANDLING is on; the
+        # None returns below are the error check it asks for.
+        warnings.filterwarnings("ignore", "Set OLD_ERROR_HANDLING", DeprecationWarning)
+        return _fitting_subgroups(reduction)
+
+
+def _fitting_subgroups(reduction: _MeshReduction) -> list[NDArray[np.int_]]:
+    dataset = spglib.get_symmetry_dataset(reduction.cell, symprec=1e-5)  # pyright: ignore[reportArgumentType]
     if dataset is None:
         return []
     crystal = np.unique(np.asarray(dataset.rotations, dtype=int), axis=0)
     fitting: list[NDArray[np.int_]] = []
-    for group in _subgroups(crystal):
-        if reduction.n_operations is not None and len(group) != reduction.n_operations:
-            continue
-        if (
-            reduction.point_group is not None
-            and spglib.get_pointgroup(group)[0].strip() != reduction.point_group
-        ):
-            continue
+    for group in _subgroups(crystal, reduction.n_operations):
+        if reduction.point_group is not None:
+            named = spglib.get_pointgroup(group)
+            if named is None or named[0].strip() != reduction.point_group:
+                continue
         k_rotations = np.rint(np.linalg.inv(group).transpose(0, 2, 1)).astype(int)
         if _reproduces_irreducible_kpoints(k_rotations, reduction):
             fitting.append(k_rotations)
@@ -383,7 +400,10 @@ class Outcar(Mapping[str, Any]):
         if sym_ops:
             return np.array([sym_op["rotation"] for sym_op in sym_ops])
 
-        reduction = _mesh_reduction(self.file_str)
+        # Every fact the fit reads is printed before the first electronic step.
+        first_step = re.search(r"-{5,} Iteration", self.file_str)
+        header = self.file_str[: first_step.start()] if first_step else self.file_str
+        reduction = _mesh_reduction(header, self.kgrid)
         if reduction is None:
             return np.empty((0, 3, 3))
         fitting = _fitting_operations(reduction)
