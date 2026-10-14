@@ -52,3 +52,16 @@ def test_export_writes_next_to_the_given_path(
 
     header = (tmp_path / written).read_text().splitlines()[0]
     assert header.split("," if written.endswith(".csv") else " ")[0] == "kpath_values"
+
+
+def test_unknown_suffix_raises_before_reading_or_plotting(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match=r"\.csv, \.txt, \.dat or \.json"):
+        pyprocar.bandsplot(
+            code="vasp",
+            dirname=str(tmp_path / "no-calculation-here"),
+            export_data_file=str(tmp_path / "bands.xlsx"),
+            show=False,
+        )
+
+    assert plt.get_fignums() == []
+    assert list(tmp_path.iterdir()) == []
