@@ -12,7 +12,9 @@ from matplotlib.collections import LineCollection, PathCollection, PolyCollectio
 
 import pyprocar
 from pyprocar.core import ElectronicBandStructurePath
+from tests.pyprocar.io.vasp.test_procar import NON_COLLINEAR_PHASE_PROCAR
 from tests.utils import DATA_DIR, writable_copy
+from tests.utils.user_warning import user_warning
 
 UNFOLDING = DATA_DIR / "examples" / "bands" / "unfolding"
 SUPERCELL = np.diag([2, 2, 2])
@@ -39,6 +41,15 @@ INDEPENDENT_WEIGHTS = {
     (49, 1): 0.500521,
     (75, 30): 0.999997,
 }
+# The two OUTCAR fields from_code reads, for fcc InP with a = 5.869 Angstrom.
+INP_OUTCAR = """ E-fermi :   5.0000
+
+      direct lattice vectors                 reciprocal lattice vectors
+     0.000000000  2.934500000  2.934500000    -0.170386778  0.170386778  0.170386778
+     2.934500000  0.000000000  2.934500000     0.170386778 -0.170386778  0.170386778
+     2.934500000  2.934500000  0.000000000     0.170386778  0.170386778 -0.170386778
+
+"""
 
 
 def _copy(tmp_path, name):
@@ -277,3 +288,15 @@ class TestUnfoldArguments:
         with pytest.raises(TypeError, match=rf"unfold\(\) no longer takes {name}"):
             removed: dict[str, Any] = {name: True}
             pyprocar.unfold(dirname=tmp_path, show=False, **removed)
+
+    def test_non_collinear_calculation_names_the_summed_spinor_phases(self, tmp_path):
+        (tmp_path / "PROCAR").write_text(NON_COLLINEAR_PHASE_PROCAR)
+        (tmp_path / "OUTCAR").write_text(INP_OUTCAR)
+
+        with (
+            pytest.raises(ValueError, match="sums the up and down spinor phases"),
+            user_warning(__file__, match="sum of the up and down spinor"),
+        ):
+            pyprocar.unfold(
+                code="vasp", dirname=tmp_path, transformation_matrix=SUPERCELL, show=False
+            )
