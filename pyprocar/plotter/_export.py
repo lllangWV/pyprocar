@@ -22,7 +22,7 @@ def export_path(path: str | Path) -> Path:
     return path
 
 
-def recorded_columns(values: Mapping[str, object]) -> dict[str, np.ndarray]:
+def recorded_columns(values: Mapping[str, npt.ArrayLike | None]) -> dict[str, np.ndarray]:
     """The non-empty arrays a plotter recorded, or a ValueError when it recorded none."""
     if not values:
         raise ValueError("No values recorded. Plot first before exporting.")
