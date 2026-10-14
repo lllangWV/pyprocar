@@ -110,7 +110,7 @@ class Outcar(Mapping[str, Any]):
         return tuple(int(x) for x in self.version.split("."))
 
     @cached_property
-    def fermi(self):
+    def fermi(self) -> float:
         """
         Just finds all E-fermi fields in the outcar file and keeps the
         last one (if more than one found).
@@ -120,7 +120,14 @@ class Outcar(Mapping[str, Any]):
         fermi
             the fermi energy
         """
-        return float(re.findall(r"E-fermi\s*:\s*(-?\d+.\d+)", self.file_str)[-1])
+        values = re.findall(r"E-fermi\s*:\s*(-?\d+.\d+)", self.file_str)
+        if not values:
+            source = self.filepath if self.filepath is not None else "text"
+            raise ValueError(
+                f"The OUTCAR {source} has no 'E-fermi :' line, so it gives no Fermi energy;"
+                + " the run stopped before VASP wrote one."
+            )
+        return float(values[-1])
 
     @cached_property
     def is_non_collinear(self) -> bool | None:
