@@ -60,10 +60,8 @@ class _MeshReduction:
 
 
 def _last(pattern: str | re.Pattern[str], text: str) -> re.Match[str] | None:
-    last = None
-    for last in re.finditer(pattern, text):
-        pass
-    return last
+    matches = list(re.finditer(pattern, text))
+    return matches[-1] if matches else None
 
 
 def _mesh_reduction(text: str, kgrid: tuple[int | None, ...]) -> _MeshReduction | None:
@@ -94,7 +92,8 @@ def _mesh_reduction(text: str, kgrid: tuple[int | None, ...]) -> _MeshReduction 
         text, per_type.end()
     )
     position_block = re.compile(
-        rf"position of ions in fractional coordinates \(direct lattice\)\s*\n((?:.*\n){{{sum(counts)}}})"
+        r"position of ions in fractional coordinates \(direct lattice\)\s*\n"
+        + rf"((?:.*\n){{{sum(counts)}}})"
     ).search(text, per_type.end())
     if lattice_block is None or position_block is None:
         return None

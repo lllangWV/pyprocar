@@ -169,7 +169,7 @@ Automatic generation of k-mesh.
 {listed}
 
  Dimension of arrays:
-   k-points           NKPTS = {len(irreducible):6d}   k-points in BZ     NKDIM = {len(irreducible):6d}
+   k-points           NKPTS = {len(irreducible):6d}
    ions per type =               {per_type}
 --------------------------------------------------------------------------------------------------------
    ISPIN  =      1    spin polarized calculation?
