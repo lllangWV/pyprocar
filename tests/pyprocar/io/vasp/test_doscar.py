@@ -392,3 +392,12 @@ class TestDoscarWithoutDos:
 
         with pytest.raises(ValueError, match=re.escape(str(tmp_path / "DOSCAR")) + " holds no DOS"):
             DensityOfStates.from_code("vasp", calc)
+
+
+def test_an_outcar_without_e_fermi_raises_naming_it(tmp_path: Path) -> None:
+    # An interrupted run's OUTCAR stops before VASP writes "E-fermi :".
+    outcar = "   LNONCOLLINEAR =      F non collinear calculations\n"
+    calc = _calc_dir(tmp_path, DOSCAR=_doscar_text(1, 9), OUTCAR=outcar)
+
+    with pytest.raises(ValueError, match=re.escape(str(tmp_path / "OUTCAR")) + ".*E-fermi"):
+        DensityOfStates.from_code("vasp", calc)
