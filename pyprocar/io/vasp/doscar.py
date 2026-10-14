@@ -208,8 +208,8 @@ class Doscar:
         Return PDOS in shape (n_energies, n_spins, n_atoms, n_orbitals), or None
         when the DOSCAR has no projected blocks (LORBIT unset).
 
-        ``non_collinear`` is LNONCOLLINEAR of the run (from the OUTCAR). It is needed
-        only to read 16 columns per atom, which are either the 16 lm orbitals of a
+        ``non_collinear`` is LNONCOLLINEAR of the run (from the OUTCAR or PROCAR). It is
+        needed only to read 16 columns per atom, which are either the 16 lm orbitals of a
         collinear run or s, p, d, f times (total, mx, my, mz) of a non-collinear one.
         """
         nedos, natoms = self.nedos, self.natoms
@@ -253,8 +253,8 @@ class Doscar:
                 raise ValueError(
                     f"The DOSCAR has {n_columns} projected columns per atom: {n_columns}"
                     + f" orbitals of a collinear run or {n_columns // 4} orbitals times (total,"
-                    + " mx, my, mz) of a non-collinear one. Keep the run's OUTCAR, whose"
-                    + " LNONCOLLINEAR tells them apart, next to the DOSCAR."
+                    + " mx, my, mz) of a non-collinear one. Keep the run's OUTCAR (LNONCOLLINEAR)"
+                    + " or PROCAR, which tell them apart, next to the DOSCAR."
                 )
             non_collinear = fits_noncollinear
         if non_collinear and fits_noncollinear:

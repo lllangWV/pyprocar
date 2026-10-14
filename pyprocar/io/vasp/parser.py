@@ -184,6 +184,14 @@ class VaspParser(BaseParser):
         return tuple(int(x) for x in self.version.split("."))
 
     @cached_property
+    def is_non_collinear(self) -> bool | None:
+        """LNONCOLLINEAR of the run: from the OUTCAR, else from the PROCAR, else None."""
+        from_outcar = self.outcar.is_non_collinear if self.outcar is not None else None
+        if from_outcar is not None:
+            return from_outcar
+        return self.procar.is_non_colinear if self.procar is not None else None
+
+    @cached_property
     def is_spin_polarized(self) -> bool:
         if self.vasprun:
             return self.vasprun.is_spin_polarized
@@ -297,8 +305,7 @@ class VaspParser(BaseParser):
             return self.vasprun.partial  # shape: (n_energies, n_spins, n_atoms, n_orbitals)
         if self.doscar is not None:
             logger.info("Using doscar projected dos")
-            non_collinear = self.outcar.is_non_collinear if self.outcar else None
-            return self.doscar.projected(non_collinear=non_collinear)
+            return self.doscar.projected(non_collinear=self.is_non_collinear)
         return None
 
     @property
