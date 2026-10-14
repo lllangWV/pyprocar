@@ -7,6 +7,8 @@ import numpy as np
 from pyprocar.core.atomic_orbital_index import orbital_indices, present_shells
 from pyprocar.core.property_store import Property
 
+SPIN_COMPONENT_LABELS = ("Total projection", "Sx projection", "Sy projection", "Sz projection")
+
 
 class SpinSelection(NamedTuple):
     channels: list[int]
@@ -41,6 +43,15 @@ def resolve_spins(
             + f" (0 total, 1-3 Sx, Sy, Sz); got spins={list(spins)}"
         )
     return SpinSelection([0], [0] if spins is None else list(spins))
+
+
+def projection_colorbar_title(
+    configured: str, user_set: bool, is_non_collinear: bool, projection_spins: list[int]
+) -> str:
+    """The user's colorbar title, else a non-collinear Sx, Sy or Sz label, else ``configured``."""
+    if user_set or not is_non_collinear or projection_spins == [0]:
+        return configured
+    return SPIN_COMPONENT_LABELS[projection_spins[0]]
 
 
 def projection_components(source, kind: str, atoms=None, orbitals=None, items=None, **kwargs):
