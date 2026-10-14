@@ -212,8 +212,10 @@ class TestDoscar:
 
 VASP_LM_NAMES = ["s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz", "x2-y2"]
 VASP_F_NAMES = ["fy3x2", "fxyz", "fyz2", "fz3", "fxz2", "fzx2", "fx3"]
-COLLINEAR_OUTCAR = "   LNONCOLLINEAR =      F non collinear calculations\n E-fermi :   0.5000\n"
-NON_COLLINEAR_OUTCAR = "   LNONCOLLINEAR =      T non collinear calculations\n E-fermi :   0.5000\n"
+# VASP lists the parameters it ran with after the INCAR echo of an OUTCAR.
+_LISTED = " Startparameter for this run:\n   LNONCOLLINEAR =      {} non collinear calculations\n"
+COLLINEAR_OUTCAR = _LISTED.format("F") + " E-fermi :   0.5000\n"
+NON_COLLINEAR_OUTCAR = _LISTED.format("T") + " E-fermi :   0.5000\n"
 DOSCAR_NATOMS = 2
 DOSCAR_NEDOS = 3
 

@@ -12,6 +12,7 @@ import pytest
 
 from pyprocar.core.dos import DensityOfStates
 from pyprocar.core.property_store import Property
+from pyprocar.io.vasp.outcar import Outcar
 from tests.utils import DATA_DIR, writable_copy
 
 DOS_DIR = DATA_DIR / "examples" / "dos"
@@ -78,3 +79,107 @@ def test_doscar_dos_without_a_poscar_selects_atoms_and_rejects_species(tmp_path:
     )
     with pytest.raises(ValueError, match="no structure"):
         dos.compute_projected_sum(species=["V"])
+
+
+# The OUTCAR echoes the INCAR verbatim at its top and lists the parameters VASP ran
+# with after "Startparameter for this run:". LSORBIT turns LNONCOLLINEAR on.
+NON_COLINEAR_ECHO = "   LNONCOLLINEAR = .TRUE.\n"
+NON_COLINEAR_LISTED = "   LNONCOLLINEAR =      T non collinear calculations\n"
+
+
+def _edited(path: Path, old: str, new: str) -> str:
+    text = path.read_text()
+    assert text.count(old) == 1, f"{old!r} occurs {text.count(old)} times in {path}"
+    return text.replace(old, new)
+
+
+def _fixture_outcar(name: str) -> Path:
+    path = DOS_DIR / name / "OUTCAR"
+    if not path.exists():
+        pytest.skip(f"fixture dos/{name} not downloaded")
+    return path
+
+
+@pytest.mark.data
+@pytest.mark.parametrize(
+    ("name", "old", "new", "expected"),
+    [
+        pytest.param("non-colinear", "", "", True, id="non-collinear"),
+        pytest.param("non-spin-polarized", "", "", False, id="collinear"),
+        pytest.param(
+            "non-colinear", NON_COLINEAR_ECHO, "   LNONCOLLINEAR = F\n", True, id="echo-says-F"
+        ),
+        pytest.param(
+            "non-colinear",
+            NON_COLINEAR_LISTED,
+            "   LNONCOLLINEAR =      F non collinear calculations\n",
+            True,
+            id="LSORBIT-listed-T",
+        ),
+        pytest.param(
+            "non-colinear",
+            NON_COLINEAR_LISTED,
+            "   LNONCOLLINEAR = .TRUE. non collinear calculations\n",
+            True,
+            id="listed-as-.TRUE.",
+        ),
+        pytest.param(
+            "non-spin-polarized",
+            "   LNONCOLLINEAR =      F non collinear calculations\n",
+            "   LNONCOLLINEAR = .FALSE. non collinear calculations\n",
+            False,
+            id="listed-as-.FALSE.",
+        ),
+    ],
+)
+def test_outcar_non_collinear_is_the_value_vasp_ran_with(
+    name: str, old: str, new: str, expected: bool
+) -> None:
+    path = _fixture_outcar(name)
+    text = _edited(path, old, new) if old else path.read_text()
+
+    assert Outcar.from_str(text).is_non_collinear is expected
+
+
+@pytest.mark.data
+def test_outcar_without_its_parameter_listing_gives_no_non_collinear() -> None:
+    # A run killed before VASP listed its parameters leaves only the INCAR echo.
+    text = _edited(_fixture_outcar("non-colinear"), NON_COLINEAR_ECHO, "   LNONCOLLINEAR = T\n")
+    killed = text[: text.index(" Startparameter for this run:")]
+
+    assert Outcar.from_str(killed).is_non_collinear is None
+
+
+def _as_spdf(doscar: Path) -> None:
+    """Rewrite the projected blocks of a LORBIT=11 non-collinear DOSCAR (9 lm orbitals
+    times total, mx, my, mz) as s, p, d, f times the same 4, with f zero: 16 columns."""
+    lines = doscar.read_text().splitlines()
+    natoms, nedos = int(lines[0].split()[0]), int(lines[5].split()[2])
+    for atom in range(natoms):
+        first = 6 + nedos + 1 + atom * (nedos + 1)
+        for i in range(first, first + nedos):
+            row = [float(v) for v in lines[i].split()]
+            lm = np.array(row[1:]).reshape(9, 4)
+            spdf = [lm[0], lm[1:4].sum(axis=0), lm[4:9].sum(axis=0), np.zeros(4)]
+            lines[i] = f"{row[0]:10.3f}" + "".join(f"{v:12.4E}" for v in np.ravel(spdf))
+    doscar.write_text("\n".join(lines) + "\n")
+
+
+@pytest.mark.data
+def test_sixteen_columns_follow_the_run_parameters_not_the_incar_echo(tmp_path: Path) -> None:
+    calc = _doscar_only(tmp_path, "non-colinear", keep=("DOSCAR", "OUTCAR", "POSCAR"))
+    outcar = calc / "OUTCAR"
+    _ = outcar.write_text(_edited(outcar, NON_COLINEAR_ECHO, "   LNONCOLLINEAR = F\n"))
+    _as_spdf(calc / "DOSCAR")
+    reference = DensityOfStates.from_code("vasp", str(DOS_DIR / "non-colinear"))
+
+    dos = DensityOfStates.from_code("vasp", str(calc))
+
+    assert dos.orbital_names == ["s", "p", "d", "f"]
+    assert dos.projected is not None and reference.projected is not None
+    np.testing.assert_allclose(
+        dos.projected.value[..., 2],
+        reference.projected.value[..., 4:9].sum(axis=-1),
+        rtol=DOS_RTOL,
+        atol=5 * DOS_ATOL,
+    )
