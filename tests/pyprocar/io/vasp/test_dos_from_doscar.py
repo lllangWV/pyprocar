@@ -19,6 +19,7 @@ import pytest
 from pyprocar.core.dos import DensityOfStates
 from pyprocar.core.property_store import Property
 from pyprocar.io.vasp.outcar import Outcar
+from pyprocar.io.vasp.vasprun import VaspXML
 from tests.utils import DATA_DIR, writable_copy
 
 DOS_DIR = DATA_DIR / "examples" / "dos"
@@ -389,3 +390,18 @@ def test_a_doscar_next_to_another_runs_outcar_gives_its_own_fermi_energy(
 
     # The DOSCAR header of this run: "12.62318812 -31.06108337 6000 5.69903164 1.0".
     assert dos.fermi == 5.69903164
+
+
+@pytest.mark.data
+@pytest.mark.guards_existing_behaviour(
+    reason="main finds this DOS block; the one-block lookup must still find it in a 281 MB file"
+)
+def test_the_dos_block_of_a_large_vasprun_is_found() -> None:
+    calc = DATA_DIR / "examples" / "fermi2d" / "bisb_monolayer"
+    if not calc.exists():
+        pytest.skip("fixture fermi2d/bisb_monolayer not downloaded")
+
+    vaspxml = VaspXML(calc / "vasprun.xml")
+
+    assert vaspxml.has_dos
+    assert vaspxml.fermi == -1.21843928  # '<i name="efermi">     -1.21843928 </i>' in the file
