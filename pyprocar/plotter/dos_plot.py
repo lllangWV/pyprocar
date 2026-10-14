@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -799,16 +799,6 @@ class DOSPlotter:
             self.ax.legend(handles, labels, **kwargs)
         else:
             self.ax.legend(**kwargs)
-
-    # ------------------------------------------------------------------
-    # Data capture helpers
-    # ------------------------------------------------------------------
-    def store_arrays(self, mapping: Mapping[str, np.ndarray]) -> None:
-        self._values.update({key: np.asarray(value) for key, value in mapping.items()})
-
-    @property
-    def values_dict(self) -> dict[str, np.ndarray]:
-        return dict(self._values)
 
     def _resolve_channel_param(self, param: Iterable[Any] | None) -> Sequence[Any]:
         if len(param) > 1:
