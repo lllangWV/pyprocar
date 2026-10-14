@@ -361,6 +361,15 @@ class TestBandsplot:
                 code="vasp", dirname=calc, mode="parametric", fermi=FERMI, spins=[1, 2], show=False
             )
 
+    @pytest.mark.parametrize("spins", [[5], [-1]])
+    def test_non_collinear_rejects_an_unknown_spin_component(self, tmp_path, spins):
+        calc = _calc(tmp_path, "bands/non-colinear")
+
+        with pytest.raises(ValueError, match="spin component is 0 total, 1-3 Sx, Sy, Sz"):
+            pyprocar.bandsplot(
+                code="vasp", dirname=calc, mode="parametric", fermi=FERMI, spins=spins, show=False
+            )
+
     def test_non_collinear_ipr_uses_the_total_component(self, tmp_path):
         calc = _calc(tmp_path, "bands/non-colinear")
         ipr = ElectronicBandStructurePath.from_code("vasp", calc).compute_ebs_ipr().value
