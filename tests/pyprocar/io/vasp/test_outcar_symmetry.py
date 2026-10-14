@@ -1,0 +1,411 @@
+"""The operations VASP reduced its k-mesh with, when the OUTCAR prints no operator table.
+
+VASP prints the table only with NWRITE = 3. The default NWRITE = 2 leaves the point group's
+name, the operation count and the irreducible k-points, and pyprocar recovers the operations
+from those (issue #5).
+"""
+
+import re
+from dataclasses import dataclass
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from pyprocar.core.dos import DensityOfStates
+from pyprocar.io.vasp.outcar import Outcar
+from pyprocar.io.vasp.parser import VaspParser
+from tests.utils import DATA_DIR
+from tests.utils.lattices import MONOCLINIC as MONOCLINIC_LATTICE
+from tests.utils.lattices import fcc_primitive
+
+EXAMPLES = DATA_DIR / "examples"
+
+
+@dataclass(frozen=True)
+class Cell:
+    lattice: np.ndarray
+    positions: np.ndarray
+    species: tuple[str, ...]  # one atom of each
+
+
+@dataclass(frozen=True)
+class Mesh:
+    kind: str
+    size: tuple[int, int, int]
+    shift: tuple[float, float, float]  # as VASP prints it: Gamma's offset, in mesh steps
+
+
+# A one-atom monoclinic cell, unique axis b: the crystal's point group is 2/m (C_2h).
+MONOCLINIC = Cell(MONOCLINIC_LATTICE, np.zeros((1, 3)), ("Pb",))
+# InP as in VASP 6.5.0's testsuite, rows in its POSCAR's order: zinc blende, point group T_d.
+ZINC_BLENDE = Cell(
+    fcc_primitive(5.8686)[[1, 2, 0]], np.array([[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]]), ("In", "P")
+)
+
+GAMMA_331 = Mesh("Gamma", (3, 3, 1), (0.0, 0.0, 0.0))
+# Even Monkhorst-Pack meshes: VASP 6.5.0 prints the shift 0.5 along each even axis.
+MONKHORST_PACK_221 = Mesh("Monkhorst-Pack", (2, 2, 1), (0.5, 0.5, 0.0))
+MONKHORST_PACK_444 = Mesh("Monkhorst-Pack", (4, 4, 4), (0.5, 0.5, 0.5))
+
+# k-space rotations of 2/m in the monoclinic cell: a 2-fold axis along b turns a and c over.
+E = np.eye(3, dtype=int)
+INVERSION = -E
+C2_B = np.diag([-1, 1, -1])
+
+# The isymop matrices VASP 6.5.0 printed at NWRITE = 3 for zinc-blende InP, one per row.
+T_D_ISYMOP = """
+ 1  0  0  0  1  0  0  0  1    0  0  1  1  0  0  0  1  0    0  1  0  0  0  1  1  0  0
+-1 -1 -1  0  0  1  1  0  0   -1 -1 -1  0  1  0  0  0  1   -1 -1 -1  1  0  0  0  1  0
+ 0  1  0  1  0  0 -1 -1 -1    1  0  0  0  0  1 -1 -1 -1    0  0  1  0  1  0 -1 -1 -1
+ 0  0  1 -1 -1 -1  0  1  0    0  1  0 -1 -1 -1  1  0  0    1  0  0 -1 -1 -1  0  0  1
+-1 -1 -1  0  1  0  1  0  0   -1 -1 -1  1  0  0  0  0  1   -1 -1 -1  0  0  1  0  1  0
+ 0  1  0  0  0  1 -1 -1 -1    1  0  0  0  1  0 -1 -1 -1    0  0  1  1  0  0 -1 -1 -1
+ 1  0  0 -1 -1 -1  0  1  0    0  0  1 -1 -1 -1  1  0  0    0  1  0 -1 -1 -1  0  0  1
+ 1  0  0  0  0  1  0  1  0    0  1  0  1  0  0  0  0  1    0  0  1  0  1  0  1  0  0
+"""
+# VASP 6 lists the k-space rotation of each operation as isymop transposed.
+T_D = np.array(T_D_ISYMOP.split(), dtype=int).reshape(-1, 3, 3).transpose(0, 2, 1)
+
+THIRD = 1 / 3
+# Gamma 3x3x1 reduced by {E, I}, which time reversal alone also gives: each k pairs with -k.
+PAIRED_WITH_MINUS_K = [
+    ((0, 0, 0), 1),
+    ((THIRD, 0, 0), 2),
+    ((0, THIRD, 0), 2),
+    ((THIRD, THIRD, 0), 2),
+    ((-THIRD, THIRD, 0), 2),
+]
+# Monkhorst-Pack 2x2x1, k = (+-1/4, +-1/4, 0), reduced by {E, I}.
+QUARTERS_PAIRED_WITH_MINUS_K = [((0.25, 0.25, 0), 2), ((-0.25, 0.25, 0), 2)]
+# Gamma 3x3x1 reduced by {E, C2_b} alone: (k1, k2, 0) pairs with (-k1, k2, 0).
+TURNED_ABOUT_B = [
+    ((0, 0, 0), 1),
+    ((THIRD, 0, 0), 2),
+    ((0, THIRD, 0), 1),
+    ((0, -THIRD, 0), 1),
+    ((THIRD, THIRD, 0), 2),
+    ((THIRD, -THIRD, 0), 2),
+]
+# The irreducible k-points VASP 6.5.0 printed for zinc-blende InP on Monkhorst-Pack 4x4x4. T_d
+# carries the shifted mesh off itself, so VASP adds the images: the weights sum to 256, not 64.
+ZINC_BLENDE_MONKHORST_PACK_444 = [
+    ((0.125, 0.125, 0.125), 8),
+    ((0.375, 0.125, 0.125), 24),
+    ((-0.375, 0.125, 0.125), 24),
+    ((-0.125, 0.125, 0.125), 24),
+    ((0.375, 0.375, 0.125), 24),
+    ((-0.375, 0.375, 0.125), 48),
+    ((-0.125, 0.375, 0.125), 48),
+    ((-0.375, -0.375, 0.125), 24),
+    ((0.375, 0.375, 0.375), 8),
+    ((-0.375, 0.375, 0.375), 24),
+]
+
+
+def symmetry_lines(configuration: str, group: str, n_operations: int) -> str:
+    return f"""
+The {configuration} configuration has the point symmetry {group} .
+
+
+ Subroutine INISYM returns: Found {n_operations:2d} space group operations
+ (whereof {n_operations:2d} operations are pure point group operations),
+ and found     1 'primitive' translations
+"""
+
+
+OVERALL_S2 = symmetry_lines("overall", "S_2", 2)
+OVERALL_C2 = symmetry_lines("overall", "C_2", 2)
+DYNAMIC_T_D = symmetry_lines("dynamic", "T_d", 24)
+NOSYMM = "NOSYMM: (Re-)initialisation of all symmetry stuff for point group C_1.\n"
+
+
+def _rows(matrix: np.ndarray) -> str:
+    return "\n".join("  " + "  ".join(f"{x:13.9f}" for x in row) for row in matrix)
+
+
+def synthetic_outcar(
+    symmetry: str,
+    irreducible,
+    noncollinear: bool = False,
+    mesh: Mesh = GAMMA_331,
+    cell: Cell = MONOCLINIC,
+) -> str:
+    """An NWRITE = 2 OUTCAR."""
+    lattices = _rows(np.hstack([cell.lattice, np.linalg.inv(cell.lattice).T]))
+    listed = "\n".join(
+        f"  {k[0]:9.6f} {k[1]:9.6f} {k[2]:9.6f}      {w:8.6f}" for k, w in irreducible
+    )
+    flag = "T" if noncollinear else "F"
+    grid = "".join(f"{n:5d}" for n in mesh.size)
+    shift = "  ".join(f"{s:.9f}" for s in mesh.shift)
+    per_type = "   ".join("1" for _ in cell.species)
+    return f""" vasp.6.4.2 20Jul23 (build Apr  3 2024 16:30:41) complex
+ POSCAR = synthetic
+
+Analysis of structural, dynamic, and magnetic symmetry:
+=====================================================================
+{symmetry}
+
+ KPOINTS: {mesh.kind}
+
+Automatic generation of k-mesh.
+ Grid dimensions read from file:
+ generate k-points for:{grid}
+
+ Generating k-lattice:
+
+  Shift w.r.t. Gamma in fractional coordinates (k-lattice)
+     {shift}
+
+
+ Subroutine IBZKPT returns following result:
+ ===========================================
+
+ Found {len(irreducible):6d} irreducible k-points:
+
+ Following reciprocal coordinates:
+            Coordinates               Weight
+{listed}
+
+ Dimension of arrays:
+   k-points           NKPTS = {len(irreducible):6d}
+   ions per type =               {per_type}
+--------------------------------------------------------------------------------------------------------
+   ISPIN  =      1    spin polarized calculation?
+   LNONCOLLINEAR =      {flag} non collinear calculations
+
+      direct lattice vectors                 reciprocal lattice vectors
+{lattices}
+
+  length of vectors
+
+ position of ions in fractional coordinates (direct lattice)
+{_rows(cell.positions)}
+
+ E-fermi :   0.0000     XC(G=0):  -1.0000     alpha+bet : -1.0000
+
+"""
+
+
+def poscar(cell: Cell = MONOCLINIC) -> str:
+    return (
+        f"synthetic\n1.0\n{_rows(cell.lattice)}\n{' '.join(cell.species)}\n"
+        + f"{' '.join('1' for _ in cell.species)}\nDirect\n{_rows(cell.positions)}\n"
+    )
+
+
+def kpoints_file(mesh: Mesh = GAMMA_331) -> str:
+    return f"{mesh.kind}\n0\n{mesh.kind}\n {' '.join(str(n) for n in mesh.size)}\n 0 0 0\n"
+
+
+def synthetic_procar(irreducible, n_ions: int = 1) -> str:
+    """One band whose energy is the irreducible k-point's 1-based index."""
+    total = sum(weight for _, weight in irreducible)
+    header = "ion      s     py     pz     px    dxy    dyz    dz2    dxz  x2-y2    tot\n"
+    ion_rows = "".join(
+        f"{ion:5d}  1.000" + "  0.000" * 8 + "  1.000\n" for ion in range(1, n_ions + 1)
+    )
+    if n_ions > 1:
+        ion_rows += f"tot  {n_ions:5.3f}" + "  0.000" * 8 + f"  {n_ions:5.3f}\n"
+    blocks = [
+        f"PROCAR lm decomposed\n# of k-points:  {len(irreducible)}"
+        + f"         # of bands:    1         # of ions:    {n_ions}\n"
+    ]
+    for index, (k, weight) in enumerate(irreducible, start=1):
+        blocks.append(
+            f"\n k-point {index:5d} :    {k[0]:.8f} {k[1]:.8f} {k[2]:.8f}"
+            + f"     weight = {weight / total:.8f}\n\n"
+            + f"band     1 # energy {index:13.8f} # occ.  1.00000000\n \n"
+            + header
+            + ion_rows
+            + " \n"
+        )
+    return "".join(blocks)
+
+
+def as_set(rotations) -> set[tuple[int, ...]]:
+    return {tuple(np.rint(rotation).astype(int).ravel()) for rotation in rotations}
+
+
+@pytest.mark.parametrize(
+    ("outcar", "expected"),
+    [
+        # 2/m has one subgroup named S_2 (Ci).
+        pytest.param(synthetic_outcar(OVERALL_S2, PAIRED_WITH_MINUS_K), [E, INVERSION], id="S_2"),
+        # VASP reduces a non-collinear mesh by its operations alone, without k -> -k: only
+        # {E, C2_b} leaves (0, 1/3, 0) and (0, -1/3, 0) in separate orbits.
+        pytest.param(
+            synthetic_outcar(OVERALL_C2, TURNED_ABOUT_B, noncollinear=True),
+            [E, C2_B],
+            id="non-collinear-C_2",
+        ),
+        # ISYM = 0: VASP names C_1 and pairs each k with -k by time reversal alone.
+        pytest.param(synthetic_outcar(NOSYMM, PAIRED_WITH_MINUS_K), [E], id="ISYM=0"),
+        pytest.param(
+            synthetic_outcar(
+                DYNAMIC_T_D,
+                ZINC_BLENDE_MONKHORST_PACK_444,
+                mesh=MONKHORST_PACK_444,
+                cell=ZINC_BLENDE,
+            ),
+            T_D,
+            id="mesh-carried-off-itself",
+        ),
+    ],
+)
+def test_outcar_without_table_recovers_the_operations_vasp_used(outcar, expected):
+    assert as_set(Outcar.from_str(outcar).rotations) == as_set(expected)
+
+
+@pytest.mark.parametrize(
+    ("symmetry", "irreducible", "mesh", "cell", "operations"),
+    [
+        pytest.param(OVERALL_S2, PAIRED_WITH_MINUS_K, GAMMA_331, MONOCLINIC, [E], id="S_2"),
+        pytest.param(NOSYMM, PAIRED_WITH_MINUS_K, GAMMA_331, MONOCLINIC, [E], id="ISYM=0"),
+        pytest.param(
+            OVERALL_S2,
+            QUARTERS_PAIRED_WITH_MINUS_K,
+            MONKHORST_PACK_221,
+            MONOCLINIC,
+            [E],
+            id="Monkhorst-Pack",
+        ),
+        pytest.param(
+            DYNAMIC_T_D,
+            ZINC_BLENDE_MONKHORST_PACK_444,
+            MONKHORST_PACK_444,
+            ZINC_BLENDE,
+            T_D,
+            id="mesh-carried-off-itself",
+        ),
+    ],
+)
+def test_reduced_mesh_unfolds_to_the_full_grid(symmetry, irreducible, mesh, cell, operations):
+    """Each grid point gets the energy of the irreducible k-point whose orbit holds it.
+
+    The orbits are taken under the operations VASP printed, each also with k -> -k.
+    """
+    parser = VaspParser.from_str(
+        outcar=synthetic_outcar(symmetry, irreducible, mesh=mesh, cell=cell),
+        procar=synthetic_procar(irreducible, n_ions=len(cell.species)),
+        kpoints=kpoints_file(mesh),
+        poscar=poscar(cell),
+    )
+
+    ebs = parser.ebs
+
+    assert ebs is not None
+    assert ebs.bands is not None
+    assert ebs.n_kpoints == np.prod(mesh.size)
+    signed = np.concatenate([operations, np.negative(operations)])
+    for kpoint, energy in zip(ebs.kpoints, ebs.bands[:, 0, 0], strict=True):
+        steps = kpoint - np.einsum("oij,sj->soi", signed, [k for k, _ in irreducible])
+        in_orbit = np.all(np.abs(steps - np.rint(steps)) < 1e-6, axis=2).any(axis=1)
+        assert energy == np.flatnonzero(in_orbit)[0] + 1, kpoint
+
+
+@pytest.mark.guards_existing_behaviour(
+    reason="main recovers no operations at all; this pins that the fit refuses this list"
+)
+def test_collinear_outcar_whose_list_needs_no_time_reversal_recovers_nothing():
+    """A collinear run pairs k with -k, so no subgroup of 2/m gives the C_2 list."""
+    outcar = Outcar.from_str(synthetic_outcar(OVERALL_C2, TURNED_ABOUT_B))
+
+    assert len(outcar.rotations) == 0
+
+
+def test_named_group_that_does_not_fit_the_list_raises_from_ebs():
+    """With time reversal, {E, C2_b} sends (1/3, 1/3, 0) to 4 grid points, not the 2 listed."""
+    parser = VaspParser.from_str(
+        outcar=synthetic_outcar(OVERALL_C2, PAIRED_WITH_MINUS_K),
+        procar=synthetic_procar(PAIRED_WITH_MINUS_K),
+        kpoints=kpoints_file(),
+        poscar=poscar(),
+    )
+
+    assert parser.outcar is not None
+    assert len(parser.outcar.rotations) == 0
+    with pytest.raises(
+        ValueError, match=r"holds 5 k-points, not the 9 of the 3x3x1 mesh.*NWRITE = 3.*ISYM = -1"
+    ):
+        _ = parser.ebs
+
+
+# Every fixture OUTCAR that prints a VASP 6 operator table and reduces an automatic mesh.
+TABLE_FIXTURES = [
+    "dos/non-spin-polarized",
+    "dos/spin-polarized",
+    "dos/non-colinear",
+    "fermi2d/non-spin-polarized",
+    "fermi2d/spin-polarized",
+    "fermi3d/non-spin-polarized",
+    "fermi3d/spin-polarized",
+    "fermi3d/non-colinear",
+    "bands/2d-bands/graphene",
+]
+
+
+def strip_operator_table(text: str) -> str:
+    """The OUTCAR as NWRITE = 2 writes it: no irot blocks."""
+    return re.sub(r"^ irot\s*:.*?rotmap:\s*\n[^\n]*\n", "", text, flags=re.MULTILINE | re.DOTALL)
+
+
+def printed_table(text: str) -> list[np.ndarray]:
+    """VASP's isymop matrices, transposed: the k-space rotations VASP 6 lists. Read here
+    rather than through Outcar, so the expected set does not come from the code under test."""
+    rows = r"\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)"
+    return [
+        np.array(found, dtype=int).reshape(3, 3).T
+        for found in re.findall(r"isymop:" + rows * 3, text)
+    ]
+
+
+@pytest.mark.data
+@pytest.mark.parametrize("fixture", TABLE_FIXTURES)
+def test_recovered_operations_equal_the_printed_table(fixture):
+    text = (EXAMPLES / fixture / "OUTCAR").read_text()
+    stripped = Outcar.from_str(strip_operator_table(text))
+    table = printed_table(text)
+    assert table, "the fixture prints an operator table"
+    assert stripped.get_symmetry_operations() == []
+
+    assert as_set(stripped.rotations) == as_set(table)
+
+
+def _stripped_parser(fixture: Path) -> VaspParser:
+    outcar = Outcar.from_str(strip_operator_table((fixture / "OUTCAR").read_text()))
+    return VaspParser(dirpath=fixture, outcar=outcar)
+
+
+@pytest.mark.data
+def test_ambiguous_group_raises_from_ebs():
+    """O_h has four S_6 subgroups, one per body diagonal, and the 61x61x1 list fits each."""
+    parser = _stripped_parser(EXAMPLES / "fermi2d" / "non-colinear")
+
+    assert parser.outcar is not None
+    assert len(parser.outcar.rotations) == 0
+    with pytest.raises(
+        ValueError, match=r"holds 1831 k-points, not the 3721.*NWRITE = 3.*ISYM = -1"
+    ):
+        _ = parser.ebs
+
+
+@pytest.mark.data
+@pytest.mark.guards_existing_behaviour(
+    reason="the DOS of an NWRITE = 2 run reads as before; only ebs raises when it cannot unfold"
+)
+def test_ambiguous_group_still_reads_the_dos():
+    dos = _stripped_parser(EXAMPLES / "fermi2d" / "non-colinear").dos
+
+    assert isinstance(dos, DensityOfStates)
+
+
+@pytest.mark.data
+@pytest.mark.guards_existing_behaviour(
+    reason="a band path has no mesh to unfold, so it keeps no operations as before"
+)
+def test_band_path_without_table_keeps_no_operations():
+    outcar = Outcar(EXAMPLES / "bands" / "non-colinear" / "OUTCAR")
+
+    assert outcar.rotations.shape == (0, 3, 3)
