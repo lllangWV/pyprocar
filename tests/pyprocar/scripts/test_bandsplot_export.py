@@ -18,6 +18,7 @@ FERMI = 5.3017
 
 @pytest.fixture(autouse=True)
 def close_figures():
+    plt.close("all")  # a figure an earlier test on this worker left open is not ours
     yield
     plt.close("all")
 
