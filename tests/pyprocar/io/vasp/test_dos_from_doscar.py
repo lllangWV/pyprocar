@@ -15,8 +15,10 @@ from xml.etree import ElementTree
 
 import numpy as np
 import pytest
+from lxml import etree
 
 from pyprocar.core.dos import DensityOfStates
+from pyprocar.core.ebs import ElectronicBandStructure
 from pyprocar.core.property_store import Property
 from pyprocar.io.vasp.outcar import Outcar
 from pyprocar.io.vasp.vasprun import VaspXML
@@ -373,3 +375,43 @@ def test_the_fermi_energy_of_a_large_vasprun_comes_from_its_dos_block() -> None:
     vaspxml = _large_vasprun()
 
     assert vaspxml.fermi == -1.21843928  # '<i name="efermi">     -1.21843928 </i>' in the file
+
+
+def _truncated_vasprun_run(tmp_path: Path, keep: tuple[str, ...]) -> Path:
+    """A copy of the non-spin-polarized run whose vasprun.xml stops halfway, as a run
+    that was interrupted while writing it leaves it."""
+    calc = _doscar_only(tmp_path, "non-spin-polarized", keep=("vasprun.xml", *keep))
+    vasprun = calc / "vasprun.xml"
+    text = vasprun.read_bytes()
+    _ = vasprun.write_bytes(text[: len(text) // 2])
+    return calc
+
+
+@pytest.mark.data
+def test_a_truncated_vasprun_raises_naming_the_file(tmp_path: Path) -> None:
+    calc = _truncated_vasprun_run(tmp_path, keep=("DOSCAR", "OUTCAR", "POSCAR"))
+
+    with pytest.raises(ValueError, match="could not be parsed") as excinfo:
+        _ = DensityOfStates.from_code("vasp", str(calc))
+
+    message = str(excinfo.value)
+    assert str(calc / "vasprun.xml") in message
+    assert "interrupted" in message
+    assert "VaspParser(dirpath, vasprun=None)" in message
+    assert isinstance(excinfo.value.__cause__, etree.XMLSyntaxError)
+
+
+@pytest.mark.data
+@pytest.mark.guards_existing_behaviour(
+    reason="main reads the bands of a run whose vasprun.xml is truncated; they come from"
+    + " the PROCAR and OUTCAR, so the vasprun.xml error must not reach them"
+)
+def test_a_truncated_vasprun_leaves_the_band_structure_readable(tmp_path: Path) -> None:
+    calc = _truncated_vasprun_run(tmp_path, keep=("PROCAR", "OUTCAR", "POSCAR", "KPOINTS"))
+    reference = ElectronicBandStructure.from_code("vasp", str(DOS_DIR / "non-spin-polarized"))
+
+    ebs = ElectronicBandStructure.from_code("vasp", str(calc))
+
+    assert ebs.bands is not None and reference.bands is not None
+    np.testing.assert_array_equal(ebs.bands.value, reference.bands.value)
+    assert ebs.fermi == reference.fermi

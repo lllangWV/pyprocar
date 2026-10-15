@@ -1,7 +1,9 @@
+from pathlib import Path
 from typing import NamedTuple
 
 import numpy as np
 import pytest
+from lxml import etree
 
 from pyprocar.io.vasp.vasprun import VaspXML
 
@@ -2067,3 +2069,17 @@ def test_a_kpoints_opt_dos_block_alone_is_no_dos() -> None:
 
     assert not vaspxml.has_dos
     assert vaspxml.total is None and vaspxml.partial is None and vaspxml.fermi is None
+
+
+def test_a_truncated_vasprun_raises_naming_the_file(tmp_path: Path) -> None:
+    path = tmp_path / "vasprun.xml"
+    # A run interrupted while writing vasprun.xml leaves it cut off mid-element.
+    _ = path.write_text(f'<?xml version="1.0" encoding="ISO-8859-1"?>\n<modeling>\n{RUN_DOS[:120]}')
+
+    with pytest.raises(ValueError, match="could not be parsed") as excinfo:
+        _ = VaspXML(path).has_dos
+
+    message = str(excinfo.value)
+    assert str(path) in message
+    assert "VaspParser(dirpath, vasprun=None)" in message
+    assert isinstance(excinfo.value.__cause__, etree.XMLSyntaxError)
