@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 import matplotlib.pyplot as plt
@@ -16,6 +17,7 @@ from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 
 from pyprocar.core.property_store import Property
+from pyprocar.plotter._export import recorded_columns, write_table
 from pyprocar.plotter._series import ShowColorbar
 from pyprocar.utils.log_utils import warn_user
 
@@ -667,39 +669,15 @@ class FermiSlicePlotter:
     # Export methods (Phase 7)
     # ------------------------------------------------------------------
 
-    def export_data(self, filename: str) -> None:
+    def export_data(self, filename: str | Path) -> None:
         """Export recorded plot arrays to file.
 
         Parameters
         ----------
-        filename : str
+        filename : str or Path
             Output path. Extension determines format (csv, txt, json, dat).
         """
-        import json
-
-        import pandas as pd
-
-        possible_file_types = ["csv", "txt", "json", "dat"]
-        file_type = filename.split(".")[-1]
-        if file_type not in possible_file_types:
-            raise ValueError(f"File type must be one of {possible_file_types}")
-        if not self.values_dict:
-            raise ValueError("No values recorded. Plot first before exporting.")
-
-        values = {}
-        for key, value in self.values_dict.items():
-            arr = np.atleast_1d(value)
-            if arr.size > 0:
-                values[key] = arr
-
-        if file_type in ["csv", "txt", "dat"]:
-            df = pd.DataFrame(values)
-            sep = "," if file_type == "csv" else "\t" if file_type == "txt" else " "
-            df.to_csv(filename, sep=sep, index=False)
-        else:  # json
-            serializable = {k: np.asarray(v).tolist() for k, v in values.items()}
-            with open(filename, "w") as f:
-                json.dump(serializable, f)
+        write_table(filename, recorded_columns(self.values_dict))
 
     def show(self) -> None:
         """Display the plot."""

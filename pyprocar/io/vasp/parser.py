@@ -6,12 +6,11 @@ from typing import overload
 import numpy as np
 
 import pyprocar.core.kpoints as kpoints_core
-from pyprocar.core.atomic_orbital_index import OrbitalIndexer
 from pyprocar.core.dos import DensityOfStates
 from pyprocar.core.ebs import ElectronicBandStructure, get_ebs_from_data
 from pyprocar.core.structure import Structure
 from pyprocar.io.base import BaseParser
-from pyprocar.io.vasp.doscar import Doscar
+from pyprocar.io.vasp.doscar import Doscar, dos_orbital_names
 from pyprocar.io.vasp.kpoints import Kpoints
 from pyprocar.io.vasp.outcar import Outcar
 from pyprocar.io.vasp.poscar import Poscar
@@ -20,8 +19,6 @@ from pyprocar.io.vasp.vasprun import VaspXML
 from pyprocar.utils.log_utils import warn_user
 
 logger = logging.getLogger(__name__)
-
-ORBITAL_ORDERING = OrbitalIndexer()
 
 
 class VaspParser(BaseParser):
@@ -187,6 +184,14 @@ class VaspParser(BaseParser):
         return tuple(int(x) for x in self.version.split("."))
 
     @cached_property
+    def is_non_collinear(self) -> bool | None:
+        """LNONCOLLINEAR of the run: from the OUTCAR, else from the PROCAR, else None."""
+        from_outcar = self.outcar.is_non_collinear if self.outcar is not None else None
+        if from_outcar is not None:
+            return from_outcar
+        return self.procar.is_non_colinear if self.procar is not None else None
+
+    @cached_property
     def is_spin_polarized(self) -> bool:
         if self.vasprun:
             return self.vasprun.is_spin_polarized
@@ -225,14 +230,13 @@ class VaspParser(BaseParser):
 
     @cached_property
     def fermi(self) -> float | None:
-        if self.outcar is not None:
-            fermi = self.outcar.fermi
-        elif self.vasprun is not None:
-            fermi = self.vasprun.fermi
-        else:
-            fermi = None
+        """The OUTCAR's E-fermi, which ``ebs`` carries, else None.
 
-        return fermi
+        ``dos`` carries the Fermi energy of the file its DOS comes from instead.
+        """
+        if self.outcar is not None and self.outcar.has_fermi:
+            return self.outcar.fermi
+        return None
 
     @property
     def ebs(self) -> ElectronicBandStructure | None:
@@ -286,25 +290,28 @@ class VaspParser(BaseParser):
         )
 
     @cached_property
+    def _dos_vasprun(self) -> VaspXML | None:
+        """vasprun.xml when it holds a DOS of the run's k-mesh.
+
+        The DOS (energies, total, projected and Fermi energy) comes from this file
+        alone, else from the DOSCAR alone, so pieces of two runs never mix.
+        """
+        return self.vasprun if self.vasprun is not None and self.vasprun.has_dos else None
+
+    @cached_property
     def energies(self) -> np.ndarray | None:
-        if self.vasprun is not None and self.vasprun.has_dos:
-            energies = self.vasprun.dos_energies
-
-        elif self.doscar is not None and self.doscar.has_dos:
-            energies = self.doscar.energies
-        else:
-            return None
-
-        # if self.is_spin_polarized:
-        #     energies = np.repeat(energies, 2, axis=0)
-        return energies
+        if self._dos_vasprun is not None:
+            return self._dos_vasprun.dos_energies
+        if self.doscar is not None:
+            return self.doscar.energies
+        return None
 
     @cached_property
     def total_dos(self) -> np.ndarray | None:
-        if self.vasprun is not None and self.vasprun.has_dos:
-            total_dos = self.vasprun.total  # shape: (n_energies, n_spins)
-        elif self.doscar is not None and self.doscar.has_dos:
-            total_dos = self.doscar.total
+        if self._dos_vasprun is not None:
+            total_dos = self._dos_vasprun.total  # shape: (n_energies, n_spins)
+        elif self.doscar is not None:
+            total_dos = self.doscar.total_dos
         else:
             return None
 
@@ -313,34 +320,42 @@ class VaspParser(BaseParser):
 
     @cached_property
     def projected_dos(self) -> np.ndarray | None:
-        if self.vasprun is not None and self.vasprun.has_dos:
+        if self._dos_vasprun is not None:
             logger.info("Using vasprun projected dos")
-            return self.vasprun.partial  # shape: (n_energies, n_spins, n_atoms, n_orbitals)
-        elif self.doscar is not None and self.doscar.has_dos:
+            return self._dos_vasprun.partial  # shape: (n_energies, n_spins, n_atoms, n_orbitals)
+        if self.doscar is not None:
             logger.info("Using doscar projected dos")
-            return self.doscar.projected_dos
-        else:
-            return None
+            return self.doscar.projected(non_collinear=lambda: self.is_non_collinear)
+        return None
 
     @property
     def dos(self) -> DensityOfStates | None:
-        try:
-            dos = DensityOfStates(
-                energies=self.energies,
-                total=self.total_dos,
-                fermi=self.fermi,
-                projected=self.projected_dos,
-                orbital_names=self._orbital_names(self.projected_dos),
-                structure=self.structure,
+        if self.energies is None or self.total_dos is None:
+            return None
+        return DensityOfStates(
+            energies=self.energies,
+            total=self.total_dos,
+            fermi=self._dos_fermi,
+            projected=self.projected_dos,
+            orbital_names=self._orbital_names(self.projected_dos),
+            structure=self.structure,
+        )
+
+    @property
+    def _dos_fermi(self) -> float:
+        """The Fermi energy of the file the DOS comes from; no other file's stands in."""
+        if self._dos_vasprun is None:
+            assert self.doscar is not None, "the DOS comes from the DOSCAR"
+            return self.doscar.efermi
+        fermi = self._dos_vasprun.fermi
+        if fermi is None:
+            raise ValueError(
+                f"The vasprun.xml {self._dos_vasprun.filepath} holds a DOS but no efermi in"
+                + " its <dos> block, and a DOS takes its Fermi energy only from the file it"
+                + " comes from. Restore the efermi line, or read the DOSCAR's DOS with"
+                + " VaspParser(dirpath, vasprun=None)."
             )
-        except Exception:
-            msg = (
-                "Issue with parsing the DOS. "
-                "Either it was not found or there is an issue with the parser"
-            )
-            logger.warning(msg)
-            dos = None
-        return dos
+        return fermi
 
     @property
     def structure(self) -> Structure | None:
@@ -373,4 +388,4 @@ class VaspParser(BaseParser):
     def _orbital_names(projected: np.ndarray | None) -> list[str] | None:
         if projected is None:
             return None
-        return ORBITAL_ORDERING.flat_conventional[: projected.shape[-1]]
+        return list(dos_orbital_names(projected.shape[-1]))

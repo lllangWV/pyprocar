@@ -7,7 +7,7 @@ Each feature has a reusable driver in `scripts/examples/<feature>.py`. It runs e
 | Feature | File | Driver / fixture | Status (dev @ d6d4aaa7, re-driven 2026-10-04) |
 |---|---|---|---|
 | Band structure along a k-path | [bands.md](bands.md) | `bands.py` / `data/examples/bands/non-spin-polarized` | Object API plain/parametric/scatter/`plot_quiver`/flip and legacy `bandsplot` plain/parametric/scatter/overlay_species and `bandsdosplot` work; `plot(vectors_mode=)` and `plot_overlay` crash |
-| Density of states | [dos.md](dos.md) | `dos.py` / `data/examples/dos/non-spin-polarized` | Object API and legacy `dosplot` plain/parametric work; other `dosplot` modes not driven |
+| Density of states | [dos.md](dos.md) | `dos.py` / `data/examples/dos/non-spin-polarized` | Object API and legacy `dosplot` plain/parametric work, and `dosplot(export_data_file=)` and the DOSCAR-only VASP path (#10) are tested; other `dosplot` modes not driven |
 | 3D Fermi surface | [fermi3d.md](fermi3d.md) | `fermi3d.py` / `data/examples/fermi3d/non-spin-polarized` | Object API and legacy `FermiHandler` plain/parametric/fermi_speed work |
 | 2D Fermi slice | [fermi2d.md](fermi2d.md) | `fermi2d.py` / `data/examples/fermi2d/non-spin-polarized` | Legacy `fermi2D` plain/parametric and `FermiSlicePlotter` with and without scalars work; `plot(scalars_data=<Property>)` draws uncolored lines |
 | 2D band structure surface | [bs2d.md](bs2d.md) | `bs2d.py` / `data/examples/bands/2d-bands` | Object API and legacy `BandStructure2DHandler` work |

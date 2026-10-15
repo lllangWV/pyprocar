@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import NamedTuple
 
 import numpy as np
@@ -1462,8 +1463,11 @@ class TestVasprunTotal:
     def case(self, request: pytest.FixtureRequest) -> VaspXMLTotalTestCase:
         return request.param
 
+    @pytest.mark.guards_existing_behaviour(
+        reason="the total parse is unchanged; the reader now takes it from a <dos> block"
+    )
     def test_total_shape(self, case: VaspXMLTotalTestCase) -> None:
-        vaspxml = VaspXML.from_str(case.data)
+        vaspxml = VaspXML.from_str(f"<dos>{case.data}</dos>")
         assert vaspxml.total.shape == (2, case.n_spins)
 
 
@@ -1624,8 +1628,11 @@ class TestVasprunPartial:
     def case(self, request: pytest.FixtureRequest) -> VaspXMLPartialTestCase:
         return request.param
 
+    @pytest.mark.guards_existing_behaviour(
+        reason="the partial parse is unchanged; the reader now takes it from a <dos> block"
+    )
     def test_partial_shape(self, case: VaspXMLPartialTestCase) -> None:
-        vaspxml = VaspXML.from_str(case.data)
+        vaspxml = VaspXML.from_str(f"<dos>{case.data}</dos>")
         assert vaspxml.partial.shape == (2, case.n_spins, 2, 9)
 
 
@@ -2005,3 +2012,74 @@ FINAL_STRUCTURE_ELEMENT = """ <structure name="finalpos" >
 def parse_final_structure_element():
     parser = VaspXML.from_str(FINAL_STRUCTURE_ELEMENT)
     assert False
+
+
+def test_fermi_comes_from_the_dos_block_the_total_dos_is_read_from() -> None:
+    vaspxml = VaspXML.from_str(
+        """<modeling>
+ <calculation><dos><i name="efermi">      4.96063322 </i>
+  <total><array><set><set comment="spin 1"><r> -1.0 2.0 0.0 </r></set></set></array></total>
+ </dos></calculation>
+ <calculation><dos><i name="efermi">      1.25000000 </i>
+  <total><array><set><set comment="spin 1"><r> -1.0 7.0 0.0 </r></set></set></array></total>
+ </dos></calculation>
+</modeling>"""
+    )
+
+    assert vaspxml.total is not None and vaspxml.total[0, 0] == 2.0
+    assert vaspxml.fermi == 4.96063322
+
+
+def test_fermi_is_none_when_no_dos_block_gives_an_efermi() -> None:
+    vaspxml = VaspXML.from_str("<modeling><calculation><dos/></calculation></modeling>")
+
+    assert vaspxml.fermi is None
+
+
+def _dos_block(attributes: str, efermi: str, energy: str, total: str, partial: str) -> str:
+    """A <dos> block of one energy, one spin and one ion projected onto two orbitals."""
+    return f"""<dos{attributes}><i name="efermi">      {efermi} </i>
+  <total><array><set><set comment="spin 1"><r> {energy} {total} 0.0 </r></set></set></array></total>
+  <partial><array><set><set comment="ion 1"><set comment="spin 1"><r> {energy} {partial} </r>
+  </set></set></set></array></partial>
+ </dos>"""
+
+
+# VASP 6 with KPOINTS_OPT writes the DOS of the extra k-points before the DOS of the
+# run's own k-mesh, in the same calculation.
+KPOINTS_OPT_DOS = _dos_block(' comment="kpoints_opt"', "4.20000000", "-2.0", "9.0", "9.0 8.0")
+RUN_DOS = _dos_block("", "5.69903164", "-1.0", "2.0", "0.5 0.25")
+
+
+def test_the_dos_is_the_block_of_the_runs_k_mesh_not_the_kpoints_opt_block() -> None:
+    vaspxml = VaspXML.from_str(
+        f"<modeling><calculation>{KPOINTS_OPT_DOS}{RUN_DOS}</calculation></modeling>"
+    )
+
+    assert vaspxml.has_dos
+    np.testing.assert_array_equal(vaspxml.dos_energies, [-1.0])
+    np.testing.assert_array_equal(vaspxml.total, [[2.0]])
+    np.testing.assert_array_equal(vaspxml.partial, [[[[0.5, 0.25]]]])
+    assert vaspxml.fermi == 5.69903164
+
+
+def test_a_kpoints_opt_dos_block_alone_is_no_dos() -> None:
+    vaspxml = VaspXML.from_str(f"<modeling><calculation>{KPOINTS_OPT_DOS}</calculation></modeling>")
+
+    assert not vaspxml.has_dos
+    assert vaspxml.total is None and vaspxml.partial is None and vaspxml.fermi is None
+
+
+def test_a_truncated_vasprun_raises_naming_the_file(tmp_path: Path) -> None:
+    path = tmp_path / "vasprun.xml"
+    # A run interrupted while writing vasprun.xml leaves it cut off mid-element.
+    _ = path.write_text(f'<?xml version="1.0" encoding="ISO-8859-1"?>\n<modeling>\n{RUN_DOS[:120]}')
+
+    with pytest.raises(ValueError, match="could not be parsed") as excinfo:
+        _ = VaspXML(path).has_dos
+
+    message = str(excinfo.value)
+    assert str(path) in message
+    assert "VaspParser(dirpath, vasprun=None)" in message
+    # lxml's XMLSyntaxError, chained; it subclasses SyntaxError.
+    assert isinstance(excinfo.value.__cause__, SyntaxError)

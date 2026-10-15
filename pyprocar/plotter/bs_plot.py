@@ -3,10 +3,10 @@ __maintainer__ = "Pedram Tavadze and Logan Lang"
 __email__ = "petavazohi@mail.wvu.edu, lllang@mix.wvu.edu"
 __date__ = "March 31, 2020"
 
-import json
 import logging
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any
 
 import matplotlib.cm as cm
@@ -14,13 +14,13 @@ import matplotlib.colors as mpcolors
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection, PathCollection
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MultipleLocator
 
 from pyprocar.core.kpoints import KPath
+from pyprocar.plotter._export import recorded_columns, write_table
 from pyprocar.plotter._series import LineSeries, channel_lims, line_series, resolve_clim
 
 logger = logging.getLogger(__name__)
@@ -911,54 +911,24 @@ class BandStructurePlotter:
         """Save the current figure to disk."""
         self.fig.savefig(filename, dpi=(dpi or self.dpi), bbox_inches=bbox_inches)
 
-    def export_data(self, filename: str):
+    def export_data(self, filename: str | Path):
         """Export recorded plot arrays to CSV/TXT/JSON/DAT.
 
         Parameters
         ----
-        filename : str
+        filename : str or Path
             Output path; extension defines format.
         """
-        possible_file_types = ["csv", "txt", "json", "dat"]
-        file_type = filename.split(".")[-1]
-        if file_type not in possible_file_types:
-            raise ValueError(f"The file type must be {possible_file_types}")
-        if not self.values_dict:
-            raise ValueError("No values recorded. Plot first before exporting.")
-
-        values = {}
-        for key, value in self.values_dict.items():
-            if value is None:
-                continue
-            arr = np.atleast_1d(value)
-            if arr.size > 0:
-                values[key] = arr
-
-        column_names = list(values.keys())
-        sorted_columns = []
-        for key in ["kpath_values", "kpath_tick_names", "k_current"]:
-            if key in column_names:
-                sorted_columns.append(key)
+        values = recorded_columns(self.values_dict)
+        order = [key for key in ["kpath_values", "kpath_tick_names", "k_current"] if key in values]
         for ispin in range(2):
-            for name in column_names:
-                if name.startswith("bands__") and name.endswith(f"spinChannel-{ispin}"):
-                    sorted_columns.append(name)
-        for name in sorted(column_names):
-            if name not in sorted_columns:
-                sorted_columns.append(name)
-
-        if file_type in ["csv", "txt", "dat"]:
-            df = pd.DataFrame(values)
-            if file_type == "csv":
-                df.to_csv(filename, columns=sorted_columns, index=False)
-            elif file_type == "txt":
-                df.to_csv(filename, columns=sorted_columns, sep="\t", index=False)
-            else:
-                df.to_csv(filename, columns=sorted_columns, sep=" ", index=False)
-        else:
-            serializable = {k: np.asarray(v).tolist() for k, v in values.items()}
-            with open(filename, "w") as outfile:
-                json.dump(serializable, outfile)
+            order += [
+                name
+                for name in values
+                if name.startswith("bands__") and name.endswith(f"spinChannel-{ispin}")
+            ]
+        order += [name for name in sorted(values) if name not in order]
+        write_table(filename, {name: values[name] for name in order})
 
     # ---- helpers ----
     def _record_kpath_exports(self, kpath: KPath):

@@ -1,11 +1,37 @@
 import logging
+from collections.abc import Callable
 from functools import cached_property
 from pathlib import Path
 from typing import TypedDict
 
 import numpy as np
 
+from pyprocar.core.atomic_orbital_index import SHELL_LETTERS, OrbitalIndexer
+
 logger = logging.getLogger(__name__)
+
+_LM_ORBITALS = OrbitalIndexer().flat_conventional
+# The orbitals a VASP DOS projects onto, by their count per atom: s, p, d (and f)
+# with LORBIT=10, or the 9 (16) lm orbitals with LORBIT=11.
+DOS_ORBITAL_NAMES: dict[int, tuple[str, ...]] = {
+    3: SHELL_LETTERS[:3],
+    4: SHELL_LETTERS,
+    9: tuple(_LM_ORBITALS[:9]),
+    16: tuple(_LM_ORBITALS[:16]),
+}
+ORBITAL_COUNTS = tuple(DOS_ORBITAL_NAMES)
+HEADER_LINES = 6
+_VASP_ORBITALS = (
+    "VASP projects onto s, p, d (and f) with LORBIT=10, or onto the 9 (16) lm orbitals"
+    + " with LORBIT=11"
+)
+
+
+def dos_orbital_names(n_orbitals: int) -> tuple[str, ...]:
+    """The names of the ``n_orbitals`` orbitals a VASP DOS projects onto per atom."""
+    if n_orbitals not in DOS_ORBITAL_NAMES:
+        raise ValueError(f"The DOS projects onto {n_orbitals} orbitals per atom; {_VASP_ORBITALS}.")
+    return DOS_ORBITAL_NAMES[n_orbitals]
 
 
 class HeaderLine1(TypedDict):
@@ -66,8 +92,28 @@ class Doscar:
         return file_str
 
     @cached_property
-    def lines(self) -> list[str]:
+    def _source(self) -> str:
+        return str(self.filepath) if self.filepath is not None else "text"
+
+    @cached_property
+    def _all_lines(self) -> list[str]:
         return self.file_str.splitlines()
+
+    @cached_property
+    def has_dos(self) -> bool:
+        """Whether a DOS follows the header; a run killed early leaves none."""
+        return any(line.strip() for line in self._all_lines[HEADER_LINES:])
+
+    @cached_property
+    def lines(self) -> list[str]:
+        """The file's lines, or a ValueError naming it when no DOS follows its header."""
+        if not self.has_dos:
+            raise ValueError(
+                f"The DOSCAR {self._source} holds no DOS: it has {len(self._all_lines)} lines,"
+                + f" and VASP writes the DOS after a {HEADER_LINES}-line header at the end of"
+                + " a run. Rerun the calculation, or keep its vasprun.xml next to the DOSCAR."
+            )
+        return self._all_lines
 
     # ---------------------------
     # === HEADER SECTION ===
@@ -136,19 +182,32 @@ class Doscar:
 
     @cached_property
     def is_spin_pol(self) -> bool:
-        sample_line = self.lines[6].split()
-        return len(sample_line) == 5
+        return self._raw_total_dos.shape[1] == 5
 
     @cached_property
-    def _raw_total_dos(self):
+    def _raw_total_dos(self) -> np.ndarray:
         """
         For ISPIN=1 → shape (NEDOS, 3) [E, DOS, IntDOS]
         For ISPIN=2 → shape (NEDOS, 5) [E, DOSup, DOSdown, IntDOSup, IntDOSdown]
         """
-        start = 6
-        end = 6 + self.nedos
-        block = self.lines[start:end]
-        return np.array([list(map(float, line.split())) for line in block])
+        block = self._read_block(HEADER_LINES, "total DOS")
+        if block.shape[1] not in (3, 5):
+            raise ValueError(
+                f"The DOSCAR {self._source} total DOS has {block.shape[1]} columns; VASP writes 3"
+                + " (energy, DOS, integrated DOS) or 5 for a spin-polarized run."
+            )
+        return block
+
+    def _read_block(self, start: int, what: str) -> np.ndarray:
+        """The ``nedos`` rows from line ``start`` as one array, or a ValueError saying why not."""
+        block = self.lines[start : start + self.nedos]
+        rows = [line.split() for line in block]
+        if len(rows) < self.nedos or len({len(row) for row in rows}) != 1:
+            raise ValueError(
+                f"The DOSCAR {self._source} {what} block from line {start + 1} is not"
+                + f" {self.nedos} rows of equal length; the file is truncated or not a VASP DOSCAR."
+            )
+        return np.array(rows, dtype=float)
 
     @cached_property
     def total_dos(self) -> np.ndarray:
@@ -166,56 +225,70 @@ class Doscar:
     # === PROJECTED DOS (PDOS) ===
     # ---------------------------
 
-    @cached_property
-    def projected_dos(self) -> np.ndarray | None:
+    def projected(
+        self, non_collinear: Callable[[], bool | None] = lambda: None
+    ) -> np.ndarray | None:
         """
-        Return PDOS in shape (n_energies, n_spins, n_atoms, n_orbitals).
-        Returns None if PDOS not present.
+        Return PDOS in shape (n_energies, n_spins, n_atoms, n_orbitals), or None
+        when the DOSCAR has no projected blocks (LORBIT unset).
+
+        ``non_collinear`` returns LNONCOLLINEAR of the run (from the OUTCAR or PROCAR),
+        or None when unknown. It is called only for 16 columns per atom and one total
+        DOS channel, which are either the 16 lm orbitals of a collinear run or s, p, d,
+        f times (total, mx, my, mz) of a non-collinear one.
         """
-        # projected DOS starts after total_dos
-        nedos = self.nedos
-        natoms = self.natoms
-        start = 6 + nedos
-        if start >= len(self.lines):
+        nedos, natoms = self.nedos, self.natoms
+        start = HEADER_LINES + nedos
+        if not any(line.strip() for line in self.lines[start:]):
             return None
 
-        # determine n_spins and n_orbitals by inspecting one atom block
-        sample_idx = start + 1
-        sample_line = self.lines[sample_idx].split()
-        ncols = len(sample_line)  # includes energy column
+        def columns(atom: int) -> np.ndarray:
+            first_row = start + 1 + atom * (nedos + 1)
+            return self._read_block(first_row, f"atom {atom + 1} projected DOS")[:, 1:]
 
+        first = columns(0)
+        n_columns = first.shape[1]
+        n_spins = self._projected_spins(n_columns, non_collinear)
+        projected = np.empty((natoms, nedos, n_columns))
+        projected[0] = first
+        for atom in range(1, natoms):
+            block = columns(atom)
+            if block.shape != first.shape:
+                raise ValueError(
+                    f"The DOSCAR {self._source} has {block.shape[1]} projected columns for atom"
+                    + f" {atom + 1} and {first.shape[1]} for atom 1; VASP writes the same for every"
+                    + " atom."
+                )
+            projected[atom] = block
+        # VASP writes each orbital's spin columns together: s_up s_down py_up ... for
+        # ISPIN=2 and s_tot s_mx s_my s_mz py_tot ... for non-collinear runs.
+        return projected.reshape(natoms, nedos, n_columns // n_spins, n_spins).transpose(1, 3, 0, 2)
+
+    def _projected_spins(self, n_columns: int, non_collinear: Callable[[], bool | None]) -> int:
         if self.is_spin_pol:
-            n_spins = 2
-            n_orbitals = (ncols - 1) // n_spins
-        else:
-            n_spins = 1
-            n_orbitals = ncols - 1
-
-        # Note: non-collinear case would yield (s_total, s_x, s_y, s_z, …)
-        # In that case n_spins=4 and orbitals adjusted accordingly
-        if ncols > 10 and (ncols - 1) % 4 == 0:  # heuristic for LNONCOLLINEAR
-            n_spins = 4
-            n_orbitals = (ncols - 1) // 4
-
-        # initialize array
-        pdos = np.zeros((nedos, n_spins, natoms, n_orbitals))
-
-        idx = start
-        for atom in range(natoms):
-            idx += 1  # skip atom header line
-            block = self.lines[idx : idx + nedos]
-            arr = np.array([list(map(float, line.split())) for line in block])
-
-            cols = arr[:, 1:]  # rest are projections
-
-            if n_spins == 1:
-                pdos[:, 0, atom, :] = cols
-            else:
-                # reshape (NEDOS, n_spins, n_orbitals)
-                reshaped = cols.reshape(nedos, n_orbitals, n_spins)
-                reshaped = np.transpose(reshaped, (0, 2, 1))
-                pdos[:, :, atom, :] = reshaped
-
-            idx += nedos
-
-        return pdos
+            if n_columns % 2:
+                raise ValueError(
+                    f"The DOSCAR {self._source} has {n_columns} projected columns per atom; a"
+                    + " spin-polarized run writes an up and a down column per orbital."
+                )
+            return 2
+        fits_collinear = n_columns in ORBITAL_COUNTS
+        fits_noncollinear = n_columns % 4 == 0 and n_columns // 4 in ORBITAL_COUNTS
+        if fits_collinear and fits_noncollinear:
+            known = non_collinear()
+            if known is None:
+                raise ValueError(
+                    f"The DOSCAR {self._source} has {n_columns} projected columns per atom:"
+                    + f" {n_columns} orbitals of a collinear run or {n_columns // 4} orbitals"
+                    + " times (total, mx, my, mz) of a non-collinear one. Keep the run's OUTCAR"
+                    + " (LNONCOLLINEAR) or PROCAR, which tell them apart, next to the DOSCAR."
+                )
+            return 4 if known else 1
+        if fits_noncollinear:
+            return 4
+        if fits_collinear:
+            return 1
+        raise ValueError(
+            f"The DOSCAR {self._source} has {n_columns} projected columns per atom, which no"
+            + f" VASP run writes: {_VASP_ORBITALS}, times 4 (total, mx, my, mz) when non-collinear."
+        )

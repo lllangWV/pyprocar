@@ -15,6 +15,12 @@ from pyprocar.core.kpoints import KGRID_MODE, get_kpoints_from_kgrid
 
 logger = logging.getLogger(__name__)
 
+_PARAMETER_LISTING = "Startparameter for this run:"
+_LISTED_FLAG = re.compile(
+    r"^[ \t]*(LNONCOLLINEAR|LSORBIT)[ \t]*=[ \t]*(T|F|\.TRUE\.|\.FALSE\.)(?![\w.])",
+    re.MULTILINE | re.IGNORECASE,
+)
+
 # VASP's Schoenflies point-group names and the international symbols spglib gives them.
 _POINT_GROUP_SYMBOLS = {
     "C_1": "1", "S_2": "-1", "C_2": "2", "C_1h": "m", "C_2h": "2/m", "D_2": "222",
@@ -64,14 +70,15 @@ def _last(pattern: str | re.Pattern[str], text: str) -> re.Match[str] | None:
     return matches[-1] if matches else None
 
 
-def _mesh_reduction(text: str, kgrid: tuple[int | None, ...]) -> _MeshReduction | None:
+def _mesh_reduction(
+    text: str, kgrid: tuple[int | None, ...], non_collinear: bool | None
+) -> _MeshReduction | None:
     """The record, or None when the OUTCAR shows no automatic mesh reduced by symmetry (band
     paths, explicit lists, full meshes) or leaves out a fact the fit needs."""
     irreducible = _last(_IRREDUCIBLE, text)
     shift = _last(_SHIFT, text)
-    noncollinear = _last(r"LNONCOLLINEAR\s*=\s*([TF])\s", text)
     per_type = re.search(r"ions per type\s*=\s*([\d\s]+?)\n", text)
-    if None in kgrid or not (irreducible and shift and noncollinear and per_type):
+    if None in kgrid or non_collinear is None or not (irreducible and shift and per_type):
         return None
     mesh = np.array(kgrid, dtype=int)
     rows = text[irreducible.end() :].splitlines()[: int(irreducible.group(1))]
@@ -117,7 +124,7 @@ def _mesh_reduction(text: str, kgrid: tuple[int | None, ...]) -> _MeshReduction 
         cell=(lattice, positions, np.repeat(np.arange(len(counts)), counts)),
         point_group=point_group,
         n_operations=int(count.group(1)) if count else None,
-        time_reversal=noncollinear.group(1) == "F",
+        time_reversal=not non_collinear,
         mesh=mesh,
         shift=np.array(shift.groups(), dtype=float),
         kpoints=listed[:, :3],
@@ -344,7 +351,16 @@ class Outcar(Mapping[str, Any]):
         return tuple(int(x) for x in self.version.split("."))
 
     @cached_property
-    def fermi(self):
+    def _fermi_values(self) -> list[str]:
+        return re.findall(r"E-fermi\s*:\s*(-?\d+.\d+)", self.file_str)
+
+    @property
+    def has_fermi(self) -> bool:
+        """Whether VASP wrote an "E-fermi :" line; a run killed early leaves none."""
+        return bool(self._fermi_values)
+
+    @cached_property
+    def fermi(self) -> float:
         """
         Just finds all E-fermi fields in the outcar file and keeps the
         last one (if more than one found).
@@ -354,7 +370,33 @@ class Outcar(Mapping[str, Any]):
         fermi
             the fermi energy
         """
-        return float(re.findall(r"E-fermi\s*:\s*(-?\d+.\d+)", self.file_str)[-1])
+        values = self._fermi_values
+        if not values:
+            raise ValueError(
+                f"The OUTCAR {self.filepath or 'text'} has no 'E-fermi :' line, so it gives no"
+                + " Fermi energy; the run stopped before VASP wrote one."
+            )
+        return float(values[-1])
+
+    @cached_property
+    def is_non_collinear(self) -> bool | None:
+        """Whether the run was non-collinear, from the parameters VASP lists after
+        "Startparameter for this run:", or None when the OUTCAR stops before them.
+
+        The INCAR echo at the top of the OUTCAR is what the user wrote, not what VASP
+        ran with: LSORBIT turns LNONCOLLINEAR on whatever the INCAR says.
+        """
+        start = self.file_str.find(_PARAMETER_LISTING)
+        if start == -1:
+            return None
+        listed: dict[str, bool] = {}
+        for match in _LISTED_FLAG.finditer(self.file_str, start):
+            listed.setdefault(match.group(1).upper(), match.group(2).upper() in ("T", ".TRUE."))
+            if len(listed) == 2:
+                break
+        if not listed:
+            return None
+        return listed.get("LNONCOLLINEAR", False) or listed.get("LSORBIT", False)
 
     @cached_property
     def reciprocal_lattice(self) -> np.ndarray:
@@ -402,7 +444,7 @@ class Outcar(Mapping[str, Any]):
         # Every fact the fit reads is printed before the first electronic step.
         first_step = re.search(r"-{5,} Iteration", self.file_str)
         header = self.file_str[: first_step.start()] if first_step else self.file_str
-        reduction = _mesh_reduction(header, self.kgrid)
+        reduction = _mesh_reduction(header, self.kgrid, self.is_non_collinear)
         if reduction is None:
             return np.empty((0, 3, 3))
         fitting = _fitting_operations(reduction)

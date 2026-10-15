@@ -654,3 +654,28 @@ class TestBandStructurePlotterEdgeCases:
         assert "bands__band-0_spinChannel-0" in plotter.values_dict
         plt.close(plotter.fig)
 
+
+def test_export_data_takes_a_pathlib_path(tmp_path, mock_property_single_spin):
+    out = tmp_path / "bands.csv"
+    plotter = BandStructurePlotter()
+    plotter.plot(mock_property_single_spin, scalars_mode="none")
+
+    plotter.export_data(out)
+
+    assert "bands__band-0_spinChannel-0" in out.read_text().splitlines()[0].split(",")
+    plt.close(plotter.fig)
+
+
+@pytest.mark.guards_existing_behaviour(reason="export_data read a str path's suffix before")
+def test_export_data_reads_the_suffix_of_a_str_path_in_a_dotted_directory(
+    tmp_path, mock_property_single_spin
+):
+    out = tmp_path / "bands.d" / "bands.csv"
+    out.parent.mkdir()
+    plotter = BandStructurePlotter()
+    plotter.plot(mock_property_single_spin, scalars_mode="none")
+
+    plotter.export_data(str(out))
+
+    assert "bands__band-0_spinChannel-0" in out.read_text().splitlines()[0].split(",")
+    plt.close(plotter.fig)
