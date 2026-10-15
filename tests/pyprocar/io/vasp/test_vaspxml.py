@@ -3,7 +3,6 @@ from typing import NamedTuple
 
 import numpy as np
 import pytest
-from lxml import etree
 
 from pyprocar.io.vasp.vasprun import VaspXML
 
@@ -2082,4 +2081,5 @@ def test_a_truncated_vasprun_raises_naming_the_file(tmp_path: Path) -> None:
     message = str(excinfo.value)
     assert str(path) in message
     assert "VaspParser(dirpath, vasprun=None)" in message
-    assert isinstance(excinfo.value.__cause__, etree.XMLSyntaxError)
+    # lxml's XMLSyntaxError, chained; it subclasses SyntaxError.
+    assert isinstance(excinfo.value.__cause__, SyntaxError)

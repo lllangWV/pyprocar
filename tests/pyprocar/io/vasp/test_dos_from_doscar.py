@@ -15,7 +15,6 @@ from xml.etree import ElementTree
 
 import numpy as np
 import pytest
-from lxml import etree
 
 from pyprocar.core.dos import DensityOfStates
 from pyprocar.core.ebs import ElectronicBandStructure
@@ -400,7 +399,8 @@ def test_a_truncated_vasprun_raises_naming_the_file(tmp_path: Path) -> None:
     assert str(calc / "vasprun.xml") in message
     assert "interrupted" in message
     assert "VaspParser(dirpath, vasprun=None)" in message
-    assert isinstance(excinfo.value.__cause__, etree.XMLSyntaxError)
+    # lxml's XMLSyntaxError, chained; it subclasses SyntaxError.
+    assert isinstance(excinfo.value.__cause__, SyntaxError)
 
 
 @pytest.mark.data
