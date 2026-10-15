@@ -20,6 +20,7 @@ import pytest
 from pyprocar.core.procarunfold import ProcarUnfolder
 from pyprocar.core.procarunfold.fatband import plot_band_weight
 from pyprocar.core.procarunfold.unfolder import Unfolder
+from tests.pyprocar.io.vasp.test_procar import NON_COLLINEAR_PHASE_PROCAR
 from tests.utils import DATA_DIR
 
 # ==============================================================================
@@ -770,3 +771,28 @@ class TestPlotBandWeightEdgeCases:
 
         assert axes is not None
         plt.close("all")
+
+
+INP_POSCAR = """InP zincblende
+5.8686
+0.5 0 0.5
+0.5 0.5 0
+0 0.5 0.5
+In P
+1 1
+Direct
+0 0 0
+0.25 0.25 0.25
+"""
+
+
+def test_procar_unfolder_refuses_a_non_collinear_procar(tmp_path):
+    """Its phases sum the up and down spinors, so unfolding them would weight the bands wrongly."""
+    procar, poscar = tmp_path / "PROCAR", tmp_path / "POSCAR"
+    procar.write_text(NON_COLLINEAR_PHASE_PROCAR)
+    poscar.write_text(INP_POSCAR)
+
+    with pytest.raises(ValueError, match="non-collinear"):
+        ProcarUnfolder(
+            procar=str(procar), poscar=str(poscar), supercell_matrix=np.eye(3, dtype=int)
+        )

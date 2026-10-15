@@ -6092,24 +6092,6 @@
                 }
             }
         ],
-        "./pyprocar/io/vasp/procar.py": [
-            {
-                "code": "reportUnnecessaryTypeIgnoreComment",
-                "range": {
-                    "startColumn": 77,
-                    "endColumn": 100,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportUnnecessaryTypeIgnoreComment",
-                "range": {
-                    "startColumn": 83,
-                    "endColumn": 106,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./pyprocar/io/vasp/vasprun.py": [
             {
                 "code": "reportMissingTypeStubs",

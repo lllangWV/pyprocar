@@ -648,6 +648,12 @@ class ProcarParser:
         lines = iter(f.readlines())
         last_iband = -1
         for line in lines:
+            # Each "ion" header below consumes its ion rows; any other one is an Sx, Sy or Sz row
+            if re.match(r"\s*\d+\s", line):
+                raise ValueError(
+                    f"{procar} is non-collinear: its phases sum the up and down spinor"
+                    + " projections, so its bands cannot be unfolded"
+                )
             if line.startswith("# of k-points"):
                 a = re.findall(":\s*([0-9]*)", line)
                 self.kpointsCount, self.bandsCount, self.ionsCount = map(int, a)

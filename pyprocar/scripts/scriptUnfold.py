@@ -71,7 +71,7 @@ def unfold(
     the fraction of the band that has the primitive cell's Bloch character at
     that k-point. The supercell calculation must list its k-points along the
     primitive cell path, expressed in the supercell's reciprocal basis, and VASP
-    must write the projection phases (``LORBIT = 12``).
+    must write the projection phases (``LORBIT = 12``) of a collinear calculation.
 
     Parameters
     ----------
@@ -160,6 +160,11 @@ def unfold(
         ElectronicBandStructurePath,
         ElectronicBandStructurePath.from_code(code, dirname, use_cache=use_cache),
     )
+    if ebs.is_non_collinear:
+        raise ValueError(
+            f"{dirname} is non-collinear, so it has no phase per spinor (VASP's PROCAR sums"
+            + " the up and down spinor phases), and the bands cannot be unfolded"
+        )
     if ebs.projected_phase is None:
         raise ValueError(
             f"{dirname} has no projection phases; unfolding needs a PROCAR written with LORBIT = 12"
