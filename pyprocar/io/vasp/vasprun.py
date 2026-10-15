@@ -196,7 +196,15 @@ class VaspXML(Mapping[str, Any]):
         elif self._file_str == "" and self.filepath is None:
             raise ValueError("No file path or file string provided")
         xml_str = re.sub(r"<\?xml[^>]+\?>", "", self._file_str)
-        return etree.fromstring(xml_str)
+        try:
+            return etree.fromstring(xml_str)
+        except etree.XMLSyntaxError as exc:
+            source = self.filepath if self.filepath is not None else "text"
+            raise ValueError(
+                f"The vasprun.xml {source} could not be parsed ({exc.msg}). VASP leaves it"
+                + " incomplete when a run is interrupted. Rerun the calculation, or skip the"
+                + " file with VaspParser(dirpath, vasprun=None)."
+            ) from exc
 
     #     @cached_property
     #     def data(self) -> dict[str, Any]:
