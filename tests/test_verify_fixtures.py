@@ -564,6 +564,31 @@ def test_a_worktree_data_link_spelled_with_a_leading_double_slash_still_locks(ha
     }
 
 
+def test_worktree_setup_checks_pixi_lock_against_origin_main_not_a_stale_dev(harness):
+    if harness.shared_env is None:
+        pytest.skip("worktree-setup runs only in a linked worktree")
+    _prime(harness)
+    (harness.root / "repo/pyprocar").mkdir()
+    (harness.root / "repo/pyprocar/_version.py").write_text("version", encoding="utf-8")
+    (harness.repo / "pyprocar").mkdir()
+    commit = ("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm")
+    _git("-C", harness.repo, "update-ref", "refs/remotes/origin/dev", "HEAD")
+    (harness.repo / "pixi.lock").write_text("main's lock", encoding="utf-8")
+    _git("-C", harness.repo, "add", "pixi.lock")
+    _git("-C", harness.repo, *commit, "main changes the lock")
+    _git("-C", harness.repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    (harness.root / "repo/pixi.lock").write_text("main's lock", encoding="utf-8")
+
+    on_main = harness.verify("worktree-setup")
+    (harness.repo / "pixi.lock").write_text("this branch's lock", encoding="utf-8")
+    _git("-C", harness.repo, *commit, "this branch changes the lock", "pixi.lock")
+    changed = harness.verify("worktree-setup")
+
+    assert on_main.returncode == 0 and "warning" not in on_main.stderr, on_main.stderr
+    assert changed.returncode == 0, changed.stderr
+    assert "changes pixi.lock or pixi.toml relative to origin/main" in changed.stderr
+
+
 def test_a_verify_runs_link_out_of_data_is_never_followed(harness):
     shutil.rmtree(harness.data_dir / "verify-runs")
     (harness.data_dir / "verify-runs").symlink_to(harness.root / "outside/tmp/runs")

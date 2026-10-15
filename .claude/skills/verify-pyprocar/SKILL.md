@@ -44,9 +44,9 @@ Fixture relpaths (HF dataset `lllangWV/pyprocar_test_data`): `data/examples/{ban
 
 Other codes are already extracted under `data/codes/`: `qe/7.2/SrVO3`, `elk/6.3/SrVO3` and `vasp/6.4/SrVO3` (spin variants), and `abinit/9.6/Fe`. Siesta has no fixture; its tests build synthetic dirs. `features/parsers.md` lists the proven end states. For an independent reference from another code, run it with `pixi exec -s qe` (or `-s abinit`, `-s gfortran`), and keep its inputs and outputs outside any worktree, because `git worktree remove --force` deletes them.
 
-Run the gates with the commands in `.github/workflows/ci.yml`, as written, with `pixi run --locked -e <env>` replaced by `$H exec` and `"$BASE"` by `origin/dev`. In the main checkout `$H exec` is `pixi run -q --locked -e dev`; in a linked worktree it uses the main checkout's env (see below). The pixi `typecheck` task runs the same type check. The `test` task also runs the tests marked `data`, and the `lint` task applies `ruff --fix` to every file, so neither is a CI gate.
+Run the gates with the commands in `.github/workflows/ci.yml`, as written, with `pixi run --locked -e <env>` replaced by `$H exec` and `"$BASE"` by `origin/main`. In the main checkout `$H exec` is `pixi run -q --locked -e dev`; in a linked worktree it uses the main checkout's env (see below). The pixi `typecheck` task runs the same type check. The `test` task also runs the tests marked `data`, and the `lint` task applies `ruff --fix` to every file, so neither is a CI gate.
 
-`$H exec python .github/scripts/red_green.py origin/dev` is the `red-green` job: it fails on each added or changed test that passes on the base code without `@pytest.mark.guards_existing_behaviour(reason="...")`.
+`$H exec python .github/scripts/red_green.py origin/main` is the `red-green` job: it fails on each added or changed test that passes on the base code without `@pytest.mark.guards_existing_behaviour(reason="...")`.
 
 `--locked` fails when `pixi.lock` does not match `pixi.toml`, in CI and locally. After you edit `pixi.toml`, run `pixi lock` and commit `pixi.lock` with it.
 
@@ -61,17 +61,17 @@ $H worktree-setup
 ```
 
 It copies `_version.py` from the main checkout and links `data` to the main checkout's `data/` with `ln -sfn` (a rerun is safe). After that, `$H exec`, `doctor`, `fetch` and `run` use the main checkout's `.pixi/envs/dev` with this worktree first on `PYTHONPATH`, and `$H exec` sets `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR=.tmp`. They exit 2 when that env is missing. `worktree-setup` then prints at most one lock warning, and each asks for one action:
-- "this branch changes pixi.lock or pixi.toml relative to origin/dev": the shared env does not match the branch. Run the gates with `pixi run --locked` in this worktree and accept the build.
+- "this branch changes pixi.lock or pixi.toml relative to origin/main": the shared env does not match the branch. Run the gates with `pixi run --locked` in this worktree and accept the build.
 - "the main checkout's pixi.lock differs from this branch's": the main checkout is on another branch. Keep using `$H exec`, and treat CI as the final gate if a local result disagrees with it.
-- "no merge base with origin/dev": run `git fetch origin dev` and rerun `$H worktree-setup`.
+- "no merge base with origin/main": run `git fetch origin main` and rerun `$H worktree-setup`.
 
 In every worktree:
 
 - `data/` is shared and holds `.py` files. Give pytest an explicit test path, so it never collects them, and `-p no:cacheprovider`. Write under `data/` only through `$H fetch`, which adds fixtures to the shared cache, and `$H run`, which works on a per-run copy in `data/verify-runs/`.
 - Before `git worktree remove --force`, make the read-only copies inside the worktree writable by naming each one, for example `find -P .tmp -type d -exec chmod u+w {} +` for pytest temp copies of locked fixtures, or the removal fails with `Permission denied`. Name the copies only, never `data` or a path through it: in a worktree `data` is the shared fixture store, and a recursive chmod through it unlocks every fixture.
-- The `data`-marked tests take 10-12 minutes per checkout. Run the modules for the packages you touch in the background, at your head and at `origin/dev`, so a new failure stands apart from an old one.
+- The `data`-marked tests take 10-12 minutes per checkout. Run the modules for the packages you touch in the background, at your head and at `origin/main`, so a new failure stands apart from an old one.
 - CI has no `data/`. The conftest guard fails an unmarked test that opens or lists `data/`, but a read at import or collection time escapes it: it passes locally and fails in CI. Mark every test that needs a fixture `data`.
-- CI runs the lint and format gates on the PR merged into `dev`. Judge `ruff_new_violations.py` on your head merged with current `origin/dev` (in a detached scratch worktree), because on a head behind `dev` it also flags files that only `dev` changed.
+- CI runs the lint and format gates on the PR merged into `main`. Judge `ruff_new_violations.py` on your head merged with current `origin/main` (in a detached scratch worktree), because on a head behind `main` it also flags files that only `main` changed.
 - basedpyright runs in lock mode against `.basedpyright/baseline.json`: a new error or warning fails, and so does a baseline entry whose diagnostic is gone. When your change deletes or rewrites code that has baseline entries, delete exactly those entries in their own commit. Never add or regenerate entries. basedpyright checks only the paths in the `include` list of `pyrightconfig.json`, minus hidden directories below them, so add a new top-level Python directory or root-level `.py` file to that list.
 
 ## Doctor
@@ -161,7 +161,7 @@ This removes the `work/` copy of every run that started more than `hours` ago, f
 - `scripts/lib/verify_steps.py`: `step`, `png`, `distinct_colors`, `writable_copy` and `finish` for multi-step drivers. It is importable because the harness puts `scripts/lib` on `PYTHONPATH`.
 - `scripts/lib/references/`: independent references (unfolding weights, reduced spin mesh, tiled cut orbits), each with an analytic `validate()` and a `ref_*.py` driver. Compare against one of these before you write your own; `features/README.md` lists them.
 
-Known repo issues that affect verification (as of dev @ d6d4aaa7):
+Known repo issues that affect verification (as of main @ d6d4aaa7):
 - `pyprocar.download_from_hf(relpath, output_path=".")` crashes when given a str; it needs a `Path`. The harness passes a `Path`.
 
 A PR that changes a documented side effect updates this skill in the same PR. basedpyright type-checks `scripts/`, so a PR that breaks a driver's import or call fails CI's typecheck job until it fixes the driver.

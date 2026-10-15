@@ -250,13 +250,13 @@ worktree-setup)
   cp "$MAIN/pyprocar/_version.py" pyprocar/_version.py
   mkdir -p "$MAIN/data" .tmp
   ln -sfn "$MAIN/data" data
-  base="$(git merge-base HEAD origin/dev 2>/dev/null || true)"
+  base="$(git merge-base HEAD origin/main 2>/dev/null || true)"
   if [ -z "$base" ]; then
-    echo "warning: no merge base with origin/dev; run 'git fetch origin dev' to check pixi.lock" >&2
+    echo "warning: no merge base with origin/main; run 'git fetch origin main' to check pixi.lock" >&2
   elif ! git diff --quiet "$base" -- pixi.lock pixi.toml; then
-    echo "warning: this branch changes pixi.lock or pixi.toml relative to origin/dev; the shared env does not match it, so build this worktree's own env with 'pixi run --locked'" >&2
+    echo "warning: this branch changes pixi.lock or pixi.toml relative to origin/main; the shared env does not match it, so build this worktree's own env with 'pixi run --locked'" >&2
   elif ! cmp -s "$MAIN/pixi.lock" pixi.lock; then
-    echo "warning: the main checkout's pixi.lock differs from this branch's, which matches origin/dev; local gates may drift, so CI is the final gate" >&2
+    echo "warning: the main checkout's pixi.lock differs from this branch's, which matches origin/main; local gates may drift, so CI is the final gate" >&2
   fi
   echo "ready: data -> $MAIN/data, pyprocar/_version.py copied, env $SHARED_ENV"
   ;;
