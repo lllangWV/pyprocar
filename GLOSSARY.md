@@ -1,6 +1,6 @@
 # pyprocar
 
-pyprocar reads electronic structure from DFT codes and plots bands, densities of states and Fermi surfaces. These terms cover the lattice geometry under the Fermi-surface plots, where a result must not depend on how the user wrote the cell.
+pyprocar reads electronic structure from DFT codes and plots bands, densities of states and Fermi surfaces. These terms cover the lattice geometry under the Fermi-surface plots, where a result must not depend on how the user wrote the cell, and the spin data a plot selects.
 
 ## Language
 
@@ -51,13 +51,27 @@ A result is label-independent when every relabelling of the given reciprocal row
 A result is basis-invariant when every basis variant gives the same result, turned with the cell, so it depends on the lattice only.
 _Avoid_: label independence (for this stronger property)
 
+### Spin
+
+**Spin channel**:
+One collinear band channel, picked with `spins=[n]`: 0 up, 1 down. A spin-polarized calculation has two, any other collinear one has one.
+
+**Spin component**:
+One non-collinear projection channel, picked with `spins=[n]`: 0 total, 1 Sx, 2 Sy, 3 Sz. Sx, Sy and Sz can be negative. A plot labels the component "Sz projection" and so on.
+_Avoid_: polarization, spin channel (for this)
+
+**Phase block**:
+The complex rows under a PROCAR `ion` header that does not end in `tot`. Unfolding needs them. In a non-collinear PROCAR, VASP writes one phase block per band that sums the up and down spinors, so it cannot be unfolded.
+
 ## Relationships
 
 - A **basis variant** is a **relabelling**, a **shear**, or both.
 - A **drawn grid** samples one **k-point lattice** in one **drawn basis**.
 - **Basis invariance** implies **label independence**, but not the reverse.
+- A collinear calculation has one or two **spin channels**. A non-collinear one projects onto four **spin components**.
 
 ## Flagged ambiguities
 
 - "Canonical basis" (issue #59) meant one basis that every caller uses and that depends on the lattice only. No such **reduced basis** exists when the lattice's symmetry permutes its reduced bases, as for the fcc lattice and the Bi2Se3 rhombohedral lattice. Resolved: say **reduced basis**, and state whether a result needs **label independence** or **basis invariance**.
 - "Reduced grid" (issue #59) meant a candidate **drawn grid** in one of several **reduced bases**. Resolved: say **drawn grid** for the one drawn, and "the drawn grid in each reduced basis" for the candidates.
+- "Polarization" (issue #2) meant a **spin component** of a non-collinear calculation. Resolved: say **spin component**, and keep **spin channel** for collinear up and down.
