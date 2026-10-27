@@ -32,8 +32,9 @@ def ty_version() -> str:
 def run_ty(paths: list[str]) -> list[dict]:
     cmd = ["ty", "check", "--output-format", "gitlab", "--exit-zero", *paths]
     result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode:
-        sys.exit(f"ty failed (exit {result.returncode}):\n{result.stderr}")
+    # ty exits 0 with only a stderr warning when a PATH holds no file it checks.
+    if result.returncode or result.stderr.strip():
+        sys.exit(f"ty failed (exit {result.returncode}): {result.stderr.strip()}")
     return json.loads(result.stdout)
 
 

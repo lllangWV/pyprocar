@@ -104,7 +104,8 @@ def test_an_absolute_path_matches_the_baseline_entries_below_it(project):
 
 
 def test_a_path_ty_does_not_check_fails(project):
-    (project / "ty.toml").write_text('[environment]\npython-version = "3.12"\n[src]\ninclude = ["mod.py"]\n')
+    config = '[environment]\npython-version = "3.12"\n[src]\ninclude = ["mod.py"]\n'
+    (project / "ty.toml").write_text(config)
     (project / "docs").mkdir()
     (project / "docs" / "conf.py").write_text(ONE_ERROR)
     gate(project, "--regenerate")
