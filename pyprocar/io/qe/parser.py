@@ -771,7 +771,7 @@ class QEParser(BaseParser):
             reciprocal_lattice=self.reciprocal_lattice,
             orbital_names=self.orbital_names,
             structure=self.structure,
-            kpath=self.kpath,  # pyright: ignore[reportArgumentType]
+            kpath=self.kpath,  # ty: ignore[invalid-argument-type]
             kgrid_info=self.kgrid_info,
         )
 

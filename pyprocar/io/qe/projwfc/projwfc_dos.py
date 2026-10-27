@@ -11,7 +11,7 @@ from re import Pattern
 from typing import Any, ClassVar
 
 import numpy as np
-import pandas as pd  # pyright: ignore[reportMissingTypeStubs]
+import pandas as pd
 
 from pyprocar.core.atomic_orbital_index import OrbitalIndexer
 from pyprocar.io.qe.projwfc.projwfc_out import ORBITAL_NAMES

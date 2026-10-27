@@ -1,0 +1,4469 @@
+{
+ "ty": "0.0.92",
+ "files": {
+  ".claude/skills/verify-pyprocar/scripts/examples/bands.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `Axes | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `bool`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `bool`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `bool`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `bool`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | list[dict[Unknown, Unknown]] | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `float`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `list[float] | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `str | Path | None`, found `Unknown | list[int]`"
+   }
+  ],
+  ".claude/skills/verify-pyprocar/scripts/examples/bs2d.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `bool`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `bool`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `float`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `list[int] | None`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `list[int] | None`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `list[int] | None`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `list[int] | None`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `str | None`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `str | None`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `str | None`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `str | None`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `tuple[float, float, float]`, found `Unknown | int | list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2DHandler.plot_band_structure` is incorrect: Expected `tuple[float, float, float]`, found `Unknown | int | list[float]`"
+   }
+  ],
+  ".claude/skills/verify-pyprocar/scripts/examples/dos.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dosplot` is incorrect: Expected `Axes | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dosplot` is incorrect: Expected `bool`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dosplot` is incorrect: Expected `bool`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dosplot` is incorrect: Expected `dict[Unknown, Unknown] | list[dict[Unknown, Unknown]] | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dosplot` is incorrect: Expected `float`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dosplot` is incorrect: Expected `int`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dosplot` is incorrect: Expected `list[float | None] | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dosplot` is incorrect: Expected `list[str] | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dosplot` is incorrect: Expected `str | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dosplot` is incorrect: Expected `str | Path | None`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dosplot` is incorrect: Expected `str`, found `Unknown | list[int]`"
+   }
+  ],
+  ".claude/skills/verify-pyprocar/scripts/examples/fermi2d.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `Axes`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `bool`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `bool`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `bool`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `dict[Unknown, Unknown]`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `dict[Unknown, Unknown]`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `int`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `int`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `int`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `list[list[Unknown]]`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `list[list[int] | tuple[Unknown, ...]]`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `str`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `fermi2D` is incorrect: Expected `tuple[float, float]`, found `Unknown | list[int]`"
+   }
+  ],
+  ".claude/skills/verify-pyprocar/scripts/examples/fermi3d.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `FermiHandler.plot_fermi_surface` is incorrect: Expected `bool`, found `Unknown | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `FermiHandler.plot_fermi_surface` is incorrect: Expected `bool`, found `Unknown | list[int]`"
+   }
+  ],
+  "pyprocar/cfg/band_structure.py": [
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `float`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `float`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `dataclasses.Field[tuple[Literal[\"$\\\\uparrow$\"], Literal[\"$\\\\downarrow$\"]]]` is not assignable to `tuple[str]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `dataclasses.Field[tuple[Literal[\"blue\"], Literal[\"red\"]]]` is not assignable to `tuple[str]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `dataclasses.Field[tuple[Literal[\"o\"], Literal[\"v\"], Literal[\"^\"], Literal[\"D\"]]]` is not assignable to `tuple[str]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `dataclasses.Field[tuple[Literal[\"solid\"], Literal[\"dashed\"]]]` is not assignable to `tuple[str]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `dataclasses.Field[tuple[Literal[9], Literal[6]]]` is not assignable to `tuple[int]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `dataclasses.Field[tuple[float*, float*]]` is not assignable to `tuple[float]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `dataclasses.Field[tuple[float*, float*]]` is not assignable to `tuple[float]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `dataclasses.Field[tuple[float*, float*]]` is not assignable to `tuple[float]`"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Function `any` is not valid in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Function `any` is not valid in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Function `any` is not valid in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Function `any` is not valid in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Function `any` is not valid in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Function `any` is not valid in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Function `any` is not valid in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Function `any` is not valid in a type expression"
+   }
+  ],
+  "pyprocar/cfg/band_structure_2d.py": [
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `list[int]`"
+   }
+  ],
+  "pyprocar/cfg/fermi_surface_2d.py": [
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `dataclasses.Field[tuple[None, None]]` is not assignable to `tuple[float, float] | None`"
+   }
+  ],
+  "pyprocar/cfg/fermi_surface_3d.py": [
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `FermiSurfaceProperty`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `str`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `tuple[None, None]` is not assignable to `tuple[str] | None`"
+   }
+  ],
+  "pyprocar/cfg/unfold.py": [
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `float`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `float`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `tuple[Literal[\"blue\"], Literal[\"red\"]]` is not assignable to `tuple[str]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `tuple[Literal[9], Literal[6]]` is not assignable to `tuple[int]`"
+   },
+   {
+    "rule": "invalid-attribute-override",
+    "message": "Invalid override of attribute `dpi`: Type `str` is not assignable to inherited type `int`"
+   },
+   {
+    "rule": "invalid-attribute-override",
+    "message": "Invalid override of attribute `label`: Type `list[str]` is not assignable to inherited type `tuple[str]`"
+   },
+   {
+    "rule": "invalid-attribute-override",
+    "message": "Invalid override of attribute `linestyle`: Type `list[str]` is not assignable to inherited type `tuple[str]`"
+   },
+   {
+    "rule": "invalid-attribute-override",
+    "message": "Invalid override of attribute `linewidth`: Type `list[float]` is not assignable to inherited type `tuple[float]`"
+   },
+   {
+    "rule": "invalid-attribute-override",
+    "message": "Invalid override of attribute `marker`: Type `list[str]` is not assignable to inherited type `tuple[str]`"
+   },
+   {
+    "rule": "invalid-attribute-override",
+    "message": "Invalid override of attribute `markersize`: Type `list[float]` is not assignable to inherited type `tuple[float]`"
+   },
+   {
+    "rule": "invalid-attribute-override",
+    "message": "Invalid override of attribute `opacity`: Type `list[float]` is not assignable to inherited type `tuple[float]`"
+   },
+   {
+    "rule": "invalid-mutable-override",
+    "message": "Invalid override of attribute `fermi_linewidth`: Override does not accept writes of type `float`"
+   },
+   {
+    "rule": "invalid-mutable-override",
+    "message": "Invalid override of attribute `grid_linewidth`: Override does not accept writes of type `float`"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Function `any` is not valid in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Function `any` is not valid in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Function `any` is not valid in a type expression"
+   }
+  ],
+  "pyprocar/core/atomic_orbital_index.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `int.__new__` is incorrect: Expected `str | Buffer | SupportsInt | SupportsIndex | SupportsTrunc`, found `Iterable[int]`"
+   },
+   {
+    "rule": "not-iterable",
+    "message": "Object of type `ndarray[tuple[Any, ...], dtype[Unknown]] | None` may not be iterable"
+   }
+  ],
+  "pyprocar/core/bandstructure2D.py": [
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `ElectronicBandStructureMesh | None` is not assignable to attribute `_ebs` of type `ElectronicBandStructureMesh`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `ElectronicBandStructureMesh | None` is not assignable to attribute `_original_ebs` of type `ElectronicBandStructureMesh`"
+   },
+   {
+    "rule": "invalid-method-override",
+    "message": "Invalid override of method `save`: Definition is incompatible with `PolyData.save`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of bound method `ndarray.reshape` matches arguments"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `None` in union `Property | None`"
+   }
+  ],
+  "pyprocar/core/brillouin_zone.py": [
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `(ndarray[tuple[Any, ...], dtype[Any]], /) -> ndarray[tuple[Any, ...], dtype[Any]] | None` has no attribute `__name__`"
+   }
+  ],
+  "pyprocar/core/dos.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DensityOfStates.integrate` is incorrect: Expected `ndarray[tuple[Any, ...], dtype[float64]]`, found `Property`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `_units_divide` is incorrect: Expected `str`, found `str | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `_units_divide` is incorrect: Expected `str`, found `str | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `Property | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `Property | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `Property`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `Property`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `Property`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `Property`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `interpolate` is incorrect: Expected `ArrayLike`, found `Property`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid subscript assignment with key of type `str` and value of type `tuple[Unknown, ...]` on object of type `dict[str, list[int]]`"
+   },
+   {
+    "rule": "invalid-method-override",
+    "message": "Invalid override of method `add_property`: Definition is incompatible with `PointSet.add_property`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str | NormMode`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `Property`, found `Property | None`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `builtins.bool`, found `Literal[False] | numpy.bool[builtins.bool]`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `float`, found `ndarray[tuple[Any, ...], dtype[float64]]`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `list[str]`, found `list[str] | None`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `str`, found `None`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `str`, found `None`"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `floating[Any]` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `to_array` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `to_array` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `to_array` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `to_array` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `Self@__init__` has no attribute `total_array`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `Self@interpolate` has no attribute `projected_unnormalized`"
+   }
+  ],
+  "pyprocar/core/ebs.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `BrillouinZone.__init__` is incorrect: Expected `list[int]`, found `ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `PointSet.__init__` is incorrect: Expected `ArrayLike`, found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DifferentiablePropertyInterface.get_property` is incorrect: Expected `str`, found `tuple[Literal[\"bands\"], Literal[\"gradients\"], Literal[1]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DifferentiablePropertyInterface.get_property` is incorrect: Expected `str`, found `tuple[Literal[\"bands\"], Literal[\"gradients\"], Literal[2]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `ElectronicBandStructure.ebs_sum` is incorrect: Expected `list[int]`, found `None | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `ElectronicBandStructure.ebs_sum` is incorrect: Expected `list[int]`, found `None | list[int]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `PointSet.add_property` is incorrect: Expected `str | None`, found `ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `moveaxis` is incorrect: Argument type `dict[int, ndarray[tuple[Any, ...], dtype[float64]]] | ndarray[tuple[Any, ...], dtype[float64]] | str | Unknown` does not satisfy upper bound `ndarray[Any, Any]` of type variable `_ArrayT`"
+   },
+   {
+    "rule": "invalid-method-override",
+    "message": "Invalid override of method `get_property`: Definition is incompatible with `PointSet.get_property`"
+   },
+   {
+    "rule": "invalid-method-override",
+    "message": "Invalid override of method `gradient_func`: Definition is incompatible with `DifferentiablePropertyInterface.gradient_func`"
+   },
+   {
+    "rule": "invalid-method-override",
+    "message": "Invalid override of method `gradient_func`: Definition is incompatible with `DifferentiablePropertyInterface.gradient_func`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `KPath`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `float`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Variable of type `type[floating[Any]]` is not allowed in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Variable of type `type[floating[Any]]` is not allowed in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Variable of type `type[floating[Any]]` is not allowed in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Variable of type `type[floating[Any]]` is not allowed in a type expression"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `sum` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `sum` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `sum` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `unique` matches arguments"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `property` has no attribute `KPOINTS_DTYPE`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `property` has no attribute `RECIPROCAL_LATTICE_DTYPE`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `<=` is not supported between objects of type `dict[int, ndarray[tuple[Any, ...], dtype[float64]]] | ndarray[tuple[Any, ...], dtype[float64]] | str | Unknown` and `float`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `>=` is not supported between objects of type `dict[int, ndarray[tuple[Any, ...], dtype[float64]]] | ndarray[tuple[Any, ...], dtype[float64]] | str | Unknown` and `float`"
+   }
+  ],
+  "pyprocar/core/fermisurface.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument is incorrect: Expected `Literal[\"contour\", \"marching_cubes\", \"flying_edges\"]`, found `str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument is incorrect: Expected `Literal[\"null_value\", \"mask_points\", \"closest_point\"]`, found `str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument is incorrect: Expected `dict[str, ndarray[tuple[Any, ...], dtype[Unknown]]] | DataSetAttributes`, found `dict[str | tuple[int, int], Any]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument is incorrect: Expected `dict[str, ndarray[tuple[Any, ...], dtype[Unknown]]] | DataSetAttributes`, found `dict[str | tuple[int, int], ndarray[tuple[Any, ...], dtype[Any]]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument is incorrect: Expected `dict[str, ndarray[tuple[Any, ...], dtype[Unknown]]] | DataSetAttributes`, found `dict[str | tuple[int, int], ndarray[tuple[Any, ...], dtype[Any]]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `FermiSurface.__init__` is incorrect: Expected `dict[str | tuple[int, int], Any]`, found `DataSetAttributes | Unknown`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `FermiSurface.__init__` is incorrect: Expected `dict[str | tuple[int, int], ndarray[tuple[Any, ...], dtype[Any]]]`, found `DataSetAttributes | Unknown`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `FermiSurface.__init__` is incorrect: Expected `dict[str | tuple[int, int], ndarray[tuple[Any, ...], dtype[Any]]]`, found `DataSetAttributes | Unknown`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `FermiSurface.get_brillouin_zone` is incorrect: Expected `list[int]`, found `ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `to_rgba` is incorrect: Expected `MaskedArray[tuple[Any, ...], dtype[Any]]`, found `str`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `ElectronicBandStructureMesh | None` is not assignable to attribute `_ebs` of type `ElectronicBandStructureMesh`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `ElectronicBandStructureMesh | None` is not assignable to attribute `_original_ebs` of type `ElectronicBandStructureMesh`"
+   },
+   {
+    "rule": "invalid-method-override",
+    "message": "Invalid override of method `save`: Definition is incompatible with `PolyData.save`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `ImageData`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `UnstructuredGrid`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[str | tuple[int, int], Any]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[str | tuple[int, int], ndarray[tuple[Any, ...], dtype[Any]]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[str | tuple[int, int], ndarray[tuple[Any, ...], dtype[Any]]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[str, ndarray[tuple[Any, ...], dtype[Any]]] | ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[str, ndarray[tuple[Any, ...], dtype[Any]]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[tuple[int, int], str | tuple[int, int, int]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `float`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `float`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[str | tuple[int, int, int]]`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `points` is not defined on `None` in union `None | PolyData | Unknown`"
+   }
+  ],
+  "pyprocar/core/kpoints.py": [
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[int, str]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[str, ndarray[tuple[Any, ...], dtype[Any]]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[str, ndarray[tuple[Any, ...], dtype[Any]]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[tuple[str, str]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[tuple[str, str]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[tuple[str, str]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Variable of type `type[floating[Any]]` is not allowed in a type expression"
+   },
+   {
+    "rule": "invalid-type-form",
+    "message": "Variable of type `type[floating[Any]]` is not allowed in a type expression"
+   },
+   {
+    "rule": "unknown-argument",
+    "message": "Argument `special_kpoints` does not match any known parameter of `KPath.__init__`"
+   }
+  ],
+  "pyprocar/core/procarselect.py": [
+   {
+    "rule": "not-iterable",
+    "message": "Object of type `Unknown | None` may not be iterable"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   }
+  ],
+  "pyprocar/core/procarunfold/fatband.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `LineCollection.__init__` is incorrect: Expected `Sequence[ArrayLike]`, found `ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `LineCollection.__init__` is incorrect: Expected `Sequence[ArrayLike]`, found `ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `LineCollection.__init__` is incorrect: Expected `Sequence[ArrayLike]`, found `ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.add_collection` is incorrect: Expected `Collection[Unknown]`, found `LineCollection`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `ColorConverter.to_rgba` is incorrect: Expected `MaskedArray[tuple[Any, ...], dtype[Any]]`, found `Unknown | Literal[\"blue\"]`"
+   },
+   {
+    "rule": "invalid-attribute-access",
+    "message": "Invalid access to attribute `cm` on type `<module 'matplotlib'>`: Too many positional arguments to `object.__init__`: expected 1, got 2"
+   },
+   {
+    "rule": "invalid-attribute-access",
+    "message": "Invalid access to attribute `cm` on type `<module 'matplotlib'>`: Too many positional arguments to `object.__init__`: expected 1, got 2"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `__getattr__` has no attribute `ScalarMappable`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `__getattr__` has no attribute `bwr`"
+   }
+  ],
+  "pyprocar/core/procarunfold/procar_unfolder.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `range.__new__` is incorrect: Expected `SupportsIndex`, found `None | int | Unknown`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `range.__new__` is incorrect: Expected `SupportsIndex`, found `None | int`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `savetxt` is incorrect: Expected `str | PathLike[str] | SupportsWrite[bytes] | SupportsWrite[str]`, found `(Unknown & ~Literal[False]) | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Method `__getitem__` of type `Overload[(i: SupportsIndex, /) -> Any, (s: slice[SupportsIndex | None, SupportsIndex | None, SupportsIndex | None], /) -> list[Any]]` cannot be called with key of type `tuple[Literal[0] | Unknown, slice[None, None, None], int]` on object of type `list[Any]`"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `reshape` matches arguments"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `cell` is not defined on `list[Atoms]` in union `Atoms | list[Atoms]`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_chemical_symbols` is not defined on `list[Atoms]` in union `Atoms | list[Atoms]`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_scaled_positions` is not defined on `list[Atoms]` in union `Atoms | list[Atoms]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `list[list[int]]` and `None | int | Unknown`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between two objects of type `None | int`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `-` is not supported between objects of type `None | int` and `Literal[1]`"
+   }
+  ],
+  "pyprocar/core/procarunfold/unfolder.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `zip.__new__` is incorrect: Expected `Iterable[Unknown]`, found `None | Unknown`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `zip.__new__` is incorrect: Expected `Iterable[Unknown]`, found `None | ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `len` is incorrect: Expected `Sized`, found `None | Unknown`"
+   }
+  ],
+  "pyprocar/core/property_store.py": [
+   {
+    "rule": "call-non-callable",
+    "message": "Object of type `object` is not callable"
+   },
+   {
+    "rule": "call-non-callable",
+    "message": "Object of type `object` is not callable"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Property.__init__` is incorrect: Expected `ndarray[tuple[Any, ...], dtype[float64]] | None`, found `(Buffer & ~Property) | (_SupportsArray[dtype[Any]] & ~Property) | (_NestedSequence[_SupportsArray[dtype[Any]]] & ~Property) | ... omitted 5 union elements`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `PointSet._extract_key` is incorrect: Expected `str | tuple[str, int] | tuple[str, str] | tuple[str, str, int]`, found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `parse_frac` is incorrect: Expected `str`, found `str | None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `PointSet` is not assignable to attribute `_point_set` of type `ReferenceType[Unknown] | None`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `(...) -> Unknown`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `PointSet`, found `None`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `PointSet`, found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `str`, found `str | None`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `tuple[float | None, float | None]`, found `ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `tuple[str, str]`, found `tuple[str | None, Literal[\"\"]]`"
+   },
+   {
+    "rule": "unknown-argument",
+    "message": "Argument `divergence` does not match any known parameter of `Property.__init__`"
+   },
+   {
+    "rule": "unknown-argument",
+    "message": "Argument `laplacian` does not match any known parameter of `Property.__init__`"
+   },
+   {
+    "rule": "unknown-argument",
+    "message": "Argument `vortex` does not match any known parameter of `Property.__init__`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `Property` has no attribute `vortex`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `Self@__eq__` has no attribute `vortex`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"\\\\frac{\"]` and `str | None`"
+   }
+  ],
+  "pyprocar/core/structure.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `enumerate.__new__` is incorrect: Expected `Iterable[Unknown]`, found `Any | None | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `all` is incorrect: Expected `Iterable[object]`, found `Any | bool`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `det` is incorrect: Expected `_SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, complex]]] | _NestedSequence[_SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, complex]]]] | complex | _NestedSequence[complex]`, found `ndarray[tuple[Any, ...], dtype[Unknown]] | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `dot` is incorrect: Expected `ArrayLike`, found `ndarray[tuple[Any, ...], dtype[Unknown]] | None`"
+   },
+   {
+    "rule": "not-iterable",
+    "message": "Object of type `ndarray[tuple[Any, ...], dtype[Unknown]] | None` may not be iterable"
+   },
+   {
+    "rule": "not-iterable",
+    "message": "Object of type `ndarray[tuple[Any, ...], dtype[Unknown]] | None` may not be iterable"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `international` is not defined on `None` in union `SpglibDataset | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `number` is not defined on `None` in union `SpglibDataset | None`"
+   }
+  ],
+  "pyprocar/io/abinit/parser.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `KPath.__init__` is incorrect: Expected `list[tuple[str, str]]`, found `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `KPath.__init__` is incorrect: Expected `ndarray[tuple[Any, ...], dtype[Any]]`, found `None | ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Procar._spd2projected` is incorrect: Expected `ndarray[tuple[Any, ...], dtype[Any]] | None`, found `~None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `len` is incorrect: Expected `Sized`, found `Path | list[Path] | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `len` is incorrect: Expected `Sized`, found `Path | list[Path] | None`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `tuple[int, int, int] | None`, found `list[int] | None`"
+   }
+  ],
+  "pyprocar/io/procarparser.py": [
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `range.__new__` is incorrect: Expected `SupportsIndex`, found `None | int`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Method `__getitem__` of type `Overload[(i: SupportsIndex, /) -> Any, (s: slice[SupportsIndex | None, SupportsIndex | None, SupportsIndex | None], /) -> list[Any]]` cannot be called with key of type `tuple[slice[None, None, None], slice[None, None, None], slice[None, None, None], slice[Literal[1], Literal[-1], None]]` on object of type `list[Any]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Cannot assign to a subscript on an object of type `None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Cannot assign to a subscript on an object of type `None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Any]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, None | int | Unknown, Literal[2]]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Any]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, None | int | Unknown, Literal[2]]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Any]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, None | int | Unknown, Literal[2]]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Any]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, None | int | Unknown, None | (int & ~Literal[2]), None | int, int]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Any]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, int, Literal[1], None | int, int]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Any]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, int, Literal[1], None | int, int]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid subscript assignment with key of type `tuple[int, slice[None, None, None]]` and value of type `list[float]` on object of type `list[Any]`"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload matches arguments"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*=` is not supported between objects of type `None` and `Literal[2]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `Literal[2]` and `None | int`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `None | int | Unknown` and `None | int`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `None | int | Unknown` and `None | int`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `None | int | Unknown` and `None | int`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `None | int` and `Literal[1]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `None | int` and `Literal[2]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `None | int` and `int`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `None | int` and `int`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `None | int` and `Literal[2]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `/` is not supported between objects of type `None | int | Unknown` and `Literal[2]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `/` is not supported between objects of type `None | int | Unknown` and `Literal[2]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `<=` is not supported between objects of type `int` and `None | int`"
+   }
+  ],
+  "pyprocar/io/vasp/parser.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `KPath.__init__` is incorrect: Expected `list[tuple[str, str]]`, found `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `KPath.__init__` is incorrect: Expected `ndarray[tuple[Any, ...], dtype[Any]]`, found `ndarray[tuple[Any, ...], dtype[Any]] | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `get_ebs_from_data` is incorrect: Expected `KPath`, found `KPath | None`"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `crystal` is not defined on `None` in union `StructureInfo | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `positions` is not defined on `None` in union `StructureInfo | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Any]] | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `VaspXML & ~AlwaysFalsy` has no attribute `is_spin_polarized`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `VaspXML & ~AlwaysFalsy` has no attribute `version`"
+   }
+  ],
+  "pyprocar/io/vasp/vasprun.py": [
+   {
+    "rule": "unresolved-import",
+    "message": "Module `lxml` has no member `etree`"
+   }
+  ],
+  "pyprocar/plotter/_surface_plot.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument is incorrect: Expected `Literal[\"surface\", \"wireframe\", \"points\", \"points_gaussian\"] | None`, found `str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `savez` is incorrect: Expected `bool`, found `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-method-override",
+    "message": "Invalid override of method `add_plane_widget`: Definition is incompatible with `WidgetHelper.add_plane_widget`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `PolyData`"
+   },
+   {
+    "rule": "missing-argument",
+    "message": "No argument provided for required parameter `self` of bound method `_Wrapped.__call__`"
+   }
+  ],
+  "pyprocar/plotter/bs_2d_plot.py": [
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `PolyData`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `replace` is not defined on `None` in union `str | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"norm\"]` and `str | None`"
+   }
+  ],
+  "pyprocar/plotter/bs_plot.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `LineCollection.__init__` is incorrect: Expected `Sequence[ArrayLike]`, found `ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `LineCollection.__init__` is incorrect: Expected `Sequence[ArrayLike]`, found `ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `LineCollection.__init__` is incorrect: Expected `int`, found `Divergent | str | Normalize`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Axes.fill_between` is incorrect: Expected `Literal[\"pre\", \"post\", \"mid\"]`, found `Unknown | float`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Axes.fill_between` is incorrect: Expected `bool`, found `Unknown | float`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructurePlotter.set_xlim` is incorrect: Expected `list[float]`, found `tuple[Any, Any]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructurePlotter.set_ylim` is incorrect: Expected `list[float]`, found `tuple[float, float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.add_collection` is incorrect: Expected `Collection[Unknown]`, found `LineCollection`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.add_collection` is incorrect: Expected `Collection[Unknown]`, found `LineCollection`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.grid` is incorrect: Expected `Literal[\"major\", \"minor\", \"both\"]`, found `str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.set_ylim` is incorrect: Expected `float`, found `list[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `enumerate.__new__` is incorrect: Expected `Iterable[Unknown]`, found `None | Unknown | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `enumerate.__new__` is incorrect: Expected `Iterable[Unknown]`, found `ndarray[tuple[Any, ...], dtype[Any]] | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `_snap_max` is incorrect: Expected `float`, found `float | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `_snap_min` is incorrect: Expected `float`, found `float | None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `str | Colormap`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `str`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `Normalize | type`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `float`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[float]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[float]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[str]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `tuple[float, float]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `tuple[None, None]` is not assignable to annotated parameter type `tuple[float, float]`"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of bound method `_AxesBase.set_xlim` matches arguments"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `ndim` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Any]] | None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `ndim` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Any]] | None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `ndim` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Any]] | None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `ndim` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Any]] | None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `ndim` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Any]] | None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `ndim` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Any]] | None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `ndim` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Any]] | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Any]] | None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Module `matplotlib.pyplot` has no member `Normalize`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Module `matplotlib.pyplot` has no member `NullLocator`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Module `matplotlib.pyplot` has no member `cm`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Module `matplotlib.pyplot` has no member `get_cmap`"
+   }
+  ],
+  "pyprocar/plotter/dos_plot.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `LineCollection.__init__` is incorrect: Expected `Sequence[ArrayLike]`, found `ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Polygon.__init__` is incorrect: Expected `Sequence[float]`, found `ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `ScalarMappable.__init__` is incorrect: Expected `Normalize | None`, found `Normalize | str | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Artist.set_clip_path` is incorrect: Expected `Circle | RegularPolygon | Rectangle`, found `Polygon`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Axes.annotate` is incorrect: Expected `str | Artist | Transform | ((...) -> Unknown)`, found `tuple[str, str]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Axes.axhline` is incorrect: Expected `float`, found `Unknown | str | float`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Axes.axhline` is incorrect: Expected `float`, found `Unknown | str | float`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Axes.axvline` is incorrect: Expected `float`, found `Unknown | str | float`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Axes.axvline` is incorrect: Expected `float`, found `Unknown | str | float`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Axes.fill_betweenx` is incorrect: Expected `str | float | Period | ... omitted 3 union elements`, found `Iterable[float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Axes.fill_betweenx` is incorrect: Expected `str | float | Period | ... omitted 3 union elements`, found `float | ndarray[tuple[Any, ...], dtype[Any]] | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Axes.imshow` is incorrect: Expected `Normalize`, found `Normalize | str | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter._validate_ticks` is incorrect: Expected `Sequence[float] | Locator`, found `Sequence[float] | Locator | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.add_vectors` is incorrect: Expected `float`, found `Any | ndarray[tuple[Any, ...], dtype[Any]] | None | str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.add_vectors` is incorrect: Expected `int`, found `Any | ndarray[tuple[Any, ...], dtype[Any]] | None | str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.add_vectors` is incorrect: Expected `ndarray[tuple[Any, ...], dtype[Any]]`, found `ndarray[tuple[Any, ...], dtype[Any]] | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.add_vectors` is incorrect: Expected `str`, found `Any | ndarray[tuple[Any, ...], dtype[Any]] | None | str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.add_vectors` is incorrect: Expected `str`, found `Any | ndarray[tuple[Any, ...], dtype[Any]] | None | str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.add_vectors` is incorrect: Expected `str`, found `Any | ndarray[tuple[Any, ...], dtype[Any]] | None | str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.fill_between_image` is incorrect: Expected `AxesOrientation`, found `str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.plot_colorbar` is incorrect: Expected `str`, found `str | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.set_dos_label` is incorrect: Expected `str`, found `str | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.set_dos_label` is incorrect: Expected `str`, found `str | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.add_collection` is incorrect: Expected `Collection[Unknown]`, found `LineCollection`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.set_ylim` is incorrect: Expected `float`, found `tuple[float, float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.tick_params` is incorrect: Expected `Literal[\"x\", \"y\", \"both\"]`, found `str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `len` is incorrect: Expected `Sized`, found `Iterable[Any] | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `resolve_clim` is incorrect: Expected `tuple[float, float] | None`, found `tuple[float | None, float | None] | None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `AxesOrientation` is not assignable to attribute `orientation` of type `str`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `Literal[AxesOrientation.HORIZONTAL]` is not assignable to `str`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `tuple[float, float]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `tuple[float, float]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `ScalarsMode` is not assignable to `str`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `Sequence[float]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `Sequence[float]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `Sequence[str]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `Sequence[str]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `Sequence[str]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `Sequence[str]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str | Normalize`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str | Normalize`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `tuple[float, float]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `tuple[float, float]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `tuple[float, float]`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `ScalarMappable`, found `None`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `Sequence[Any]`, found `Iterable[Any] | None`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Return type does not match returned value: expected `str | None`, found `AxesOrientation`"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of bound method `Axes.set_xticks` matches arguments"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `Iterable[Any]` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `add_collection` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `add_patch` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `annotate` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `axhline` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `axvline` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `fill_betweenx` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `imshow` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `imshow` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `legend` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `legend` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `plot` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `plot` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `quiver` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `quiver` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `set_title` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `set_xlabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `set_xlim` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `set_xticklabels` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `set_xticks` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `set_ylabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `set_ylim` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `set_yticklabels` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `set_yticks` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `squeeze` is not defined on `float*` in union `ndarray[tuple[Any, ...], dtype[Any]] | float*`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `tick_params` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Module `matplotlib.pyplot` has no member `Figure`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Module `matplotlib.pyplot` has no member `get_cmap`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Module `matplotlib.pyplot` has no member `get_cmap`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `Locator` has no attribute `get_ticks`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `ScalarMappable` has no attribute `ax`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `Sequence[str] & Locator` has no attribute `get_ticklabels`"
+   }
+  ],
+  "pyprocar/plotter/fs_plot.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument expression after ** must be a mapping type: Found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument expression after ** must be a mapping type: Found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument expression after ** must be a mapping type: Found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `~None` has no attribute `GetLabelTextProperty`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `~None` has no attribute `SetPosition`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `~None` has no attribute `SetTitle`"
+   }
+  ],
+  "pyprocar/plotter/fs_slice_plot.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Axes.scatter` is incorrect: Expected `ArrayLike | list[tuple[float, float, float] | tuple[float64, float64, float64, float64] | tuple[unsignedinteger[_8Bit], unsignedinteger[_8Bit], unsignedinteger[_8Bit], unsignedinteger[_8Bit]] | str] | tuple[float, float, float] | ... omitted 3 union elements`, found `ndarray[tuple[Any, ...], dtype[Any]] | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.add_collection` is incorrect: Expected `Collection[Unknown]`, found `LineCollection`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.set_ylim` is incorrect: Expected `float`, found `tuple[float, float]`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Module `matplotlib.pyplot` has no member `get_cmap`"
+   }
+  ],
+  "pyprocar/pyposcar/autoSelect.py": [
+   {
+    "rule": "invalid-return-type",
+    "message": "Function always implicitly returns `None`, which is not assignable to return type `list[int]`"
+   },
+   {
+    "rule": "invalid-return-type",
+    "message": "Function always implicitly returns `None`, which is not assignable to return type `list[list[int]]`"
+   }
+  ],
+  "pyprocar/pyposcar/clusters.py": [
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `nn_list` is not defined on `None` in union `Unknown | None | Neighbors`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `nn_list` is not defined on `None` in union `Unknown | None | Neighbors`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `nn_list` is not defined on `None` in union `Unknown | None | Neighbors`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `nn_list` is not defined on `None` in union `Unknown | None | Neighbors`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `-` is not supported between objects of type `set[int] | set[Unknown] | Unknown` and `list[int | Unknown] | set[int | Unknown]`"
+   }
+  ],
+  "pyprocar/pyposcar/defects.py": [
+   {
+    "rule": "not-iterable",
+    "message": "Object of type `None | list[list[Any]]` may not be iterable"
+   },
+   {
+    "rule": "not-iterable",
+    "message": "Object of type `None | list[list[int]] | list[list[int | Unknown]]` may not be iterable"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `pop` is not defined on `None` in union `None | list[list[int]] | list[list[int | Unknown]]`"
+   },
+   {
+    "rule": "unresolved-import",
+    "message": "Cannot resolve imported module `sklearn.neighbors.kde`"
+   }
+  ],
+  "pyprocar/pyposcar/globalConectivity.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Neighbors.__init__` is incorrect: Expected `dict[Unknown, Unknown]`, found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Neighbors.__init__` is incorrect: Expected `dict[Unknown, Unknown]`, found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `len` is incorrect: Expected `Sized`, found `None | list[list[int]] | list[list[int | Unknown]]`"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   }
+  ],
+  "pyprocar/pyposcar/latticeUtils.py": [
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `enumerate.__new__` is incorrect: Expected `Iterable[list[Any]]`, found `None | list[list[Any]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `zip.__new__` is incorrect: Expected `Iterable[Unknown]`, found `None | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `zip.__new__` is incorrect: Expected `Iterable[list[Any]]`, found `None | list[list[Any]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `zip.__new__` is incorrect: Expected `Iterable[list[int] | list[int | Unknown]]`, found `None | list[list[int]] | list[list[int | Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `zip.__new__` is incorrect: Expected `Iterable[list[int] | list[int | Unknown]]`, found `None | list[list[int]] | list[list[int | Unknown]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `amax` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `amax` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `amax` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `sort` matches arguments"
+   },
+   {
+    "rule": "not-iterable",
+    "message": "Object of type `None | list[list[int]] | list[list[int | Unknown]]` may not be iterable"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   }
+  ],
+  "pyprocar/pyposcar/poscar.py": [
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `bool`: Incompatible value of type `None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `float`: Incompatible value of type `None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `int`: Incompatible value of type `None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `ndarray[tuple[Any, ...], dtype[Any]]`: Incompatible value of type `None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `ndarray[tuple[Any, ...], dtype[Any]]`: Incompatible value of type `None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `ndarray[tuple[Any, ...], dtype[Any]]`: Incompatible value of type `None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `ndarray[tuple[Any, ...], dtype[Any]]`: Incompatible value of type `None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `None` is not assignable to `str`: Incompatible value of type `None`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `TextIOWrapper[_WrappedBuffer]` is not assignable to attribute `poscar` of type `str`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `list[Any]` is not assignable to attribute `lat` of type `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `list[str]` is not assignable to attribute `poscar` of type `str`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str`"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `iter` matches arguments"
+   },
+   {
+    "rule": "not-iterable",
+    "message": "Object of type `list[Unknown] | int` may not be iterable"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `str` has no attribute `readlines`"
+   }
+  ],
+  "pyprocar/pyposcar/poscarUtils.py": [
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `Poscar.remove` is incorrect: Expected `list[Unknown] | int`, found `ndarray[tuple[Any, ...], dtype[Any]] | ndarray[tuple[Any, ...], Unknown]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `poscar_supercell.supercell` is incorrect: Expected `ndarray[tuple[Any, ...], dtype[Any]]`, found `list[Unknown]`"
+   }
+  ],
+  "pyprocar/pyposcar/rdf.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `zip.__new__` is incorrect: Expected `Iterable[Unknown]`, found `None | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `cpos` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lat` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `numberSp` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `typeSp` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-import",
+    "message": "Cannot resolve imported module `sklearn.neighbors.kde`"
+   }
+  ],
+  "pyprocar/scripts/scriptAutoBandsplot.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `list[float] | None`, found `Unknown | tuple[Unknown, Divergent] | tuple[Divergent, Unknown]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `list[float] | None`, found `Unknown | tuple[Unknown, Divergent] | tuple[Divergent, Unknown]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `bandsplot` is incorrect: Expected `list[float] | None`, found `Unknown | tuple[Unknown, Divergent] | tuple[Divergent, Unknown]`"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `amax` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `amin` matches arguments"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   }
+  ],
+  "pyprocar/scripts/scriptBandGap.py": [
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `float`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str`"
+   }
+  ],
+  "pyprocar/scripts/scriptBandStructure2DHandler.py": [
+   {
+    "rule": "missing-argument",
+    "message": "No argument provided for required parameter `self` of bound method `_Wrapped.__call__`"
+   },
+   {
+    "rule": "missing-argument",
+    "message": "No argument provided for required parameter `self` of bound method `_Wrapped.__call__`"
+   },
+   {
+    "rule": "missing-argument",
+    "message": "No argument provided for required parameter `self` of bound method `_Wrapped.__call__`"
+   }
+  ],
+  "pyprocar/scripts/scriptBandsDosplot.py": [
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str`"
+   }
+  ],
+  "pyprocar/scripts/scriptBandsplot.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructurePlotter.plot` is incorrect: Expected `str`, found `Any | dict[Unknown, Unknown] | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructurePlotter.plot` is incorrect: Expected `str`, found `Any | dict[Unknown, Unknown] | None`"
+   }
+  ],
+  "pyprocar/scripts/scriptCat.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `exists` is incorrect: Expected `int | str | bytes | PathLike[str] | PathLike[bytes]`, found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `open` is incorrect: Expected `int | str | bytes | PathLike[str] | PathLike[bytes]`, found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `open` is incorrect: Expected `int | str | bytes | PathLike[str] | PathLike[bytes]`, found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `remove` is incorrect: Expected `str | bytes | PathLike[str] | PathLike[bytes]`, found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `sorted` is incorrect: Expected `Iterable[Unknown]`, found `Unknown | None`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[str]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str`"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `open` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `open` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `open` matches arguments"
+   },
+   {
+    "rule": "unknown-argument",
+    "message": "Argument `abinit_output_filepath` does not match any known parameter of `AbinitOutput.__init__`"
+   }
+  ],
+  "pyprocar/scripts/scriptFermi2D.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `FermiSlicePlotter.__init__` is incorrect: Expected `ndarray[tuple[Any, ...], dtype[Any]] | None`, found `tuple[Literal[0], Literal[0], Literal[1]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `FermiSlicePlotter.__init__` is incorrect: Expected `ndarray[tuple[Any, ...], dtype[Any]] | None`, found `tuple[Literal[0], Literal[0], float]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `FermiSlicePlotter.__init__` is incorrect: Expected `tuple[int, int]`, found `tuple[float, float]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `Axes`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `dict[Unknown, Unknown]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `float`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[list[Unknown]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[list[int] | tuple[Unknown, ...]]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str`"
+   }
+  ],
+  "pyprocar/scripts/scriptFermiHandler.py": [
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `float`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `float`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `int`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `int`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[float]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[float]`"
+   },
+   {
+    "rule": "missing-argument",
+    "message": "No argument provided for required parameter `self` of bound method `_Wrapped.__call__`"
+   },
+   {
+    "rule": "missing-argument",
+    "message": "No argument provided for required parameter `self` of bound method `_Wrapped.__call__`"
+   }
+  ],
+  "pyprocar/scripts/scriptFilter.py": [
+   {
+    "rule": "invalid-assignment",
+    "message": "Object of type `list[int | list[Unknown]]` is not assignable to `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[int]`"
+   },
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `list[str]`"
+   },
+   {
+    "rule": "not-iterable",
+    "message": "Object of type `int` is not iterable"
+   }
+  ],
+  "pyprocar/scripts/scriptKpath.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `open` is incorrect: Expected `int | str | bytes | PathLike[str] | PathLike[bytes]`, found `Unknown | None`"
+   }
+  ],
+  "pyprocar/utils/data_utils.py": [
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `Literal[\" \"]` and `int | str`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `Literal[\" \"]` and `int | str`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `Literal[\" \"]` and `int | str`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `*` is not supported between objects of type `Literal[\" \"]` and `int | str`"
+   }
+  ],
+  "pyprocar/utils/defaults.py": [
+   {
+    "rule": "not-iterable",
+    "message": "Object of type `Unknown | None` may not be iterable"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   }
+  ],
+  "pyprocar/utils/download_examples.py": [
+   {
+    "rule": "invalid-parameter-default",
+    "message": "Default value of type `None` is not assignable to annotated parameter type `str | Path`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `/` is not supported between objects of type `str | Path` and `Literal[\"codes\"]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `/` is not supported between objects of type `str | Path` and `Literal[\"examples\"]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `/` is not supported between objects of type `str | Path` and `Literal[\"io\"]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `/` is not supported between objects of type `str | Path` and `Literal[\"issues\"]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `/` is not supported between objects of type `str | Path` and `str`"
+   }
+  ],
+  "pyprocar/utils/physics.py": [
+   {
+    "rule": "invalid-type-form",
+    "message": "Variable of type `type[floating[Any]]` is not allowed in a parameter annotation"
+   }
+  ],
+  "pyprocar/utils/procarfilefilter.py": [
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `open` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `open` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `open` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `open` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `open` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `open` matches arguments"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `group` is not defined on `None` in union `Match[str] | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `group` is not defined on `None` in union `Match[str] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `Literal[\"In File: \"]` and `Unknown | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `Literal[\"In File: \"]` and `Unknown | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `Literal[\"In File: \"]` and `Unknown | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `Literal[\"In File: \"]` and `Unknown | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `Literal[\"In File: \"]` and `Unknown | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `Literal[\"Out File: \"]` and `Unknown | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `Literal[\"Out File: \"]` and `Unknown | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `Literal[\"Out File: \"]` and `Unknown | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `Literal[\"Out File: \"]` and `Unknown | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `Literal[\"Out File: \"]` and `Unknown | None`"
+   }
+  ],
+  "pyprocar/utils/unfolder.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `enumerate.__new__` is incorrect: Expected `Iterable[Unknown]`, found `None | list[Unknown]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `len` is incorrect: Expected `Sized`, found `None | list[Unknown]`"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lattice` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_atoms` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_atoms` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_bands` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_bands` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_kpoints` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_kpoints` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_orbitals` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_orbitals` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_spins` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_spins` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_spins` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `n_spins` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `projected_phase` is not defined on `None` in union `Unknown | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | ndarray[tuple[Unknown, Unknown, Unknown, Unknown], dtype[complex128]]`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | ndarray[tuple[Unknown, Unknown, Unknown, Unknown], dtype[complex128]]`"
+   }
+  ],
+  "pyprocar/utils/utilsprocar.py": [
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Function `kreplace` has no attribute `k`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Function `kreplace` has no attribute `k`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Function `kreplace` has no attribute `localCounter`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Function `kreplace` has no attribute `localCounter`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Unresolved attribute `k` on type `def kreplace(matchobj) -> Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Unresolved attribute `k` on type `def kreplace(matchobj) -> Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Unresolved attribute `localCounter` on type `def kreplace(matchobj) -> Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Unresolved attribute `localCounter` on type `def kreplace(matchobj) -> Unknown`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+` is not supported between objects of type `Literal[\"Filename :\"]` and `Unknown | None`"
+   }
+  ],
+  "scripts/dftb+2procar.py": [
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "deprecated",
+    "message": "The function `shape` is deprecated: In-place shape modification will be deprecated in NumPy 2.5."
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `range.__new__` is incorrect: Expected `SupportsIndex`, found `None | int`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `range.__new__` is incorrect: Expected `SupportsIndex`, found `None | int`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to constructor `range.__new__` is incorrect: Expected `SupportsIndex`, found `None | int`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Unknown]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, Literal[4]]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Unknown]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, None | int, None | int, None | int]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Unknown]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, None | int, None | int]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Unknown]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, None | int, None | int]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Unknown]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, None | int]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Unknown]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, None | int]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid assignment to data descriptor attribute `shape` on type `ndarray[tuple[Any, ...], dtype[Unknown]]`: Expected `SupportsIndex | Sequence[SupportsIndex]`, found `tuple[None | int, None | int]`"
+   },
+   {
+    "rule": "invalid-assignment",
+    "message": "Invalid subscript assignment with key of type `tuple[int, int, int, list[Any | None]]` and value of type `Unknown | ndarray[tuple[Any, ...], dtype[Any]]` on object of type `ndarray[tuple[Any, ...], dtype[Any]]`"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of bound method `Pattern.sub` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `findall` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `findall` matches arguments"
+   },
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `linspace` matches arguments"
+   },
+   {
+    "rule": "redundant-condition",
+    "message": "Object of type `(bound method int.is_integer() -> Literal[True]) | (bound method float*.is_integer() -> bool)` is always truthy"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `data` is not defined on `Element`, `None` in union `Element | ProcessingInstruction | Comment | Text | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `data` is not defined on `Element`, `None` in union `Element | ProcessingInstruction | Comment | Text | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `flatten` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `flatten` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `flatten` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `keys` is not defined on `None` in union `None | OrderedDict[Any, Any | None]`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `replace` is not defined on `None` in union `None | str | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `replace` is not defined on `None` in union `None | str | Unknown`"
+   }
+  ],
+  "tests/pyprocar/core/test_bandstructure2d.py": [
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `None` in union `Property | None`"
+   }
+  ],
+  "tests/pyprocar/core/test_dos.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `len` is incorrect: Expected `Sized`, found `ndarray[tuple[Any, ...], dtype[Unknown]] | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `list[Property]` in union `Property | list[Property]`"
+   }
+  ],
+  "tests/pyprocar/core/test_ebs.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/pyprocar/core/test_from_code.py": [
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `type` has no attribute `from_code`"
+   }
+  ],
+  "tests/pyprocar/core/test_kpoints.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `cartesian_to_reduced` is incorrect: Expected `ndarray[tuple[Literal[3], Literal[3]], dtype[Unknown]]`, found `None`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `reduced_to_cartesian` is incorrect: Expected `ndarray[tuple[Literal[3], Literal[3]], dtype[Unknown]]`, found `None`"
+   }
+  ],
+  "tests/pyprocar/core/test_procarselect.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `None | Unknown`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `None | Unknown`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `None | Unknown`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `None | Unknown`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `None | Unknown`"
+   }
+  ],
+  "tests/pyprocar/core/test_property_store.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Property.__init__` is incorrect: Expected `(...) -> Unknown`, found `str | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Property.__init__` is incorrect: Expected `PointSet | None`, found `str | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Property.__init__` is incorrect: Expected `dict[int, ndarray[tuple[Any, ...], dtype[float64]]] | None`, found `str | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Property.__init__` is incorrect: Expected `dict[str, Any] | None`, found `str | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Property.__init__` is incorrect: Expected `ndarray[tuple[Any, ...], dtype[float64]] | None`, found `str | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Property.__init__` is incorrect: Expected `ndarray[tuple[Any, ...], dtype[float64]] | None`, found `str | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Property.__init__` is incorrect: Expected `str | None`, found `str | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Property.__init__` is incorrect: Expected `str | None`, found `str | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `Property.__init__` is incorrect: Expected `tuple[float | None, float | None] | None`, found `str | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `dict[int, ndarray[tuple[Any, ...], dtype[float64]]] | ndarray[tuple[Any, ...], dtype[float64]] | str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `dict[int, ndarray[tuple[Any, ...], dtype[float64]]] | ndarray[tuple[Any, ...], dtype[float64]] | str`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `value` is not defined on `None` in union `Property | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `Property | None` has no attribute `tolist`"
+   }
+  ],
+  "tests/pyprocar/core/test_structure.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `Any | None | ndarray[tuple[Any, ...], dtype[Unknown]]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `allclose` is incorrect: Expected `ArrayLike`, found `ndarray[tuple[Any, ...], dtype[Unknown]] | Any | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `tolist` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Unknown]] | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `tolist` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Unknown]] | None`"
+   }
+  ],
+  "tests/pyprocar/core/test_surface_get_property.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2D.from_code` is incorrect: Expected `str`, found `Path`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `BandStructure2D.from_code` is incorrect: Expected `str`, found `Path`"
+   }
+  ],
+  "tests/pyprocar/io/abinit/test_procar.py": [
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `bands` is not defined on `None` in union `Procar | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `kpoints` is not defined on `None` in union `Procar | None`"
+   }
+  ],
+  "tests/pyprocar/io/elk/test_dos.py": [
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   }
+  ],
+  "tests/pyprocar/io/elk/test_parser.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to `list.__init__` is incorrect: Expected `Iterable[Unknown]`, found `ndarray[tuple[Any, ...], dtype[Unknown]] | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `atoms` is not defined on `None` in union `Structure | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `natoms` is not defined on `None` in union `Structure | None`"
+   }
+  ],
+  "tests/pyprocar/io/elk/test_projections.py": [
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   }
+  ],
+  "tests/pyprocar/io/lobster/test_parser.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `list.append` is incorrect: Expected `LiteralString`, found `str`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+=` is not supported between objects of type `list[LiteralString]` and `list[str]`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `+=` is not supported between objects of type `list[LiteralString]` and `list[str]`"
+   }
+  ],
+  "tests/pyprocar/io/qe/test_projwfc_out.py": [
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   }
+  ],
+  "tests/pyprocar/io/qe/test_pw_out.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Method `__getitem__` of type `bound method str.__getitem__(key: SupportsIndex | slice[SupportsIndex | None, SupportsIndex | None, SupportsIndex | None], /) -> str` cannot be called with key of type `Literal[\"calls\"]` on object of type `str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Method `__getitem__` of type `bound method str.__getitem__(key: SupportsIndex | slice[SupportsIndex | None, SupportsIndex | None, SupportsIndex | None], /) -> str` cannot be called with key of type `Literal[\"cpu_s\"]` on object of type `str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Method `__getitem__` of type `bound method str.__getitem__(key: SupportsIndex | slice[SupportsIndex | None, SupportsIndex | None, SupportsIndex | None], /) -> str` cannot be called with key of type `Literal[\"cpu_s\"]` on object of type `str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Method `__getitem__` of type `bound method str.__getitem__(key: SupportsIndex | slice[SupportsIndex | None, SupportsIndex | None, SupportsIndex | None], /) -> str` cannot be called with key of type `Literal[\"name\"]` on object of type `str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Method `__getitem__` of type `bound method str.__getitem__(key: SupportsIndex | slice[SupportsIndex | None, SupportsIndex | None, SupportsIndex | None], /) -> str` cannot be called with key of type `Literal[\"name\"]` on object of type `str`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Method `__getitem__` of type `bound method str.__getitem__(key: SupportsIndex | slice[SupportsIndex | None, SupportsIndex | None, SupportsIndex | None], /) -> str` cannot be called with key of type `Literal[\"wall_s\"]` on object of type `str`"
+   }
+  ],
+  "tests/pyprocar/io/qe/test_pw_xml.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to function `assert_array_almost_equal` is incorrect: Expected `_SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, complex]]] | _NestedSequence[_SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, complex]]]] | complex | ... omitted 3 union elements`, found `ndarray[tuple[Any, ...], dtype[Any]] | None`"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "not-subscriptable",
+    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Any]] | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `shape` is not defined on `None` in union `ndarray[tuple[Any, ...], dtype[Any]] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"bands\"]` and `dict[str, ndarray[tuple[Any, ...], dtype[Any]]] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"calculation\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"cell_do_free\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"cell_dynamics\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"conv_thr\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"created\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"creator\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"date\"]` and `dict[str, str] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"demet\"]` and `dict[str, float] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"diagonalization\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"eband\"]` and `dict[str, float] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"ecutrho\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"ecutwfc\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"ehart\"]` and `dict[str, float] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"equivalent_atoms\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"etot\"]` and `dict[str, float] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"etot_conv_thr\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"etxc\"]` and `dict[str, float] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"ewald\"]` and `dict[str, float] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"gamma_only\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"ion_dynamics\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"job\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"k_points\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"kpoints\"]` and `dict[str, ndarray[tuple[Any, ...], dtype[Any]]] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"lsda\"]` and `dict[str, bool] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"max_nstep\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"max_seconds\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"mixing_beta\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"mixing_mode\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"nbgrp\"]` and `dict[str, int] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"ndiag\"]` and `dict[str, int] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"nk\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"no_t_rev\"]` and `dict[str, bool] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"noinv\"]` and `dict[str, bool] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"noncolin\"]` and `dict[str, bool] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"nosym\"]` and `dict[str, bool] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"npool\"]` and `dict[str, int] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"nprocs\"]` and `dict[str, int] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"ntasks\"]` and `dict[str, int] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"nthreads\"]` and `dict[str, int] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"ntyp\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"occupations\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"occupations\"]` and `dict[str, ndarray[tuple[Any, ...], dtype[Any]]] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"outdir\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"partial\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"prefix\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"pressure\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"pseudo_dir\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"restart_mode\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"rotations\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"smearing\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"species\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"spinorbit\"]` and `dict[str, bool] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"time\"]` and `dict[str, str] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"tot_charge\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"total\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"translations\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"upscale\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"verbosity\"]` and `dict[str, Any] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"vtxc\"]` and `dict[str, float] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"weights\"]` and `dict[str, ndarray[tuple[Any, ...], dtype[Any]]] | None`"
+   },
+   {
+    "rule": "unsupported-operator",
+    "message": "Operator `in` is not supported between objects of type `Literal[\"xml_format\"]` and `dict[str, Any] | None`"
+   }
+  ],
+  "tests/pyprocar/io/vasp/test_dos_from_doscar.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   },
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   },
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   },
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/pyprocar/io/vasp/test_locproj.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/pyprocar/io/vasp/test_parser.py": [
+   {
+    "rule": "no-matching-overload",
+    "message": "No overload of function `diag` matches arguments"
+   }
+  ],
+  "tests/pyprocar/io/vasp/test_poscar.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/pyprocar/plotter/test_bs_plot.py": [
+   {
+    "rule": "unresolved-attribute",
+    "message": "Object of type `None | Colorbar` has no attribute `mappable`"
+   }
+  ],
+  "tests/pyprocar/plotter/test_dos_plot.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.plot` is incorrect: Expected `Property`, found `Property | list[Property]`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `DOSPlotter.plot` is incorrect: Expected `Property`, found `Property | list[Property]`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `collections` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `collections` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `collections` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `collections` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `collections` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `collections` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `collections` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `collections` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `collections` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `collections` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `collections` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_legend` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_legend` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_title` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlim` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlim` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_xlim` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_ylabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_ylabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_ylabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_ylabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_ylabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_ylabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_ylabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_ylabel` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `get_ylim` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `images` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `lines` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `metadata` is not defined on `list[Property]` in union `Property | list[Property]`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `texts` is not defined on `None` in union `Axes | None`"
+   },
+   {
+    "rule": "unresolved-attribute",
+    "message": "Attribute `to_array` is not defined on `list[Property]` in union `Property | list[Property]`"
+   }
+  ],
+  "tests/pyprocar/plotter/test_fs_slice_plot.py": [
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.add_collection` is incorrect: Expected `Collection[Unknown]`, found `LineCollection`"
+   },
+   {
+    "rule": "invalid-argument-type",
+    "message": "Argument to bound method `_AxesBase.set_ylim` is incorrect: Expected `float`, found `tuple[Literal[-1], Literal[1]]`"
+   }
+  ],
+  "tests/pyprocar/scripts/test_auto_bandsplot.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/pyprocar/scripts/test_bandsplot_export.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/pyprocar/scripts/test_dosplot_export.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/pyprocar/scripts/test_dosplot_values.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/pyprocar/scripts/test_one_call_functions.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/pyprocar/scripts/test_species_without_structure.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/pyprocar/scripts/test_unfold.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/test_verify_fixtures.py": [
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   },
+   {
+    "rule": "too-many-positional-arguments",
+    "message": "Too many positional arguments: expected 0, got 1"
+   }
+  ],
+  "tests/utils/user_warning.py": [
+   {
+    "rule": "deprecated",
+    "message": "The overload of `contextmanager` is deprecated: Annotating the return type as `-> Iterator[Foo]` with `@contextmanager` is deprecated. Use `-> Generator[Foo]` instead."
+   }
+  ]
+ }
+}

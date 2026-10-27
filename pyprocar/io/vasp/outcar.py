@@ -235,7 +235,7 @@ def _fitting_operations(reduction: _MeshReduction) -> list[NDArray[np.int_]]:
 
 
 def _fitting_subgroups(reduction: _MeshReduction) -> list[NDArray[np.int_]]:
-    dataset = spglib.get_symmetry_dataset(reduction.cell, symprec=1e-5)  # pyright: ignore[reportArgumentType]
+    dataset = spglib.get_symmetry_dataset(reduction.cell, symprec=1e-5)  # ty: ignore[invalid-argument-type]
     if dataset is None:
         return []
     crystal = np.unique(np.asarray(dataset.rotations, dtype=int), axis=0)
@@ -567,10 +567,8 @@ class Outcar(Mapping[str, Any]):
                     * det_A
                 )
 
-                R = (  # pyright: ignore[reportConstantRedefinition]
-                    np.linalg.inv(self.reciprocal_lattice.T).dot(R).dot(self.reciprocal_lattice.T)
-                )
-                R = np.round(R, decimals=3)  # pyright: ignore[reportConstantRedefinition, reportUnknownVariableType]
+                R = np.linalg.inv(self.reciprocal_lattice.T).dot(R).dot(self.reciprocal_lattice.T)
+                R = np.round(R, decimals=3)
 
                 sym_op["irot"] = irot
                 sym_op["rotation"] = R
@@ -632,7 +630,7 @@ class Outcar(Mapping[str, Any]):
         return tmp_dict
 
     @override
-    def __contains__(self, key: str) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def __contains__(self, key: str) -> bool:  # ty: ignore[invalid-method-override]
         return key in self.__dict__
 
     def __getitem__(self, key: str) -> Any:

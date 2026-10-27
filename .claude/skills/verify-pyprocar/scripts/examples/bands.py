@@ -64,7 +64,7 @@ def _():
     props = ebs.build_overlay_species_weights(orbitals=[4, 5, 6, 7, 8])
     P().plot_overlay(
         ebs.kpath,
-        ebs.bands,  # pyright: ignore[reportArgumentType]  # the call new_bands_examples.py makes
+        ebs.bands,  # ty: ignore[invalid-argument-type]  # the call new_bands_examples.py makes
         [p.to_array() for p in props],
         labels=[p.label or "" for p in props],
     )

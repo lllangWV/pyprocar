@@ -127,7 +127,7 @@ test = { cmd = "bash $PIXI_PROJECT_ROOT/.config/run_silent_pytest.sh {{ test_pat
 
 [feature.lint.dependencies]
 actionlint = "*"
-basedpyright = "*"
+ty = "==0.0.92"
 dprint = "*"
 go-shfmt = "*"
 ruff = "*"

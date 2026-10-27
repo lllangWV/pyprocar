@@ -67,8 +67,8 @@ jobs:
           locked: true
           # A cached env skips the editable build that writes pyprocar/_version.py.
           cache: false
-      - name: basedpyright (fails on errors not in .basedpyright/baseline.json)
-        run: pixi run --locked -e dev basedpyright --project pyrightconfig.json
+      - name: ty (fails on diagnostics not in .ty/baseline.json, and on stale entries)
+        run: pixi run --locked -e dev python .github/scripts/ty_baseline.py
 
   test:
     runs-on: ubuntu-latest
