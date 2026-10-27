@@ -2,10 +2,11 @@
 
 pyprocar/core/__init__.py re-exports the core classes for users. A parser that imports
 through it (``from pyprocar.core import Structure``) closes an import cycle through that
-file, because core/ebs.py and core/dos.py call the parsers. basedpyright reports at most
-four cycles per file, and which four depends on the import graph, so a new import
-anywhere in pyprocar.core added or removed ``reportImportCycles`` baseline entries on
-pyprocar/core/__init__.py and failed lock mode on code nobody changed (issue #60).
+file, because core/ebs.py and core/dos.py call the parsers. basedpyright, the type
+checker then, reported at most four cycles per file, and which four depended on the
+import graph, so a new import anywhere in pyprocar.core added or removed
+``reportImportCycles`` baseline entries on pyprocar/core/__init__.py and failed lock
+mode on code nobody changed (issue #60).
 This test fails on any import of the package itself from pyprocar/, and names the
 submodule to import from instead.
 """

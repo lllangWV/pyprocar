@@ -1,0 +1,12 @@
+# CI runs ty through .github/scripts/ty_baseline.py, which compares its diagnostics
+# with .ty/baseline.json.
+
+[environment]
+python-version = "3.12"
+python-platform = "all"
+# The verify-pyprocar drivers import verify_steps and references from scripts/lib.
+root = [".", ".claude/skills/verify-pyprocar/scripts/lib"]
+
+[src]
+include = ["pyprocar", "tests", "scripts", "setup.py", ".claude/skills"]
+exclude = ["**/_version.py"]

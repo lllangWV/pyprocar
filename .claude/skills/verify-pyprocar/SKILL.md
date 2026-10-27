@@ -50,7 +50,7 @@ Run the gates with the commands in `.github/workflows/ci.yml`, as written, with 
 
 `--locked` fails when `pixi.lock` does not match `pixi.toml`, in CI and locally. After you edit `pixi.toml`, run `pixi lock` and commit `pixi.lock` with it.
 
-Run env binaries through `$H exec`. Called by path, without its env's `bin/` on `PATH`, `.pixi/envs/dev/bin/basedpyright` reports phantom errors that CI does not.
+Run env binaries through `$H exec`. ty finds the env through `CONDA_PREFIX`, which `pixi run` sets. Called by path, `.pixi/envs/dev/bin/ty` has no `CONDA_PREFIX`, so it resolves no third-party imports and reports errors that CI does not.
 
 ### Agents in worktrees
 
@@ -72,7 +72,7 @@ In every worktree:
 - The `data`-marked tests take 10-12 minutes per checkout. Run the modules for the packages you touch in the background, at your head and at `origin/dev`, so a new failure stands apart from an old one.
 - CI has no `data/`. The conftest guard fails an unmarked test that opens or lists `data/`, but a read at import or collection time escapes it: it passes locally and fails in CI. Mark every test that needs a fixture `data`.
 - CI runs the lint and format gates on the PR merged into `dev`. Judge `ruff_new_violations.py` on your head merged with current `origin/dev` (in a detached scratch worktree), because on a head behind `dev` it also flags files that only `dev` changed.
-- basedpyright runs in lock mode against `.basedpyright/baseline.json`: a new error or warning fails, and so does a baseline entry whose diagnostic is gone. When your change deletes or rewrites code that has baseline entries, delete exactly those entries in their own commit. Never add or regenerate entries. basedpyright checks only the paths in the `include` list of `pyrightconfig.json`, minus hidden directories below them, so add a new top-level Python directory or root-level `.py` file to that list.
+- ty runs against `.ty/baseline.json` through `.github/scripts/ty_baseline.py`: a new error or warning fails, and so does a baseline entry whose diagnostic is gone. Entries hold a file, rule and message, not a line, so moving code keeps them. When your change deletes or fixes code that has baseline entries, delete exactly those entries with `$H exec python .github/scripts/ty_baseline.py --prune`, in their own commit. Fix a new diagnostic, or suppress one deliberately with `# ty: ignore[<rule>]` and a reason. `--regenerate` belongs only in the commit that changes the ty pin in `pixi.toml`, because each ty release rewords diagnostics. ty checks only the paths in `src.include` of `ty.toml`, so add a new top-level Python directory or root-level `.py` file to that list.
 
 ## Doctor
 
@@ -164,4 +164,4 @@ This removes the `work/` copy of every run that started more than `hours` ago, f
 Known repo issues that affect verification (as of dev @ d6d4aaa7):
 - `pyprocar.download_from_hf(relpath, output_path=".")` crashes when given a str; it needs a `Path`. The harness passes a `Path`.
 
-A PR that changes a documented side effect updates this skill in the same PR. basedpyright type-checks `scripts/`, so a PR that breaks a driver's import or call fails CI's typecheck job until it fixes the driver.
+A PR that changes a documented side effect updates this skill in the same PR. ty type-checks `scripts/`, so a PR that breaks a driver's import or call fails CI's typecheck job until it fixes the driver.

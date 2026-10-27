@@ -1,4 +1,3 @@
-import json
 import re
 import tomllib
 from pathlib import Path
@@ -18,12 +17,14 @@ def test_every_tool_checks_the_declared_python_floor():
     ruff = tomllib.loads((ROOT / ".config/.ruff.toml").read_text(encoding="utf-8"))[
         "target-version"
     ]
-    pyright = json.loads((ROOT / "pyrightconfig.json").read_text(encoding="utf-8"))["pythonVersion"]
+    ty = tomllib.loads((ROOT / "ty.toml").read_text(encoding="utf-8"))["environment"][
+        "python-version"
+    ]
 
     assert pixi.startswith(f">={major_minor},"), f"pixi.toml python {pixi!r} != {requires}"
     ruff_floor = "py" + major_minor.replace(".", "")
     assert ruff == ruff_floor, f".config/.ruff.toml target-version {ruff!r} != {requires}"
-    assert pyright == major_minor, f"pyrightconfig.json pythonVersion {pyright!r} != {requires}"
+    assert ty == major_minor, f"ty.toml environment.python-version {ty!r} != {requires}"
     docs = re.search(
         r'^\s+python: "(3\.\d+)"', (ROOT / ".readthedocs.yaml").read_text(encoding="utf-8"), re.M
     )

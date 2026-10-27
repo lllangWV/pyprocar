@@ -42,9 +42,6 @@ def to_numpy_array(data, dtype=None):
         return np.asarray(data, dtype=dtype)
 
 
-# pyright: reportUnknownMemberType=false
-
-
 class GradientOrder(Enum):
     FIRST = 1
     SECOND = 2

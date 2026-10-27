@@ -470,7 +470,7 @@ def test_molecule_positions_are_cartesian_bohr(tmp_path, filename, content):
 
 def test_ebs_kpoints_are_fractional_and_kdirect_is_gone(bands_calc_dir):
     with pytest.raises(TypeError):
-        ElkParser(bands_calc_dir, kdirect=False)  # pyright: ignore[reportCallIssue]
+        ElkParser(bands_calc_dir, kdirect=False)  # ty: ignore[unknown-argument]
     ebs = ElkParser(bands_calc_dir).ebs
 
     assert isinstance(ebs, ElectronicBandStructurePath)
