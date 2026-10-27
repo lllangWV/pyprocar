@@ -101,3 +101,15 @@ def test_an_absolute_path_matches_the_baseline_entries_below_it(project):
     result = gate(project, str(project / "mod.py"))
 
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_a_path_ty_does_not_check_fails(project):
+    (project / "ty.toml").write_text('[environment]\npython-version = "3.12"\n[src]\ninclude = ["mod.py"]\n')
+    (project / "docs").mkdir()
+    (project / "docs" / "conf.py").write_text(ONE_ERROR)
+    gate(project, "--regenerate")
+
+    result = gate(project, "docs")
+
+    assert result.returncode == 1
+    assert "No python files found" in result.stderr
