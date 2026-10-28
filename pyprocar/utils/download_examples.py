@@ -51,7 +51,19 @@ def uncompress_dirpath(dirpath: str | Path):
         raise FileNotFoundError(f"Test data archive not found: {dirpath}")
 
     with zipfile.ZipFile(archive_path, "r") as zipf:
-        zipf.extractall(path=outpath)
+        zipf.extractall(path=_extract_root(zipf.namelist(), outpath))
+
+
+def _extract_root(names: list[str], outpath: Path) -> Path:
+    """Where to extract an archive so that its files land in ``outpath``.
+
+    ``compress_dirpath`` stores each entry under the directory's own name
+    (``codes/qe/...``), while an examples archive from ``shutil.make_archive``
+    stores none, and the dataset holds both.
+    """
+    if names and all(name.startswith(f"{outpath.name}/") for name in names):
+        return outpath.parent
+    return outpath
 
 
 def compress_test_data(data_dirpath: str | Path):
