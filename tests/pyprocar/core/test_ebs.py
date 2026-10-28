@@ -1114,6 +1114,78 @@ def test_unfold_weights_are_the_primitive_cell_character_of_each_band():
     assert np.asarray(ebs.weights.value).ravel().tolist() == pytest.approx([1.0, 0.0, 0.5])
 
 
+def _s_orbital_chain(
+    x_positions: list[float], phases: list[list[float]]
+) -> ElectronicBandStructure:
+    structure = Structure(
+        atoms=["H"] * len(x_positions),
+        fractional_coordinates=[[x, 0.0, 0.0] for x in x_positions],
+        lattice=np.diag([20.0, 10.0, 10.0]),
+    )
+    phase = np.array(phases, dtype=complex).reshape(1, len(phases), 1, len(x_positions), 1)
+    return ElectronicBandStructure(
+        kpoints=np.array([[0.0, 0.0, 0.0]]),
+        bands=np.arange(len(phases), dtype=float).reshape(1, -1, 1),
+        projected=np.abs(phase) ** 2,
+        projected_phase=phase,
+        orbital_names=["s"],
+        structure=structure,
+    )
+
+
+@pytest.mark.parametrize(
+    ("x_positions", "transformation_matrix", "lost_atom", "translation"),
+    [
+        pytest.param([0.0], np.diag([2, 1, 1]), 0, r"\(0\.5, 0, 0\)", id="vacancy"),
+        pytest.param([0.0, 0.5], np.diag([3, 1, 1]), 0, r"\(0\.333, 0, 0\)", id="wrong-matrix"),
+        pytest.param([0.0, 0.05, 0.5], np.diag([2, 1, 1]), 1, r"\(0\.5, 0, 0\)", id="interstitial"),
+    ],
+)
+def test_unfold_refuses_an_atom_with_no_image_under_a_primitive_translation(
+    x_positions, transformation_matrix, lost_atom, translation
+):
+    ebs = _s_orbital_chain(x_positions, [[1.0] * len(x_positions)])
+
+    with pytest.raises(ValueError, match=rf"atom {lost_atom} \(H\).*translation {translation}"):
+        ebs.unfold(transformation_matrix=transformation_matrix, structure=ebs.structure)
+
+
+def test_unfold_maps_each_atom_to_its_nearest_image_when_two_fall_within_the_tolerance():
+    # A dimer 1.6 Angstrom long: both of its atoms lie within tol_radius = 0.1 (2 Angstrom
+    # along this 20 Angstrom axis) of each translated atom.
+    a_bonding, a_zone_boundary = [1.0, 0.0, 1.0, 0.0], [1.0, 0.0, -1.0, 0.0]
+    b_bonding = [0.0, 1.0, 0.0, 1.0]
+    ebs = _s_orbital_chain([0.0, 0.08, 0.5, 0.58], [a_bonding, a_zone_boundary, b_bonding])
+
+    ebs.unfold(transformation_matrix=np.diag([2, 1, 1]), structure=ebs.structure)
+
+    assert ebs.weights is not None
+    assert np.asarray(ebs.weights.value).ravel().tolist() == pytest.approx([1.0, 0.0, 1.0])
+
+
+
+@pytest.mark.guards_existing_behaviour(reason="main maps sites by position and orbital only")
+def test_unfold_maps_a_substituted_atom_onto_the_host_site():
+    structure = Structure(
+        atoms=["Mg", "Al"],
+        fractional_coordinates=[[0.0, 0.0, 0.0], [0.5, 0.0, 0.0]],
+        lattice=np.diag([6.0, 3.0, 3.0]),
+    )
+    phase = np.array([[1, 1], [1, -1]], dtype=complex).reshape(1, 2, 1, 2, 1)
+    ebs = ElectronicBandStructure(
+        kpoints=np.array([[0.0, 0.0, 0.0]]),
+        bands=np.array([[[-1.0], [1.0]]]),
+        projected=np.abs(phase) ** 2,
+        projected_phase=phase,
+        orbital_names=["s"],
+        structure=structure,
+    )
+
+    ebs.unfold(transformation_matrix=np.diag([2, 1, 1]), structure=structure)
+
+    assert ebs.weights is not None
+    assert np.asarray(ebs.weights.value).ravel().tolist() == pytest.approx([1.0, 0.0])
+
 def test_ibz_unfolds_with_time_reversal_when_the_point_group_lacks_inversion():
     from pyprocar.core import Structure
 

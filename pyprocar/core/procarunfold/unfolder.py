@@ -8,6 +8,8 @@ import numpy as np
 from ase.atoms import Atoms
 from ase.build import make_supercell
 
+from pyprocar.utils.unfolder import translation_images
+
 
 class Unfolder:
     """phonon unfolding class"""
@@ -79,32 +81,20 @@ class Unfolder:
         A N * nbasis array.
         index[i] is the mapping from supercell to translated supercell so that
         T(r_i) psi = psi[indices[i]].
-
-        TODO: vacancies/add_atoms not supported. How to do it? For
-        vacancies, a ghost atom can be added. For add_atom, maybe we
-        can just ignore them? Will it change the energy spectrum?
-
         """
         a1 = Atoms(symbols="H", positions=[(0, 0, 0)], cell=[1, 1, 1])
         sc = make_supercell(a1, self._scmat)
         rs = sc.get_scaled_positions()
 
-        positions = self._positions
-        indices = np.zeros([len(rs), len(positions)], dtype="int32")
-        for i, ri in enumerate(rs):
-            inds = []
-            Tpositions = positions + np.array(ri)
-            close_to_int = lambda x: np.all(np.abs(x - np.round(x)) < self._tol_r)
-            for i_basis, pos in enumerate(positions):
-                for j_basis, Tpos in enumerate(Tpositions):
-                    dpos = Tpos - pos
-                    if close_to_int(dpos) and (self._basis[i_basis] == self._basis[j_basis]):
-                        # indices[i, j_atom * self._ndim:j_atom * self._ndim + self._ndim] = np.arange(i_atom * self._ndim, i_atom * self._ndim + self._ndim)
-                        indices[i, j_basis] = i_basis
-
         self._trans_rs = rs
-        self._trans_indices = indices
-        # print(indices)
+        self._trans_indices = translation_images(
+            self._positions,
+            self._basis,
+            rs,
+            np.asarray(self._cell),
+            self._tol_r,
+            names=[f"basis function {i} ({label})" for i, label in enumerate(self._basis)],
+        )
 
     def get_weight(self, evec, qpt, G=None):
         """
