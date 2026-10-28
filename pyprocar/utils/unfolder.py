@@ -58,7 +58,7 @@ class Unfolder:
 
         # norm the atomic-orbital axis
         norm = np.linalg.norm(self.eigenvectors, ord=2, axis=-1)
-        self.eigenvectors /= norm[:, :, None]
+        self.eigenvectors /= norm[..., None]
 
         ebs, structure = self.ebs, self.structure
         assert ebs is not None and structure is not None

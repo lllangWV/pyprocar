@@ -232,6 +232,15 @@ class ElectronicBandStructure(PointSet):
         check_projected_layout(
             projected, orbital_names, BAND_PROJECTIONS, bands, structure, atom_groups
         )
+        check_projected_layout(
+            projected_phase,
+            orbital_names,
+            BAND_PROJECTIONS,
+            bands,
+            structure,
+            atom_groups,
+            name="projected_phase",
+        )
 
         if bands is not None:
             self.add_property(name="bands", value=bands)
