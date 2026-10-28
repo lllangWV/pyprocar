@@ -2685,22 +2685,6 @@
   ],
   "pyprocar/utils/unfolder.py": [
    {
-    "rule": "invalid-argument-type",
-    "message": "Argument to constructor `enumerate.__new__` is incorrect: Expected `Iterable[Unknown]`, found `None | list[Unknown]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `len` is incorrect: Expected `Sized`, found `None | list[Unknown]`"
-   },
-   {
-    "rule": "not-subscriptable",
-    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
-   },
-   {
-    "rule": "not-subscriptable",
-    "message": "Cannot subscript object of type `None` with no `__getitem__` method"
-   },
-   {
     "rule": "not-subscriptable",
     "message": "Cannot subscript object of type `None` with no `__getitem__` method"
    },
