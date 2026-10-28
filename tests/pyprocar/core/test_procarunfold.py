@@ -15,6 +15,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from ase.atoms import Atoms
+from ase.build import make_supercell
 
 # Import classes to test
 from pyprocar.core.procarunfold import ProcarUnfolder
@@ -52,23 +54,21 @@ def supercell_matrix_identity():
     return np.eye(3, dtype=int)
 
 
+SUPERCELL_2X2X2_SITES = [
+    np.array([i, j, k]) / 2 for i in range(2) for j in range(2) for k in range(2)
+]
+
+
 @pytest.fixture
 def simple_basis():
-    """Simple basis labels for a 2-atom cell with s and p orbitals."""
-    basis = []
-    for atom in range(2):
-        for orb in ["s", "p"]:
-            basis.append(f"None|{orb}|0")
-    return basis
+    """s and p labels on each atom of a 2x2x2 supercell of a one-atom cubic cell."""
+    return [f"None|{orb}|0" for _ in SUPERCELL_2X2X2_SITES for orb in ["s", "p"]]
 
 
 @pytest.fixture
 def simple_positions():
-    """Fractional positions for a 2-atom cell."""
-    return [
-        np.array([0.0, 0.0, 0.0]),
-        np.array([0.5, 0.5, 0.5]),
-    ] * 2  # Repeated for 2 orbitals per atom
+    """The fractional position of each basis function in ``simple_basis``."""
+    return [site for site in SUPERCELL_2X2X2_SITES for _ in ["s", "p"]]
 
 
 @pytest.fixture
@@ -79,7 +79,7 @@ def simple_eigenvectors(rng):
     """
     n_kpoints = 5
     n_bands = 4
-    n_basis = 4  # 2 atoms * 2 orbitals
+    n_basis = 2 * len(SUPERCELL_2X2X2_SITES)
 
     # Create random complex eigenvectors and normalize
     real_part = rng.random((n_kpoints, n_bands, n_basis))
@@ -322,6 +322,23 @@ class TestUnfolder:
             weights = unfolder.get_weights()
             assert weights.shape == simple_eigenvectors.shape[:2]
 
+
+    def test_supercell_with_a_vacancy_is_refused(
+        self, simple_cubic_cell, supercell_matrix_2x2x2, simple_qpoints
+    ):
+        sites = SUPERCELL_2X2X2_SITES[1:]
+        eigenvectors = np.ones((len(simple_qpoints), 1, len(sites))) / np.sqrt(len(sites))
+
+        with pytest.raises(ValueError, match=r"basis function \d+ \(s\) has none"):
+            Unfolder(
+                cell=simple_cubic_cell * 2,
+                basis=["s"] * len(sites),
+                positions=sites,
+                supercell_matrix=supercell_matrix_2x2x2,
+                eigenvectors=eigenvectors,
+                qpoints=simple_qpoints,
+                phase=False,
+            )
 
 @pytest.mark.data
 class TestProcarUnfolder:
@@ -700,11 +717,11 @@ class TestUnfolderEdgeCases:
         weights = unfolder.get_weights()
         assert weights.shape == (5, 1)
 
-    def test_non_diagonal_supercell_matrix(
-        self, simple_cubic_cell, simple_basis, simple_positions, simple_eigenvectors, simple_qpoints
-    ):
-        """Test with non-diagonal supercell matrix."""
-        # 2x2x1 with shear
+    @pytest.mark.guards_existing_behaviour(
+        reason="the sites now fit the sheared supercell, which main already unfolds"
+    )
+    def test_non_diagonal_supercell_matrix(self, simple_cubic_cell):
+        """A uniform Gamma state of a sheared 2x2x1 supercell is all primitive Gamma."""
         supercell_matrix = np.array(
             [
                 [2, 1, 0],
@@ -712,19 +729,22 @@ class TestUnfolderEdgeCases:
                 [0, 0, 1],
             ]
         )
+        sites = make_supercell(
+            Atoms(symbols="H", positions=[(0, 0, 0)], cell=[1, 1, 1]), supercell_matrix
+        ).get_scaled_positions()
+        uniform = np.ones((1, 1, len(sites))) / np.sqrt(len(sites))
 
         unfolder = Unfolder(
-            cell=simple_cubic_cell,
-            basis=simple_basis,
-            positions=simple_positions,
+            cell=supercell_matrix @ simple_cubic_cell,
+            basis=["s"] * len(sites),
+            positions=sites,
             supercell_matrix=supercell_matrix,
-            eigenvectors=simple_eigenvectors,
-            qpoints=simple_qpoints,
+            eigenvectors=uniform,
+            qpoints=np.zeros((1, 3)),
             phase=False,
         )
 
-        weights = unfolder.get_weights()
-        assert weights.shape == simple_eigenvectors.shape[:2]
+        assert unfolder.get_weights().tolist() == [[pytest.approx(1.0)]]
 
     def test_high_symmetry_kpoints(self, simple_unfolder):
         """Test weights at high-symmetry points."""
