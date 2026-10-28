@@ -1,68 +1,6 @@
 {
  "ty": "0.0.92",
  "files": {
-  ".claude/skills/verify-pyprocar/scripts/examples/bands.py": [
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `Axes | None`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `bool`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `bool`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `bool`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `bool`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | None`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `dict[Unknown, Unknown] | list[dict[Unknown, Unknown]] | None`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `float`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `list[float] | None`, found `Unknown | list[int]`"
-   },
-   {
-    "rule": "invalid-argument-type",
-    "message": "Argument to function `bandsplot` is incorrect: Expected `str | Path | None`, found `Unknown | list[int]`"
-   }
-  ],
   ".claude/skills/verify-pyprocar/scripts/examples/bs2d.py": [
    {
     "rule": "invalid-argument-type",

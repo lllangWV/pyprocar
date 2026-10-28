@@ -1,6 +1,5 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any
 
 
 class PlotType(Enum):
@@ -44,11 +43,6 @@ class BaseConfig:
         The type of plot this configuration is meant for. It dictates the
         specific configuration subclass and related plotting functionalities.
 
-    custom_settings : Dict[str, Any]
-        A dictionary to hold any additional settings that do not fit directly
-        into the static structure of a configuration class. This provides flexibility
-        in adding new settings without altering the class structure.
-
     Example
     -------
     Creating an instance of BaseConfig for a 3D Fermi surface plot:
@@ -59,4 +53,3 @@ class BaseConfig:
     """
 
     plot_type: PlotType
-    custom_settings: dict[str, Any] = field(default_factory=dict)

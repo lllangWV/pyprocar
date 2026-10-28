@@ -127,9 +127,9 @@ class DensityOfStatesConfig(BaseConfig):
     stack_y_label : str, optional
         The label for the y-axis for stack mode.
     x_label : str, optional
-        The label for the x-axis.
+        The label for the x-axis. Empty keeps the energy or DOS label dosplot picks.
     y_label : str, optional
-        The label for the y-axis.
+        The label for the y-axis. Empty keeps the energy or DOS label dosplot picks.
     dpi : str, optional
         The resolution in dots per inch. If 'figure', use the figure's dpi value.
 

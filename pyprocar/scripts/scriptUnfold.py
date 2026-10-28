@@ -151,7 +151,7 @@ def unfold(
     default_config = cast(UnfoldingConfig, ConfigFactory.create_config(PlotType.UNFOLD))
     if vmin is not None or vmax is not None:
         kwargs["clim"] = as_lim((vmin, vmax), default_config.clim or (0.0, 1.0))
-    config = cast(UnfoldingConfig, ConfigManager.merge_configs(default_config, kwargs))
+    config = cast(UnfoldingConfig, ConfigManager.merge_configs(default_config, kwargs, unfold))
     if print_plot_opts:
         for key, value in default_config.as_dict().items():
             user_logger.info(f"{key} : {value}")

@@ -310,7 +310,9 @@ def dosplot(
 
     welcome()
     default_config = ConfigFactory.create_config(PlotType.DENSITY_OF_STATES)
-    config = cast(DensityOfStatesConfig, ConfigManager.merge_configs(default_config, kwargs))
+    config = cast(
+        DensityOfStatesConfig, ConfigManager.merge_configs(default_config, kwargs, dosplot)
+    )
 
     user_logger.info("_" * 100)
     if print_plot_opts:
@@ -434,6 +436,10 @@ def dosplot(
 
     plotter.set_energy_label(energy_label)
     plotter.set_dos_label("DOS")
+    if config.x_label:
+        plotter.set_xlabel(config.x_label)
+    if config.y_label:
+        plotter.set_ylabel(config.y_label)
     ax = cast(plt.Axes, plotter.ax)
     x_axis, y_axis = (plotter.set_xlim, ax.get_xlim), (plotter.set_ylim, ax.get_ylim)
     horizontal = plotter.orientation is AxesOrientation.HORIZONTAL

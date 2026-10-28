@@ -5,7 +5,9 @@ keywords fermi2D no longer took (#248), scripts/procar.py called fermi2D with ``
 (#257, #264) and bandsplot without ``dirname`` (#282), and handlers kept an
 ``apply_symmetry`` keyword that no longer exists. This test parses every Python snippet
 a user copies, including rendered ``>>>`` examples, and binds each top-level
-``pyprocar`` call against ``inspect.signature``.
+``pyprocar`` call against ``inspect.signature``. The keywords a one-call function takes as
+``**kwargs`` go through ``ConfigManager.merge_configs``, which rejects any that is not a
+plot option, as notebooks passed ``xlabel`` and ``cache`` to bandsplot (#74).
 """
 
 import ast
@@ -16,12 +18,28 @@ import textwrap
 from collections.abc import Iterator
 from pathlib import Path
 
+import pytest
+
 import pyprocar
+from pyprocar.cfg import ConfigFactory, ConfigManager, PlotType
 
 ROOT = Path(__file__).resolve().parent.parent
 RST_BLOCK = re.compile(r"\.\. code-block:: (?:python|ipython3?)\n((?:\n|[ \t]+.*(?:\n|\Z))+)")
 MD_BLOCK = re.compile(r"```python\n(.*?)```", re.S)
 RST_COMMENT = re.compile(r"(\s*)\.\.(?:\s+(?!\S+::|_|\[|\|).*)?")
+
+# The plot options each one-call function takes as ``**kwargs``.
+PLOT_OPTIONS = {
+    "bandsplot": PlotType.BAND_STRUCTURE,
+    "dosplot": PlotType.DENSITY_OF_STATES,
+    "unfold": PlotType.UNFOLD,
+}
+# Public callables whose ``**kwargs`` are not plot options.
+OTHER_KWARGS = {
+    "get_parser": "forwards them to the parser's constructor, which binds them",
+    "AbinitParser": "forwards them to BaseParser, which binds them",
+    "spin_asymmetry": "was removed; it raises NotImplementedError",
+}
 
 
 def _rendered_lines(text: str) -> Iterator[tuple[int, str]]:
@@ -107,10 +125,14 @@ def unbound_calls(root: Path) -> list[str]:
                 keyword.arg is None for keyword in node.keywords
             ):
                 continue
+            signature = inspect.signature(target)
+            keywords = {str(keyword.arg): keyword.value for keyword in node.keywords}
             try:
-                inspect.signature(target).bind(
-                    *node.args, **{str(keyword.arg): keyword.value for keyword in node.keywords}
-                )
+                signature.bind(*node.args, **keywords)
+                if name in PLOT_OPTIONS:
+                    options = {k: v for k, v in keywords.items() if k not in signature.parameters}
+                    default = ConfigFactory.create_config(PLOT_OPTIONS[name])
+                    ConfigManager.merge_configs(default, options, target)
             except TypeError as error:
                 problems.append(f"{where}:{node.lineno}: pyprocar.{name}: {error}")
     return problems
@@ -118,6 +140,36 @@ def unbound_calls(root: Path) -> list[str]:
 
 def test_documented_pyprocar_calls_bind_to_the_current_signatures():
     assert unbound_calls(ROOT) == []
+
+
+@pytest.mark.guards_existing_behaviour(
+    reason="a new public **kwargs function must say whether its keywords are plot options"
+)
+def test_every_public_function_with_kwargs_names_what_they_are():
+    with_kwargs = {
+        name
+        for name, obj in vars(pyprocar).items()
+        if callable(obj)
+        and getattr(obj, "__module__", "").startswith("pyprocar")
+        and any(
+            p.kind is inspect.Parameter.VAR_KEYWORD
+            for p in inspect.signature(obj).parameters.values()
+        )
+    }
+
+    assert with_kwargs == PLOT_OPTIONS.keys() | OTHER_KWARGS.keys()
+
+
+def test_a_documented_call_with_an_unknown_plot_option_is_reported(tmp_path):
+    (tmp_path / "README.md").write_text(
+        '```python\npyprocar.bandsplot(code="vasp", dirname="d", xlabel="k", title="ok")\n```\n',
+        encoding="utf-8",
+    )
+
+    assert unbound_calls(tmp_path) == [
+        "README.md:1:1: pyprocar.bandsplot: bandsplot() got unexpected keyword argument"
+        + " 'xlabel' (did you mean 'x_label'?); print_plot_opts=True lists its plot options"
+    ]
 
 
 def missing_ebs_members(root: Path) -> list[str]:

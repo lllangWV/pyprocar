@@ -2,6 +2,8 @@
 # and legacy bandsplot/bandsdosplot.
 # Fixture: data/examples/bands/non-spin-polarized
 
+from typing import Any
+
 import matplotlib.pyplot as plt
 import numpy as np
 from verify_steps import CALC, EV, REPO, finish, png, step, writable_copy
@@ -77,12 +79,13 @@ def _():
     return {**facts(), "png": png("obj_channel_flip")}
 
 
-for mode, kw in {
+LEGACY_SELECTIONS: dict[str, dict[str, Any]] = {
     "plain": {},
     "parametric": dict(atoms=[1], orbitals=[4, 5, 6, 7, 8]),
     "scatter": dict(atoms=[1], orbitals=[4, 5, 6, 7, 8]),
     "overlay_species": dict(orbitals=[1, 2, 3]),
-}.items():
+}
+for mode, kw in LEGACY_SELECTIONS.items():
 
     @step(f"legacy_bandsplot_{mode}")
     def _(mode=mode, kw=kw):
