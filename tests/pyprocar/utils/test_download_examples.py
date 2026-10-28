@@ -72,3 +72,34 @@ def test_download_from_hf_stages_beside_the_fixture_not_in_the_system_tmp(
     assert (out / "data/codes/qe/scf.out").read_text() == "codes"
     assert [Path(s).parent for s in staged] == [out / "data"]
     assert sorted(p.name for p in (out / "data").iterdir()) == ["codes"]
+
+
+def test_download_from_hf_unpacks_a_whole_directory_archive_in_place(tmp_path, monkeypatch):
+    def snapshot_download(*, allow_patterns, local_dir, **_hub_args):
+        archive = Path(local_dir) / allow_patterns[0]
+        archive.parent.mkdir(parents=True)
+        # every entry of the dataset's data/io.zip starts with io/, as compress_dirpath writes it
+        with zipfile.ZipFile(archive, "w") as z:
+            z.writestr("io/vasp/outcar/OUTCAR_v64", "outcar")
+
+    monkeypatch.setattr(download_examples, "snapshot_download", snapshot_download)
+
+    download_examples.download_from_hf("data/io", output_path=tmp_path)
+
+    assert (tmp_path / "data/io/vasp/outcar/OUTCAR_v64").read_text() == "outcar"
+    assert sorted(p.name for p in (tmp_path / "data/io").iterdir()) == ["vasp"]
+
+
+def test_a_compressed_directory_unpacks_to_the_same_tree(tmp_path):
+    source = tmp_path / "codes"
+    (source / "qe").mkdir(parents=True)
+    (source / "qe" / "scf.out").write_text("scf")
+    download_examples.compress_dirpath(source)
+    (source / "qe" / "scf.out").unlink()
+    (source / "qe").rmdir()
+    source.rmdir()
+
+    download_examples.uncompress_dirpath(tmp_path / "codes.zip")
+
+    assert (tmp_path / "codes/qe/scf.out").read_text() == "scf"
+    assert sorted(p.name for p in (tmp_path / "codes").iterdir()) == ["qe"]
