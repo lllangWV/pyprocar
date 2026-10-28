@@ -31,11 +31,12 @@ def find_nearest(array, value):
     return idx
 
 
+PLOTTER_OPTIONS = ("off_screen", "window_size", "theme")
+
+
 def _new_plotter(kwargs, save_2d) -> FermiPlotter:
     """Build the FermiPlotter, off screen when a screenshot is requested."""
-    plotter_kwargs = {
-        k: v for k, v in kwargs.items() if k in ["off_screen", "window_size", "theme"]
-    }
+    plotter_kwargs = {k: v for k, v in kwargs.items() if k in PLOTTER_OPTIONS}
     if save_2d:
         plotter_kwargs["off_screen"] = True
     return FermiPlotter(**plotter_kwargs)
@@ -233,7 +234,9 @@ class FermiHandler:
         print_plot_opts: bool, optional
             Boolean to print the plotting options
         """
-        config = ConfigManager.merge_configs(self.default_config, kwargs)
+        config = ConfigManager.merge_configs(
+            self.default_config, kwargs, self.plot_fermi_surface, PLOTTER_OPTIONS
+        )
         config = cast(FermiSurface3DConfig, ConfigManager.merge_config(config, "mode", mode))
 
         user_logger.info("_" * 100)
@@ -352,7 +355,9 @@ class FermiHandler:
         print_plot_opts: bool, optional
             Boolean to print the plotting options
         """
-        config = ConfigManager.merge_configs(self.default_config, kwargs)
+        config = ConfigManager.merge_configs(
+            self.default_config, kwargs, self.plot_fermi_isoslider, PLOTTER_OPTIONS
+        )
         config = ConfigManager.merge_config(config, "mode", mode)
 
         user_logger.info("_" * 100)
@@ -459,7 +464,7 @@ class FermiHandler:
         print_plot_opts: bool, optional
             Boolean to print the plotting options
         """
-        config = ConfigManager.merge_configs(self.default_config, kwargs)
+        config = ConfigManager.merge_configs(self.default_config, kwargs, self.create_isovalue_gif)
         config = ConfigManager.merge_config(config, "mode", mode)
 
         user_logger.info("_" * 100)
@@ -569,7 +574,9 @@ class FermiHandler:
         print_plot_opts: bool, optional
             Boolean to print the plotting options
         """
-        config = ConfigManager.merge_configs(self.default_config, kwargs)
+        config = ConfigManager.merge_configs(
+            self.default_config, kwargs, self.plot_fermi_cross_section, PLOTTER_OPTIONS
+        )
         config = cast(FermiSurface3DConfig, ConfigManager.merge_config(config, "mode", mode))
 
         user_logger.info("_" * 100)
@@ -690,7 +697,9 @@ class FermiHandler:
         print_plot_opts: bool, optional
             Boolean to print the plotting options
         """
-        config = ConfigManager.merge_configs(self.default_config, kwargs)
+        config = ConfigManager.merge_configs(
+            self.default_config, kwargs, self.plot_fermi_cross_section_box_widget, PLOTTER_OPTIONS
+        )
         config = cast(FermiSurface3DConfig, ConfigManager.merge_config(config, "mode", mode))
 
         user_logger.info("_" * 100)

@@ -172,7 +172,7 @@ class BandStructure2DHandler:
         **kwargs
             Additional keyword arguments for configuration
         """
-        config = ConfigManager.merge_configs(self.default_config, kwargs)
+        config = ConfigManager.merge_configs(self.default_config, kwargs, self.plot_band_structure)
         config = cast(Bandstructure2DConfig, ConfigManager.merge_config(config, "mode", mode))
 
         user_logger.info("_" * 100)

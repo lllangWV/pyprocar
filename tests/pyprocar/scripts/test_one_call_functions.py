@@ -24,6 +24,7 @@ from pyprocar.core import (
     FermiSurface,
 )
 from pyprocar.core.property_store import Property
+from pyprocar.scripts import scriptBandsplot
 from pyprocar.scripts._selection import SpinSelection, resolve_spins
 from tests.utils import DATA_DIR, ROOT_DIR, writable_copy
 
@@ -116,6 +117,12 @@ class TestResolveSpins:
         assert resolve_spins(is_non_collinear, n_channels, spins, plain=plain) == expected
 
 
+@pytest.mark.parametrize("function", [pyprocar.bandsplot, pyprocar.dosplot, pyprocar.unfold])
+def test_an_unknown_plot_option_raises_before_reading_the_calculation(function, tmp_path):
+    with pytest.raises(TypeError, match=r"'xlabel' \(did you mean 'x_label'\?\)"):
+        function(code="vasp", dirname=tmp_path / "missing", show=False, xlabel="k")
+
+
 @pytest.mark.data
 class TestBandsplot:
     def test_plain_draws_one_line_per_band_with_kpath_ticks(self, tmp_path):
@@ -138,6 +145,15 @@ class TestBandsplot:
         assert [t.get_text() for t in ax.get_xticklabels()] == TICK_NAMES
         assert ax.get_ylim() == (-5.0, 5.0)
         assert ax.get_title() == "Basic Band Structure"
+
+    def test_verbose_sets_the_log_level_its_progress_message_promises(self, tmp_path, monkeypatch):
+        calc = _calc(tmp_path, "bands/non-spin-polarized")
+        levels: list[int] = []
+        monkeypatch.setattr(scriptBandsplot, "set_verbose_level", levels.append, raising=False)
+
+        pyprocar.bandsplot(code="vasp", dirname=calc, fermi=FERMI, show=False, verbose=0)
+
+        assert levels == [0]
 
     def test_parametric_spin_polarized_colors_both_channels(self, tmp_path):
         calc = _calc(tmp_path, "bands/spin-polarized")
@@ -499,6 +515,30 @@ class TestDosplot:
         assert [line.get_label() for line in ax.lines if not line.get_label().startswith("_")] == [
             "Total"
         ]
+
+    def test_x_label_and_y_label_replace_the_axis_labels(self, tmp_path):
+        calc = _calc(tmp_path, "dos/non-spin-polarized")
+
+        _, ax = pyprocar.dosplot(
+            code="vasp",
+            dirname=calc,
+            fermi=FERMI,
+            show=False,
+            x_label="E-E$_F$ (eV)",
+            y_label="PDOS (states/eV)",
+        )
+
+        assert (ax.get_xlabel(), ax.get_ylabel()) == ("E-E$_F$ (eV)", "PDOS (states/eV)")
+
+    @pytest.mark.guards_existing_behaviour(
+        reason="empty x_label and y_label keep the energy and DOS labels dosplot picks"
+    )
+    def test_axis_labels_default_to_energy_and_dos(self, tmp_path):
+        calc = _calc(tmp_path, "dos/non-spin-polarized")
+
+        _, ax = pyprocar.dosplot(code="vasp", dirname=calc, fermi=FERMI, show=False)
+
+        assert (ax.get_xlabel(), ax.get_ylabel()) == (r"Energy - E$_F$ (eV)", "DOS")
 
     def test_parametric_fills_total_with_projection_colors(self, tmp_path):
         calc = _calc(tmp_path, "dos/non-spin-polarized")

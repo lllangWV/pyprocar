@@ -30,20 +30,10 @@ class ConfigFactory:
 
 ### `ConfigManager`
 
-The `ConfigManager` is responsible for merging user-provided configuration settings with the default settings of a configuration object. This allows user preferences to override or extend the predefined settings in a controlled manner.
+The `ConfigManager` merges the plot options a user passes to a one-call function as `**kwargs` into a copy of the default configuration. A key that is neither a field of the configuration nor one the caller reads itself raises `TypeError`, as Python does for an unexpected keyword argument, and names the closest valid option.
 
 ```python
-class ConfigManager:
-    @staticmethod
-    def merge_configs(default_config: BaseConfig, user_config: Dict[str, Any]):
-        for key, value in user_config.items():
-            if hasattr(default_config, key):
-                setattr(default_config, key, value)
-            else:
-                if not hasattr(default_config, 'custom_settings'):
-                    default_config.custom_settings = {}
-                default_config.custom_settings[key] = value
-        return default_config
+config = ConfigManager.merge_configs(default_config, kwargs, bandsplot)
 ```
 
 ## Example Usage
@@ -52,7 +42,7 @@ Here is how you can use `ConfigFactory` and `ConfigManager` in your application 
 
 ```python
 # Create a default configuration for a Fermi surface plot
-default_config = ConfigFactory.create_config(PlotType.FERMI_SURFACE)
+default_config = ConfigFactory.create_config(PlotType.FERMI_SURFACE_3D)
 
 # User-defined settings that might come from an input form or a settings file
 user_config = {
@@ -61,7 +51,7 @@ user_config = {
 }
 
 # Merge the default configuration with user-provided settings
-self.config = ConfigManager.merge_configs(default_config, user_config or {})
+self.config = ConfigManager.merge_configs(default_config, user_config, self.plot_fermi_surface)
 ```
 
 This example demonstrates creating a default configuration for a Fermi surface plot and merging it with additional settings provided by the user, allowing for easy customization of plot appearances.

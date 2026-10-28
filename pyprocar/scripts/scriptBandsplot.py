@@ -28,7 +28,7 @@ from pyprocar.scripts._selection import (
     signed_clim,
     take_channels,
 )
-from pyprocar.utils.log_utils import warn_user
+from pyprocar.utils.log_utils import set_verbose_level, warn_user
 from pyprocar.utils.splash import welcome
 
 user_logger = logging.getLogger("user")
@@ -117,6 +117,7 @@ def bandsplot(
     ipr_kwargs: dict | None = None,
     use_cache: bool = False,
     quiet_welcome: bool = False,
+    verbose: int = 1,
     **kwargs,
 ):
     """A function to plot the band structutre
@@ -172,9 +173,15 @@ def bandsplot(
         Boolean to not print the welcome message
     use_cache: bool, optional
         Boolean to use cache for EBS
+    verbose: int, optional
+        Verbosity level: 0 is silent, 1 logs progress, 2 or more adds debug logs
+    **kwargs
+        Plot options of :class:`pyprocar.cfg.band_structure.BandStructureConfig`, such as
+        ``title``, ``cmap`` or ``x_label``. An unknown option raises ``TypeError``.
 
     """
 
+    set_verbose_level(verbose)
     if quiet_welcome:
         user_logger.setLevel(logging.ERROR)
 
@@ -184,7 +191,9 @@ def bandsplot(
     welcome()
 
     default_config = ConfigFactory.create_config(PlotType.BAND_STRUCTURE)
-    config = cast(BandStructureConfig, ConfigManager.merge_configs(default_config, kwargs))
+    config = cast(
+        BandStructureConfig, ConfigManager.merge_configs(default_config, kwargs, bandsplot)
+    )
 
     user_logger.info("_" * 100)
     if print_plot_opts:
