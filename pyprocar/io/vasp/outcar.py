@@ -83,7 +83,6 @@ def _last(pattern: str | re.Pattern[str], text: str) -> re.Match[str] | None:
 
 
 def _incar_tags(text: str) -> dict[str, str] | None:
-    """The INCAR tags VASP echoes at the top of the OUTCAR, or None when it echoes none."""
     echo = _INCAR_ECHO.search(text)
     if echo is None:
         return None
@@ -267,7 +266,6 @@ def _subgroups(rotations: NDArray[np.int_], order: int | None) -> list[NDArray[n
 
 
 def _keeps_k_lattice(k_rotations: NDArray[np.int_], mesh: NDArray[np.int_]) -> NDArray[np.bool_]:
-    """Which rotations map the lattice of mesh steps onto itself."""
     scaled = mesh[:, np.newaxis] * k_rotations / mesh[np.newaxis, :]
     return np.all(np.abs(scaled - np.rint(scaled)) < 1e-9, axis=(1, 2))
 
