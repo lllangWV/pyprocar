@@ -655,42 +655,26 @@ class QEParser(BaseParser):
         ):
             return None
         logger.info("Parsing spd phase from atomic_proj.xml and projwfc.out")
-
-        wfc_mapping = self.projwfc_out.wfc_mapping
         projections = self.atomic_proj_xml.projections
+        if projections is None or self.projwfc_out.n_atoms is None:
+            return None
+        return self._per_orbital(projections)
+
+    def _per_orbital(self, per_state: np.ndarray) -> np.ndarray:
+        """Add each projwfc.x state's values into its (atom, l, m) slot, on the band k-points."""
+        assert self.projwfc_out is not None and self.projwfc_out.n_atoms is not None
         orbitals = self.projwfc_out.orbitals
-
-        if projections is None:
-            return None
-
-        n_kpoints = self.atomic_proj_xml.n_kpoints
-        n_bands = self.atomic_proj_xml.n_bands
-        n_spin_channels = self.atomic_proj_xml.n_spin_channels
-        n_atoms = self.projwfc_out.n_atoms
-        n_orbitals = self.projwfc_out.n_orbitals
-
-        if n_atoms is None:
-            return None
-
-        pyprocar_projections_phase = np.zeros(
-            shape=(n_kpoints, n_bands, n_spin_channels, n_atoms, n_orbitals),
-            dtype=projections.dtype,
+        per_orbital = np.zeros(
+            per_state.shape[:-1] + (self.projwfc_out.n_atoms, self.projwfc_out.n_orbitals),
+            dtype=per_state.dtype,
         )
-
-        for state_num, wfc_info in wfc_mapping.items():
-            atm_num = wfc_info["atm_num"]
+        for state_num, wfc_info in self.projwfc_out.wfc_mapping.items():
             i_orbital = orbitals.index({"l": wfc_info["l"], "m": wfc_info["m"]})
-            i_atom = atm_num - 1
-            i_state = state_num - 1
-            pyprocar_projections_phase[..., i_atom, i_orbital] += projections[..., i_state]
+            per_orbital[..., wfc_info["atm_num"] - 1, i_orbital] += per_state[..., state_num - 1]
 
         if self.kpath is not None:
-            pyprocar_projections_phase = k_utils.insert_continuous_points(
-                pyprocar_projections_phase, self.kticks
-            )
-        logger.debug(f"Spd Phase: {pyprocar_projections_phase.shape}")
-
-        return pyprocar_projections_phase
+            per_orbital = k_utils.insert_continuous_points(per_orbital, self.kticks)
+        return per_orbital
 
     @cached_property
     def position_gauge_phase(self) -> np.ndarray | None:
@@ -718,14 +702,11 @@ class QEParser(BaseParser):
             return self._spinor_spd
         if self.spd_phase is None:
             return None
-        logger.info("Parsing spd from spd phase")
-        spd = np.absolute(self.spd_phase) ** 2
-
-        n_kpoints = self.spd_phase.shape[0]
-        if self.kpath is not None and n_kpoints != self.kpath.n_kpoints:
-            spd = k_utils.insert_continuous_points(spd, self.kticks)
-        logger.debug(f"Spd: {spd.shape}")
-        return spd
+        assert self.atomic_proj_xml is not None and self.atomic_proj_xml.projections is not None
+        logger.info("Parsing spd from atomic_proj.xml")
+        # Shells sharing (l, m), such as Sr 4s and 5s, are distinct states; their
+        # weights add, so the amplitudes must not.
+        return self._per_orbital(np.absolute(self.atomic_proj_xml.projections) ** 2)
 
     @cached_property
     def _spinor_spd(self) -> np.ndarray | None:

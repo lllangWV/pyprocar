@@ -430,9 +430,7 @@ def test_structure_is_none_when_lattice_is_missing(tmp_path: Path) -> None:
     ],
 )
 @pytest.mark.data
-def test_projected_dos_sums_to_the_pdos_tot_column(
-    mag: str, pdos_columns: list[int]
-) -> None:
+def test_projected_dos_sums_to_the_pdos_tot_column(mag: str, pdos_columns: list[int]) -> None:
     calc_dir = QE_CODES_DIR / mag / "dos"
     pdos_tot = np.loadtxt(calc_dir / "SrVO3.k.pdos_tot")
 
@@ -543,9 +541,7 @@ TETRAGONAL_PROJWFC_FILES = {
         "b(3) = (  0.000000  0.000000  1.000000 )",
         "b(3) = (  0.000000  0.000000  0.500000 )",
     ),
-    "projwfc.out": PROJWFC_OUT.replace("nkstot   =   10", "nkstot   =    4").split(
-        "     k ="
-    )[0]
+    "projwfc.out": PROJWFC_OUT.replace("nkstot   =   10", "nkstot   =    4").split("     k =")[0]
     + "".join(f"     k =   {k}\n" for k in TETRAGONAL_CARTESIAN_KPOINTS),
 }
 
@@ -570,9 +566,7 @@ def test_every_kpoint_source_yields_the_same_fractional_kpoints(
     parser = QEParser(dirpath=tmp_path)
 
     assert parser.reciprocal_lattice is not None and parser.alat is not None
-    assert np.allclose(
-        parser.reciprocal_lattice * parser.alat, np.diag([1.0, 1.0, 0.5])
-    )
+    assert np.allclose(parser.reciprocal_lattice * parser.alat, np.diag([1.0, 1.0, 0.5]))
     assert parser.kpoints is not None
     assert np.allclose(parser.kpoints, TETRAGONAL_FRACTIONAL_KPOINTS)
 
@@ -646,9 +640,7 @@ def test_band_path_vertices_in_crystal_or_tpiba_units_give_the_same_kpath(
     assert kpath.segment_names == [("Γ", "X"), ("X", "Z")]
     kpoints = np.asarray(kpath.kpoints)
     assert len(kpoints) == 22
-    assert np.allclose(
-        kpoints[[0, 10, 11, 21]], [[0, 0, 0], [0.5, 0, 0], [0.5, 0, 0], [0, 0, 0.5]]
-    )
+    assert np.allclose(kpoints[[0, 10, 11, 21]], [[0, 0, 0], [0.5, 0, 0], [0.5, 0, 0], [0, 0, 0.5]])
 
 
 @pytest.mark.parametrize(
@@ -838,3 +830,50 @@ def test_projwfc_out_bands_match_atomic_proj_bands_in_ev(
     if gamma_band_0 is not None:
         assert fallback.bands[0, 0, :] == pytest.approx(gamma_band_0, abs=1e-4)
     np.testing.assert_allclose(fallback.bands, primary.bands, atol=1e-4)
+
+
+def _filproj_shell_weights(path: Path) -> dict[tuple[int, int], np.ndarray]:
+    """|<phi|psi>|^2 from projwfc.x's filproj file, summed per (atom, l), shape (k, band)."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    flags = next(i for i, line in enumerate(lines) if line.split() in (["F", "F"], ["T", "F"]))
+    n_states, n_kpoints, n_bands = map(int, lines[flags - 1].split())
+    weights: dict[tuple[int, int], np.ndarray] = {}
+    start = flags + 1
+    for _ in range(n_states):
+        _, atom, _, _, _, ang, _ = lines[start].split()
+        rows = lines[start + 1 : start + 1 + n_kpoints * n_bands]
+        state = np.array([float(row.split()[2]) for row in rows]).reshape(n_kpoints, n_bands)
+        key = (int(atom), int(ang))
+        weights[key] = weights.get(key, 0) + state
+        start += 1 + n_kpoints * n_bands
+    return weights
+
+
+@pytest.mark.data
+@pytest.mark.parametrize(
+    ("mag", "spin_files"),
+    [("non-spin-polarized", ["up"]), ("spin-polarized-colinear", ["up", "down"])],
+)
+def test_shells_sharing_an_orbital_add_their_weights(mag: str, spin_files: list[str]) -> None:
+    """Sr has 4s and 5s, 4p and 5p, and V has 3s and 4s. Each shell is its own state, so the
+    weight on (atom, l) is the sum of |<phi|psi>|^2 that projwfc.x writes, not |sum <phi|psi>|^2.
+
+    projwfc.x symmetrizes the weights it writes over m and over equivalent atoms, so the check
+    sums over m and takes Sr and V, each the only atom of its orbit.
+    """
+    bands_dir = QE_CODES_DIR / mag / "bands"
+
+    ebs = ElectronicBandStructurePath.from_code("qe", str(bands_dir))
+
+    assert ebs.projected is not None
+    kpoints = np.asarray(ebs.kpoints)
+    unique = np.r_[True, np.any(np.diff(kpoints, axis=0) != 0, axis=1)]
+    projected = np.asarray(ebs.projected.value)[unique]
+    for spin, suffix in enumerate(spin_files):
+        expected = _filproj_shell_weights(bands_dir / f"SrVO3.k.projwfc_{suffix}")
+        for (atom, ang), weight in expected.items():
+            if atom in (1, 2):
+                parsed = projected[:, :, spin, atom - 1, ang * ang : (ang + 1) ** 2].sum(axis=-1)
+                np.testing.assert_allclose(
+                    parsed, weight, atol=1e-4, err_msg=f"atom {atom}, l={ang}"
+                )
