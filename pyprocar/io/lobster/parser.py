@@ -13,7 +13,7 @@ from pyprocar.core.ebs import ElectronicBandStructure
 from pyprocar.core.kpoints import KPath
 from pyprocar.core.structure import Structure
 from pyprocar.io.base import BaseParser
-from pyprocar.io.lobster.doscar_lobster import LOBSTER_ORBITALS, DoscarLobster
+from pyprocar.io.lobster.doscar_lobster import DoscarLobster, orbital_index, orbital_names
 from pyprocar.io.lobster.fatband import Fatband
 from pyprocar.io.lobster.lobsterout import LobsterOut
 from pyprocar.utils.log_utils import warn_user
@@ -208,6 +208,10 @@ class LobsterParser(BaseParser):
         return None
 
     @cached_property
+    def _fatband_orbital_names(self) -> list[str]:
+        return orbital_names(orbital_index(fb.orbital) for fb in self._fatbands)
+
+    @cached_property
     def _aggregated_bands(self) -> dict[str, np.ndarray] | None:
         """Aggregate band data from all FATBAND files.
 
@@ -225,12 +229,12 @@ class LobsterParser(BaseParser):
         # Get ion list from lobsterout
         ions_list = self._lobsterout.ions_list if self._lobsterout else []
         n_ions = len(set(ions_list)) if ions_list else 1
-        n_orbitals = len(LOBSTER_ORBITALS)
 
         # Initialize arrays
         kpoints = fb0.kpoints.copy()
         bands = fb0.bands.copy()
 
+        n_orbitals = len(self._fatband_orbital_names)
         projected = np.zeros((n_kpoints, n_bands, n_spins, n_ions, n_orbitals))
 
         # Map element names to ion indices
@@ -240,7 +244,6 @@ class LobsterParser(BaseParser):
         # Aggregate projections from all FATBAND files
         for fb in self._fatbands:
             element = fb.element
-            orbital = fb.orbital
 
             # Find ion index
             if element in ion_index_map:
@@ -249,19 +252,7 @@ class LobsterParser(BaseParser):
                 logger.warning(f"Element {element} not found in ions list")
                 continue
 
-            # Find orbital index
-            iorb = None
-            for i, orb in enumerate(LOBSTER_ORBITALS):
-                if orb == orbital:
-                    iorb = i
-                    break
-
-            if iorb is None:
-                logger.warning(f"Orbital {orbital} not in standard list")
-                continue
-
-            # Add projections
-            projected[:, :, :, iion, iorb] += fb.projections
+            projected[:, :, :, iion, orbital_index(fb.orbital)] += fb.projections
 
         return {
             "kpoints": kpoints,
@@ -306,7 +297,7 @@ class LobsterParser(BaseParser):
             projected=data["projected"],
             fermi=fermi,
             projected_phase=None,
-            orbital_names=LOBSTER_ORBITALS,
+            orbital_names=self._fatband_orbital_names,
             reciprocal_lattice=self.reciprocal_lattice,
         )
 

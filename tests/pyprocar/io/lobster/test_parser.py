@@ -62,3 +62,37 @@ def test_dosplot_parametric_colours_a_lobster_dos_by_every_atom(tmp_path):
 
     # p of both atoms over every projection: (0.9 + 0.09) / (1.0 + 0.1)
     np.testing.assert_allclose(colours, [0.9] * 5)
+
+
+# The lobsterout line and FATBAND header LOBSTER 5.1.1 writes (QE diamond).
+# Its labels carry principal numbers.
+LOBSTER_5_LOBSTEROUT = """LOBSTER v5.1.1 (g++ 9.2.0)
+detecting used PAW program... Quantum Espresso
+calculating FatBand for Element: C1 Orbital(s): 2p_x 2s \n"""
+
+
+def _lobster_5_fatband(orbital: str, weights: tuple[float, float]) -> str:
+    return (
+        f"# FATBAND for C1 {orbital} NBANDS 2\n"
+        "# K-Point 126 : 0.00000000000000 0.00000000000000 0.00000000000000\n"
+        f"126          -24.053            {weights[0]:.3f}\n"
+        f"126           -2.611            {weights[1]:.3f}\n"
+    )
+
+
+def test_lobster_5_fatband_labels_with_principal_numbers_fill_their_orbital(tmp_path):
+    for name, content in {
+        "lobsterout": LOBSTER_5_LOBSTEROUT,
+        "DOSCAR.lobster": DOSCAR_CONTENT,
+        "FATBAND_C1_2s.lobster": _lobster_5_fatband("2s", (0.5, 0.0)),
+        "FATBAND_C1_2p_x.lobster": _lobster_5_fatband("2p_x", (0.0, 0.3)),
+    }.items():
+        (tmp_path / name).write_text(content)
+
+    ebs = LobsterParser(tmp_path).ebs
+
+    assert ebs is not None and ebs.projected is not None and ebs.orbital_names is not None
+    projected = ebs.projected.to_array()
+    s, p_x = ebs.orbital_names.index("s"), ebs.orbital_names.index("p_x")
+    assert projected[0, :, 0, 0, s] == pytest.approx([0.5, 0.0])
+    assert projected[0, :, 0, 0, p_x] == pytest.approx([0.0, 0.3])
