@@ -1163,6 +1163,29 @@ def test_unfold_maps_each_atom_to_its_nearest_image_when_two_fall_within_the_tol
     assert np.asarray(ebs.weights.value).ravel().tolist() == pytest.approx([1.0, 0.0, 1.0])
 
 
+
+@pytest.mark.guards_existing_behaviour(reason="main maps sites by position and orbital only")
+def test_unfold_maps_a_substituted_atom_onto_the_host_site():
+    structure = Structure(
+        atoms=["Mg", "Al"],
+        fractional_coordinates=[[0.0, 0.0, 0.0], [0.5, 0.0, 0.0]],
+        lattice=np.diag([6.0, 3.0, 3.0]),
+    )
+    phase = np.array([[1, 1], [1, -1]], dtype=complex).reshape(1, 2, 1, 2, 1)
+    ebs = ElectronicBandStructure(
+        kpoints=np.array([[0.0, 0.0, 0.0]]),
+        bands=np.array([[[-1.0], [1.0]]]),
+        projected=np.abs(phase) ** 2,
+        projected_phase=phase,
+        orbital_names=["s"],
+        structure=structure,
+    )
+
+    ebs.unfold(transformation_matrix=np.diag([2, 1, 1]), structure=structure)
+
+    assert ebs.weights is not None
+    assert np.asarray(ebs.weights.value).ravel().tolist() == pytest.approx([1.0, 0.0])
+
 def test_ibz_unfolds_with_time_reversal_when_the_point_group_lacks_inversion():
     from pyprocar.core import Structure
 
