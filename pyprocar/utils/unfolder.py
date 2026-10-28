@@ -1,13 +1,14 @@
 from collections.abc import Sequence
 
 import numpy as np
+import numpy.typing as npt
 
 from pyprocar.core.structure import Structure
 
 
 def translation_images(
     positions: np.ndarray,
-    labels: Sequence[object],
+    labels: npt.ArrayLike,
     translations: np.ndarray,
     lattice: np.ndarray,
     tol: float,
@@ -21,8 +22,8 @@ def translation_images(
     for the error raised when one has no image.
     """
     positions = np.asarray(positions, dtype=float)
-    labels = np.asarray(labels)
-    same_label = labels[:, None] == labels[None, :]
+    label = np.asarray(labels)
+    same_label = label[:, None] == label[None, :]
     images = np.empty((len(translations), len(positions)), dtype=int)
     for t, r in enumerate(np.asarray(translations, dtype=float)):
         offset = positions[None, :, :] - (positions[:, None, :] + r)
@@ -110,14 +111,16 @@ class Unfolder:
         """
         a1 = Structure(atoms=["H"], fractional_coordinates=[[0, 0, 0]], lattice=np.diag([1, 1, 1]))
         rs = a1.transform(self.trans_mat).fractional_coordinates
-        n_atoms, n_orbitals = self.ebs.n_atoms, self.ebs.n_orbitals
+        ebs, structure = self.ebs, self.structure
+        assert ebs is not None and structure is not None
+        n_atoms, n_orbitals = ebs.n_atoms, ebs.n_orbitals
         atom_images = translation_images(
-            self.structure.fractional_coordinates,
+            structure.fractional_coordinates,
             np.zeros(n_atoms),
             rs,
             self.cell,
             self.tol_radius,
-            names=[f"atom {i} ({atom})" for i, atom in enumerate(self.structure.atoms)],
+            names=[f"atom {i} ({atom})" for i, atom in enumerate(structure.atoms)],
         )
         self.trans_rs = rs
         self.trans_indices = (atom_images[:, :, None] * n_orbitals + np.arange(n_orbitals)).reshape(

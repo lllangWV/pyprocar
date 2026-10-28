@@ -1153,7 +1153,8 @@ def test_unfold_refuses_an_atom_with_no_image_under_a_primitive_translation(
 def test_unfold_maps_each_atom_to_its_nearest_image_when_two_fall_within_the_tolerance():
     # A dimer 1.6 Angstrom long: both of its atoms lie within tol_radius = 0.1 (2 Angstrom
     # along this 20 Angstrom axis) of each translated atom.
-    a_bonding, a_zone_boundary, b_bonding = [1, 0, 1, 0], [1, 0, -1, 0], [0, 1, 0, 1]
+    a_bonding, a_zone_boundary = [1.0, 0.0, 1.0, 0.0], [1.0, 0.0, -1.0, 0.0]
+    b_bonding = [0.0, 1.0, 0.0, 1.0]
     ebs = _s_orbital_chain([0.0, 0.08, 0.5, 0.58], [a_bonding, a_zone_boundary, b_bonding])
 
     ebs.unfold(transformation_matrix=np.diag([2, 1, 1]), structure=ebs.structure)
