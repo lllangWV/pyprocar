@@ -5,6 +5,7 @@ name, the operation count and the irreducible k-points, and pyprocar recovers th
 from those (issue #5).
 """
 
+import gzip
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,6 +21,8 @@ from tests.utils.lattices import MONOCLINIC as MONOCLINIC_LATTICE
 from tests.utils.lattices import fcc_primitive
 
 EXAMPLES = DATA_DIR / "examples"
+# OUTCARs of VASP 6.5.0 spin-orbit runs at NWRITE = 3, cut before the first electronic step.
+NWRITE3_OUTCARS = Path(__file__).parent / "nwrite3_outcars"
 
 
 @dataclass(frozen=True)
@@ -40,7 +43,9 @@ class Mesh:
 MONOCLINIC = Cell(MONOCLINIC_LATTICE, np.zeros((1, 3)), ("Pb",))
 # InP as in VASP 6.5.0's testsuite, rows in its POSCAR's order: zinc blende, point group T_d.
 ZINC_BLENDE = Cell(
-    fcc_primitive(5.8686)[[1, 2, 0]], np.array([[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]]), ("In", "P")
+    fcc_primitive(5.8686)[[1, 2, 0]],
+    np.array([[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]]),
+    ("In", "P"),
 )
 
 GAMMA_331 = Mesh("Gamma", (3, 3, 1), (0.0, 0.0, 0.0))
@@ -328,7 +333,8 @@ def test_named_group_that_does_not_fit_the_list_raises_from_ebs():
     assert parser.outcar is not None
     assert len(parser.outcar.rotations) == 0
     with pytest.raises(
-        ValueError, match=r"holds 5 k-points, not the 9 of the 3x3x1 mesh.*NWRITE = 3.*ISYM = -1"
+        ValueError,
+        match=r"holds 5 k-points, not the 9 of the 3x3x1 mesh.*NWRITE = 3.*ISYM = -1",
     ):
         _ = parser.ebs
 
@@ -340,6 +346,7 @@ TABLE_FIXTURES = [
     "dos/non-colinear",
     "fermi2d/non-spin-polarized",
     "fermi2d/spin-polarized",
+    "fermi2d/non-colinear",
     "fermi3d/non-spin-polarized",
     "fermi3d/spin-polarized",
     "fermi3d/non-colinear",
@@ -380,23 +387,71 @@ def _stripped_parser(fixture: Path) -> VaspParser:
 
 
 @pytest.mark.data
-def test_ambiguous_group_raises_from_ebs():
-    """O_h has four S_6 subgroups, one per body diagonal, and the 61x61x1 list fits each."""
-    parser = _stripped_parser(EXAMPLES / "fermi2d" / "non-colinear")
+def test_conjugate_groups_resolve_to_the_one_that_keeps_the_default_moments():
+    """O_h has four S_6 subgroups, one per body diagonal, and the 61x61x1 list fits each.
 
-    assert parser.outcar is not None
-    assert len(parser.outcar.rotations) == 0
-    with pytest.raises(
-        ValueError, match=r"holds 1831 k-points, not the 3721.*NWRITE = 3.*ISYM = -1"
-    ):
-        _ = parser.ebs
+    VASP's default non-collinear MAGMOM is (1, 1, 1) on every atom, and only the S_6 about
+    [111] keeps it. The full grid then equals the one unfolded with the printed table.
+    """
+    fixture = EXAMPLES / "fermi2d" / "non-colinear"
+    stripped = _stripped_parser(fixture).ebs
+    printed = VaspParser(dirpath=fixture).ebs
+
+    assert stripped is not None and printed is not None
+    assert stripped.n_kpoints == printed.n_kpoints == 61 * 61
+    np.testing.assert_allclose(stripped.kpoints, printed.kpoints)
+    np.testing.assert_allclose(stripped.bands.to_array(), printed.bands.to_array())
+
+
+def nwrite3_outcar(case: str) -> str:
+    return gzip.decompress((NWRITE3_OUTCARS / f"{case}.OUTCAR.gz").read_bytes()).decode()
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        # CsCl-type InP (O_h) on Gamma 6x6x1. Each list fits several conjugate subgroups, and
+        # the initial moments pick VASP's: default (1, 1, 1) gives S_6 about [111], MAGMOM
+        # along x gives C_4h about x, and MAGMOM along z in a SAXIS frame turns with SAXIS.
+        "default_magmom",
+        "m_x",
+        "saxis_x_m_z",
+        "saxis_110_m_z",
+        # Zinc-blende InP with P moved 1.7e-4 Angstrom: VASP finds T_d at SYMPREC = 1e-3, and
+        # spglib finds it only at the SYMPREC the INCAR sets.
+        "symprec_1e-3",
+    ],
+)
+def test_vasp_run_without_table_recovers_the_printed_table(case):
+    text = nwrite3_outcar(case)
+    stripped = Outcar.from_str(strip_operator_table(text))
+    table = printed_table(text)
+    assert table, "the OUTCAR prints an operator table"
+
+    assert as_set(stripped.rotations) == as_set(table)
+
+
+@pytest.mark.guards_existing_behaviour(
+    reason="main recovers nothing here either; this pins that unknown moments break no tie"
+)
+def test_outcar_that_echoes_no_incar_breaks_no_tie():
+    """VASP 5 echoes no INCAR tags, so MAGMOM is unknown, and the four S_6 stay tied."""
+    text = re.sub(
+        r"^ INCAR:\n(?:[ \t]+\w+[ \t]*=.*\n)+",
+        " INCAR:\n",
+        nwrite3_outcar("default_magmom"),
+        flags=re.MULTILINE,
+    )
+    stripped = Outcar.from_str(strip_operator_table(text))
+
+    assert len(stripped.rotations) == 0
 
 
 @pytest.mark.data
 @pytest.mark.guards_existing_behaviour(
     reason="the DOS of an NWRITE = 2 run reads as before; only ebs raises when it cannot unfold"
 )
-def test_ambiguous_group_still_reads_the_dos():
+def test_outcar_without_table_still_reads_the_dos():
     dos = _stripped_parser(EXAMPLES / "fermi2d" / "non-colinear").dos
 
     assert isinstance(dos, DensityOfStates)

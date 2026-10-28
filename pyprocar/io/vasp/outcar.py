@@ -44,6 +44,9 @@ _SHIFT = re.compile(
     r"Shift w\.r\.t\. Gamma in fractional coordinates \(k-lattice\)\s*\n"
     + rf"\s*({_FLOAT})\s+({_FLOAT})\s+({_FLOAT})"
 )
+# VASP 6 echoes each INCAR tag on its own line under " INCAR:"; VASP 5 lists only POTCARs there.
+_INCAR_ECHO = re.compile(r"^ INCAR:\n((?:[ \t]+\w+[ \t]*=.*\n)+)", re.MULTILINE)
+_DEFAULT_SYMPREC = 1e-5
 
 
 @dataclass(frozen=True)
@@ -52,22 +55,102 @@ class _MeshReduction:
 
     Invariants: kpoints and multiplicities have one row per irreducible k-point, and the
     multiplicities are positive integers, not all 1. They sum to prod(mesh), or to more when
-    the operations carry the mesh off itself and VASP adds the images.
+    the operations carry the mesh off itself and VASP adds the images. moments, when known,
+    has one row per atom of the cell: a Cartesian vector for a non-collinear run, one value
+    for a collinear spin-polarized run.
     """
 
     cell: tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.int_]]  # spglib's cell
     point_group: str | None
     n_operations: int | None
     time_reversal: bool
+    symprec: float
+    moments: NDArray[np.float64] | None
     mesh: NDArray[np.int_]
     shift: NDArray[np.float64]
     kpoints: NDArray[np.float64]
     multiplicities: NDArray[np.int_]
 
+    @property
+    def grain(self) -> int:
+        """Mesh points and their images under integer rotations are multiples of 1/grain."""
+        return 2 * int(np.lcm.reduce(self.mesh))
+
 
 def _last(pattern: str | re.Pattern[str], text: str) -> re.Match[str] | None:
     matches = list(re.finditer(pattern, text))
     return matches[-1] if matches else None
+
+
+def _incar_tags(text: str) -> dict[str, str] | None:
+    """The INCAR tags VASP echoes at the top of the OUTCAR, or None when it echoes none."""
+    echo = _INCAR_ECHO.search(text)
+    if echo is None:
+        return None
+    tags: dict[str, str] = {}
+    for line in echo.group(1).splitlines():
+        key, _, value = line.partition("=")
+        tags[key.strip().upper()] = re.split(r"[!#]", value)[0].strip()
+    return tags
+
+
+def _incar_numbers(value: str) -> list[float] | None:
+    """INCAR numbers with VASP's ``n*x`` repeats spelled out and Fortran ``d`` exponents read,
+    or None when one is not a number."""
+    numbers: list[float] = []
+    try:
+        for token in value.lower().replace("d", "e").split():
+            count, star, number = token.partition("*")
+            numbers.extend([float(number)] * int(count) if star else [float(token)])
+    except ValueError:
+        return None
+    return numbers
+
+
+def _initial_moments(
+    incar: Mapping[str, str] | None,
+    n_atoms: int,
+    non_collinear: bool,
+    spin_polarized: bool,
+) -> NDArray[np.float64] | None:
+    """The initial magnetic moments VASP analysed the symmetry with, one row per atom.
+
+    Non-collinear: Cartesian vectors, turned from the SAXIS frame MAGMOM is written in.
+    Collinear spin-polarized: one value per atom. None for a non-magnetic run, when the
+    OUTCAR echoes no INCAR (VASP 5), or when MAGMOM or SAXIS does not parse.
+    """
+    if incar is None or not (non_collinear or spin_polarized):
+        return None
+    width = 3 if non_collinear else 1
+    if "MAGMOM" in incar:
+        magmom = _incar_numbers(incar["MAGMOM"])
+        if magmom is None or len(magmom) != width * n_atoms:
+            return None
+        moments = np.array(magmom).reshape(n_atoms, width)
+    else:
+        # VASP's default MAGMOM: 1 per atom, (1, 1, 1) per atom when non-collinear.
+        moments = np.ones((n_atoms, width))
+    if not non_collinear:
+        return moments[:, 0]
+    saxis = _incar_numbers(incar.get("SAXIS", "0 0 1"))
+    if saxis is None or len(saxis) != 3:
+        return None
+    return moments @ _saxis_frame(np.array(saxis)).T
+
+
+def _saxis_frame(saxis: NDArray[np.float64]) -> NDArray[np.float64]:
+    """The rotation that takes a moment written along SAXIS's axes to Cartesian axes, from
+    the formula on the VASP wiki's SAXIS page."""
+    alpha = np.arctan2(saxis[1], saxis[0])
+    beta = np.arctan2(np.hypot(saxis[0], saxis[1]), saxis[2])
+    ca, sa, cb, sb = np.cos(alpha), np.sin(alpha), np.cos(beta), np.sin(beta)
+    return np.array(
+        [
+            [cb * ca, -sa, sb * ca],
+            [cb * sa, ca, sb * sa],
+            [-sb, 0.0, cb],
+        ]
+    )
 
 
 def _mesh_reduction(
@@ -106,7 +189,8 @@ def _mesh_reduction(
         return None
     lattice, positions = (
         np.array(
-            [re.findall(_FLOAT, line)[:3] for line in block.group(1).splitlines()], dtype=float
+            [re.findall(_FLOAT, line)[:3] for line in block.group(1).splitlines()],
+            dtype=float,
         )
         for block in (lattice_block, position_block)
     )
@@ -120,11 +204,20 @@ def _mesh_reduction(
         point_group = _POINT_GROUP_SYMBOLS[name]
     count = _last(r"INISYM returns: Found\s+(\d+)\s+space group operations", text)
 
+    incar = _incar_tags(text)
+    symprec = _incar_numbers((incar or {}).get("SYMPREC", str(_DEFAULT_SYMPREC)))
+    if not symprec:
+        return None
+    listing = text[text.find(_PARAMETER_LISTING) :]
+    spin_polarized = re.search(r"^\s*ISPIN\s*=\s*2\b", listing, re.MULTILINE) is not None
+
     return _MeshReduction(
         cell=(lattice, positions, np.repeat(np.arange(len(counts)), counts)),
         point_group=point_group,
         n_operations=int(count.group(1)) if count else None,
         time_reversal=not non_collinear,
+        symprec=symprec[0],
+        moments=_initial_moments(incar, sum(counts), non_collinear, spin_polarized),
         mesh=mesh,
         shift=np.array(shift.groups(), dtype=float),
         kpoints=listed[:, :3],
@@ -173,39 +266,61 @@ def _subgroups(rotations: NDArray[np.int_], order: int | None) -> list[NDArray[n
     ]
 
 
-def _reproduces_irreducible_kpoints(
-    k_rotations: NDArray[np.int_], reduction: _MeshReduction
-) -> bool:
-    """Whether the orbits of the listed k-points have exactly the listed multiplicities, are
-    disjoint, and hold every mesh point.
+def _keeps_k_lattice(k_rotations: NDArray[np.int_], mesh: NDArray[np.int_]) -> NDArray[np.bool_]:
+    """Which rotations map the lattice of mesh steps onto itself."""
+    scaled = mesh[:, np.newaxis] * k_rotations / mesh[np.newaxis, :]
+    return np.all(np.abs(scaled - np.rint(scaled)) < 1e-9, axis=(1, 2))
 
-    VASP reduces with the operations that map the k-point lattice onto itself, and adds time
-    reversal (k -> -k) for a collinear run only. When those operations carry a shifted mesh
-    off itself, VASP adds the images, so an orbit counts every distinct image, on the mesh or
-    not.
+
+def _test_points(reduction: _MeshReduction) -> set[int] | None:
+    """The keys of the k-points VASP's IBZKPT reduces: the mesh, and, when every operation of
+    the reciprocal lattice keeps the mesh's lattice, their images under those operations
+    (VASP's "blow-up", which adds the points a shifted mesh is carried to; an unshifted mesh
+    goes onto itself)."""
+    mesh = get_kpoints_from_kgrid(
+        kgrid=tuple(reduction.mesh),
+        kshift=tuple(reduction.shift),
+        mode=KGRID_MODE.GAMMA,
+    )
+    if np.any(reduction.shift):
+        point = (reduction.cell[0], np.zeros((1, 3)), np.zeros(1, dtype=int))
+        lattice = spglib.get_symmetry_dataset(point, symprec=reduction.symprec)
+        if lattice is None:
+            return None
+        rotations = _k_rotations(lattice.rotations)
+        if np.all(_keeps_k_lattice(rotations, reduction.mesh)):
+            mesh = np.einsum("oij,kj->koi", rotations.astype(float), mesh).reshape(-1, 3)
+    keys = _snapped_keys(mesh, reduction.grain)
+    return None if keys is None else set(keys.tolist())
+
+
+def _reproduces_irreducible_kpoints(
+    k_rotations: NDArray[np.int_],
+    reduction: _MeshReduction,
+    test_points: set[int],
+) -> bool:
+    """Whether the orbits of the listed k-points, cut to VASP's test points, have exactly the
+    listed multiplicities, are disjoint, and hold every test point.
+
+    VASP's IBZKPT (mkpoints.F) adds time reversal (k -> -k) for a collinear run only. It
+    merges a test point into an earlier irreducible k-point when one operation maps it there,
+    so an orbit counts the distinct images that are test points, whether or not the operation
+    keeps the mesh's lattice.
     """
-    n = reduction.mesh
-    scaled = n[:, np.newaxis] * k_rotations / n[np.newaxis, :]
-    keeps_lattice = np.all(np.abs(scaled - np.rint(scaled)) < 1e-9, axis=(1, 2))
-    operations = k_rotations[keeps_lattice].astype(float)
+    operations = k_rotations.astype(float)
     if reduction.time_reversal:
         operations = np.concatenate([operations, -operations])
-    # Mesh points and their images under integer rotations are multiples of 1/(2 L).
-    grain = 2 * int(np.lcm.reduce(reduction.mesh))
-    mesh = get_kpoints_from_kgrid(
-        kgrid=tuple(reduction.mesh), kshift=tuple(reduction.shift), mode=KGRID_MODE.GAMMA
-    )
-    mesh_keys = _snapped_keys(mesh, grain)
-    image_keys = _snapped_keys(np.einsum("oij,kj->koi", operations, reduction.kpoints), grain)
-    if mesh_keys is None or image_keys is None:
+    images = np.einsum("oij,kj->koi", operations, reduction.kpoints)
+    image_keys = _snapped_keys(images, reduction.grain)
+    if image_keys is None:
         return False
     covered: set[int] = set()
     for orbit_keys, multiplicity in zip(image_keys, reduction.multiplicities, strict=True):
-        orbit = set(orbit_keys.tolist())
+        orbit = test_points.intersection(orbit_keys.tolist())
         if len(orbit) != multiplicity or not covered.isdisjoint(orbit):
             return False
         covered |= orbit
-    return covered.issuperset(mesh_keys.tolist())
+    return covered == test_points
 
 
 def _snapped_keys(kpoints: NDArray[np.floating], grain: int) -> NDArray[np.int64] | None:
@@ -225,7 +340,9 @@ def _fitting_operations(reduction: _MeshReduction) -> list[NDArray[np.int_]]:
     A subgroup fits when spglib names its point group as VASP did, it has VASP's operation
     count, and its orbits reproduce the irreducible k-points and their multiplicities. The
     crystal's operations come from spglib on the cell VASP analysed, coloured by POTCAR type,
-    at VASP's default SYMPREC of 1e-5.
+    at the run's SYMPREC. When several subgroups fit (conjugate ones, such as the four S_6 of
+    O_h), only those whose every operation keeps VASP's initial magnetic moments remain:
+    VASP's own group is the crystal operations that keep them.
     """
     with warnings.catch_warnings():
         # spglib warns on every call while its process-wide OLD_ERROR_HANDLING is on; the
@@ -235,8 +352,9 @@ def _fitting_operations(reduction: _MeshReduction) -> list[NDArray[np.int_]]:
 
 
 def _fitting_subgroups(reduction: _MeshReduction) -> list[NDArray[np.int_]]:
-    dataset = spglib.get_symmetry_dataset(reduction.cell, symprec=1e-5)  # ty: ignore[invalid-argument-type]
-    if dataset is None:
+    dataset = spglib.get_symmetry_dataset(reduction.cell, symprec=reduction.symprec)  # ty: ignore[invalid-argument-type]
+    test_points = _test_points(reduction)
+    if dataset is None or test_points is None:
         return []
     crystal = np.unique(np.asarray(dataset.rotations, dtype=int), axis=0)
     fitting: list[NDArray[np.int_]] = []
@@ -245,10 +363,35 @@ def _fitting_subgroups(reduction: _MeshReduction) -> list[NDArray[np.int_]]:
             named = spglib.get_pointgroup(group)
             if named is None or named[0].strip() != reduction.point_group:
                 continue
-        k_rotations = np.rint(np.linalg.inv(group).transpose(0, 2, 1)).astype(int)
-        if _reproduces_irreducible_kpoints(k_rotations, reduction):
-            fitting.append(k_rotations)
-    return fitting
+        if _reproduces_irreducible_kpoints(_k_rotations(group), reduction, test_points):
+            fitting.append(group)
+    if len(fitting) > 1 and reduction.moments is not None:
+        keeping = _moment_keeping_rotations(reduction.cell, reduction.moments, reduction.symprec)
+        fitting = [group for group in fitting if all(w.tobytes() in keeping for w in group)]
+    return [_k_rotations(group) for group in fitting]
+
+
+def _k_rotations(rotations: NDArray[np.integer]) -> NDArray[np.int_]:
+    return np.rint(np.linalg.inv(rotations).transpose(0, 2, 1)).astype(int)
+
+
+def _moment_keeping_rotations(
+    cell: tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.int_]],
+    moments: NDArray[np.float64],
+    symprec: float,
+) -> set[bytes]:
+    """The real-space rotations, as ``tobytes`` keys, of the crystal operations that keep the
+    initial moments without time reversal. A non-collinear moment is an axial vector."""
+    found = spglib.get_magnetic_symmetry(
+        (*cell, moments), symprec=symprec, is_axial=moments.ndim == 2
+    )
+    if found is None:
+        return set()
+    return {
+        np.asarray(rotation, dtype=int).tobytes()
+        for rotation, reversed_ in zip(found["rotations"], found["time_reversals"], strict=True)
+        if not reversed_
+    }
 
 
 class Outcar(Mapping[str, Any]):
@@ -434,8 +577,8 @@ class Outcar(Mapping[str, Any]):
         Read from the operator table when the OUTCAR prints one (VASP 5.4 "Space group
         operators", VASP 6 "irot" blocks at NWRITE = 3). Otherwise recovered: the one subgroup
         of the crystal's operations whose point group, size and orbits on the mesh match what
-        the OUTCAR states. Empty when the OUTCAR shows no reduced mesh, or when not exactly one
-        subgroup fits.
+        the OUTCAR states, with ties between subgroups broken by the initial magnetic moments.
+        Empty when the OUTCAR shows no reduced mesh, or when not exactly one subgroup remains.
         """
         sym_ops = self.get_symmetry_operations()
         if sym_ops:
