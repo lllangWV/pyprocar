@@ -120,9 +120,9 @@ class Unfolder:
             names=[f"atom {i} ({atom})" for i, atom in enumerate(self.structure.atoms)],
         )
         self.trans_rs = rs
-        self.trans_indices = (
-            atom_images[:, :, None] * n_orbitals + np.arange(n_orbitals)
-        ).reshape(len(rs), n_atoms * n_orbitals)
+        self.trans_indices = (atom_images[:, :, None] * n_orbitals + np.arange(n_orbitals)).reshape(
+            len(rs), n_atoms * n_orbitals
+        )
 
     def _get_weight(self, evec):
         r"""

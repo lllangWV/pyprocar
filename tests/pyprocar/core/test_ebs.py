@@ -1114,7 +1114,9 @@ def test_unfold_weights_are_the_primitive_cell_character_of_each_band():
     assert np.asarray(ebs.weights.value).ravel().tolist() == pytest.approx([1.0, 0.0, 0.5])
 
 
-def _s_orbital_chain(x_positions: list[float], phases: list[list[float]]) -> ElectronicBandStructure:
+def _s_orbital_chain(
+    x_positions: list[float], phases: list[list[float]]
+) -> ElectronicBandStructure:
     structure = Structure(
         atoms=["H"] * len(x_positions),
         fractional_coordinates=[[x, 0.0, 0.0] for x in x_positions],
@@ -1152,9 +1154,7 @@ def test_unfold_maps_each_atom_to_its_nearest_image_when_two_fall_within_the_tol
     # A dimer 1.6 Angstrom long: both of its atoms lie within tol_radius = 0.1 (2 Angstrom
     # along this 20 Angstrom axis) of each translated atom.
     a_bonding, a_zone_boundary, b_bonding = [1, 0, 1, 0], [1, 0, -1, 0], [0, 1, 0, 1]
-    ebs = _s_orbital_chain(
-        [0.0, 0.08, 0.5, 0.58], [a_bonding, a_zone_boundary, b_bonding]
-    )
+    ebs = _s_orbital_chain([0.0, 0.08, 0.5, 0.58], [a_bonding, a_zone_boundary, b_bonding])
 
     ebs.unfold(transformation_matrix=np.diag([2, 1, 1]), structure=ebs.structure)
 

@@ -322,7 +322,6 @@ class TestUnfolder:
             weights = unfolder.get_weights()
             assert weights.shape == simple_eigenvectors.shape[:2]
 
-
     def test_supercell_with_a_vacancy_is_refused(
         self, simple_cubic_cell, supercell_matrix_2x2x2, simple_qpoints
     ):
@@ -339,6 +338,7 @@ class TestUnfolder:
                 qpoints=simple_qpoints,
                 phase=False,
             )
+
 
 @pytest.mark.data
 class TestProcarUnfolder:
