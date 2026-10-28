@@ -91,20 +91,22 @@ def check_projected_layout(
     leading: npt.ArrayLike | None = None,
     structure: HasAtoms | None = None,
     atom_groups: int | None = None,
+    name: str = "projected",
 ) -> None:
     """Raise unless ``projected`` is in ``layout`` and agrees with the data it belongs to.
 
     Its leading axes must equal the shape of ``leading`` (the bands or the total
     DOS), its atom axis must equal ``atom_groups`` when the rows are groups of
     atoms and ``structure.natoms`` otherwise, it must have 1, 2 or 4 spin
-    channels, and ``orbital_names`` must name its last axis.
+    channels, and ``orbital_names`` must name its last axis. ``name`` names the array in
+    the error, such as ``projected_phase``.
     """
     if projected is None:
         return
     shape = np.shape(projected)
     if len(shape) != len(layout.axes):
         raise ValueError(
-            f"projected has shape {shape}; it must have the {len(layout.axes)} axes {layout}."
+            f"{name} has shape {shape}; it must have the {len(layout.axes)} axes {layout}."
         )
     leading_shape = None if leading is None else np.shape(leading)
     if leading_shape is not None and len(leading_shape) != layout.n_leading:
@@ -116,7 +118,7 @@ def check_projected_layout(
     n_spins = (shape if leading_shape is None else leading_shape)[spin_axis]
     if n_spins not in SPIN_CHANNELS:
         raise ValueError(
-            f"{'projected' if leading_shape is None else layout.leading} has {n_spins} spin"
+            f"{name if leading_shape is None else layout.leading} has {n_spins} spin"
             + f" channels; a calculation has 1, 2 or 4 spin channels, not {n_spins}"
             + " (non-polarized, collinear up and down, or non-collinear total, Sx, Sy, Sz)."
         )
@@ -139,7 +141,7 @@ def check_projected_layout(
         elif structure is not None:
             sources.append(f"a {structure.natoms}-atom structure")
         raise ValueError(
-            f"projected has shape {shape}; the layout {layout} expects ({described}) from"
+            f"{name} has shape {shape}; the layout {layout} expects ({described}) from"
             + f" {' and '.join(sources)}. Its spin channels match those of {layout.leading},"
             + " except that non-collinear projections (total, Sx, Sy, Sz) may go with one"
             + f" {layout.leading} channel."
@@ -148,7 +150,7 @@ def check_projected_layout(
     if orbital_names is not None and len(orbital_names) != n_orbitals:
         raise ValueError(
             f"{len(orbital_names)} orbital_names for {n_orbitals} projected orbitals (the last axis"
-            + " of projected). Pass one name per projected orbital, for example"
+            + f" of {name}). Pass one name per projected orbital, for example"
             + f" OrbitalIndexer().flat_conventional[:{n_orbitals}]."
         )
 

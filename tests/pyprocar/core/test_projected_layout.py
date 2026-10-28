@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from pyprocar.core import DensityOfStates, ElectronicBandStructure, Structure, kpoints
-from pyprocar.core.ebs import PROJECTED_DTYPE
+from pyprocar.core.ebs import PROJECTED_DTYPE, PROJECTED_PHASE_DTYPE
 
 N_K, N_BANDS, N_ATOMS, N_ORBITALS = 2, 3, 5, 9
 BAND_LAYOUT = "(n_kpoints, n_bands, n_spins, n_atoms, n_orbitals)"
@@ -71,6 +71,25 @@ def test_band_structure_names_the_expected_layout_for_misordered_projections(
 def test_band_structure_rejects_a_spin_count_that_is_not_1_2_or_4():
     with pytest.raises(ValueError, match=re.escape("1, 2 or 4 spin channels, not 3")):
         band_structure((N_K, N_BANDS, 3, N_ATOMS, N_ORBITALS), n_band_spins=3)
+
+
+def test_band_structure_names_projected_phase_with_spin_channels_along_the_band_axis():
+    """The spin-polarized PROCAR phases that #28 could not unfold: up and down concatenated
+    along the band axis, (k, 2 * bands, 2, atoms, orbitals)."""
+    with pytest.raises(ValueError) as error:
+        ElectronicBandStructure(
+            kpoints=cast(kpoints.KPOINTS_DTYPE, np.zeros((N_K, 3))),
+            bands=np.zeros((N_K, N_BANDS, 2)),
+            projected=cast(PROJECTED_DTYPE, np.zeros((N_K, N_BANDS, 2, N_ATOMS, N_ORBITALS))),
+            projected_phase=cast(
+                PROJECTED_PHASE_DTYPE, np.zeros((N_K, 2 * N_BANDS, 2, N_ATOMS, N_ORBITALS))
+            ),
+            orbital_names=[f"o{i}" for i in range(N_ORBITALS)],
+        )
+
+    assert str(error.value).startswith(f"projected_phase has shape {(N_K, 6, 2, 5, 9)}")
+    assert BAND_LAYOUT in str(error.value)
+    assert "(2, 3, 2, *, *)" in str(error.value)
 
 
 @pytest.mark.guards_existing_behaviour(

@@ -346,47 +346,17 @@ class Procar(Mapping[str, Any]):
 
         spd_phase = np.array(real_parts, dtype=float) + 1j * np.array(imaginary_parts, dtype=float)
 
-        # handling collinear polarized case
-        if self.is_spin_polarized:
-            # splitting both spin components, now they are along k-points
-            # axis (1st axis) but, then should be concatenated along the
-            # bands.
-            up, down = np.vsplit(spd_phase, 2)
-            # n_spins = 1 for a while, we will made the distinction
-            up = up.reshape(
-                self.n_kpoints,
-                self.n_bands,
-                1,
-                self.n_atoms,
-                self.n_orbitals,
-            )
-            down = down.reshape(
-                self.n_kpoints,
-                self.n_bands,
-                1,
-                self.n_atoms,
-                self.n_orbitals,
-            )
-            # concatenating bandwise. Density and magntization, their
-            # meaning is obvious, and do uses 2 times more memory than
-            # required, but I *WANT* to keep it as close as possible to the
-            # non-collinear or non-polarized case
-            density = np.concatenate((up, down), axis=1)
-            magnet = np.concatenate((up, -down), axis=1)
-            # concatenated along 'n_spins axis'
-            spd_phase = np.concatenate((density, magnet), axis=2)
-
-        # otherwise, just a reshaping suffices (non-collinear phases are dropped earlier)
-        else:
-            spd_phase = spd_phase.reshape(
-                self.n_kpoints,
-                self.n_bands,
-                1,
-                self.n_atoms,
-                self.n_orbitals,
-            )
-
-        return spd_phase
+        # A spin-polarized PROCAR holds every spin-up k-point, then every spin-down one,
+        # so the spin channel is the slowest axis; non-collinear phases are dropped earlier.
+        n_spin_channels = 2 if self.is_spin_polarized else 1
+        spd_phase = spd_phase.reshape(
+            n_spin_channels,
+            self.n_kpoints,
+            self.n_bands,
+            self.n_atoms,
+            self.n_orbitals,
+        )
+        return np.moveaxis(spd_phase, 0, 2)
 
     def _validate_file(self, filepath: str | Path) -> Path:
         """

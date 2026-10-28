@@ -12,7 +12,10 @@ from matplotlib.collections import LineCollection, PathCollection, PolyCollectio
 
 import pyprocar
 from pyprocar.core import ElectronicBandStructurePath
-from tests.pyprocar.io.vasp.test_procar import NON_COLLINEAR_PHASE_PROCAR
+from tests.pyprocar.io.vasp.test_procar import (
+    NON_COLLINEAR_PHASE_PROCAR,
+    SPIN_POLARIZED_PHASE_PROCAR,
+)
 from tests.utils import DATA_DIR, writable_copy
 from tests.utils.user_warning import user_warning
 
@@ -49,6 +52,28 @@ INP_OUTCAR = """ E-fermi :   5.0000
      0.000000000  2.934300000  2.934300000    -0.170398391  0.170398391  0.170398391
      2.934300000  0.000000000  2.934300000     0.170398391 -0.170398391  0.170398391
      2.934300000  2.934300000  0.000000000     0.170398391  0.170398391 -0.170398391
+
+"""
+
+# Two ions half a cell apart along a1 of a 6 x 3 x 3 Angstrom cell: a 2 x 1 x 1 supercell of a
+# 3 Angstrom cubic cell, for SPIN_POLARIZED_PHASE_PROCAR.
+DOUBLED_CUBE_POSCAR = """doubled cube
+1.0
+6.0 0.0 0.0
+0.0 3.0 0.0
+0.0 0.0 3.0
+V
+2
+Direct
+0.0 0.0 0.0
+0.5 0.0 0.0
+"""
+DOUBLED_CUBE_OUTCAR = """ E-fermi :   0.0000
+
+      direct lattice vectors                 reciprocal lattice vectors
+     6.000000000  0.000000000  0.000000000     0.166666667  0.000000000  0.000000000
+     0.000000000  3.000000000  0.000000000     0.000000000  0.333333333  0.000000000
+     0.000000000  0.000000000  3.000000000     0.000000000  0.000000000  0.333333333
 
 """
 
@@ -281,6 +306,23 @@ class TestUnfoldPlot:
 
         with pytest.raises(ValueError, match="LORBIT = 12"):
             pyprocar.unfold(code="vasp", dirname=calc, transformation_matrix=SUPERCELL, show=False)
+
+
+def test_spin_polarized_bands_unfold_each_spin_channel_from_its_own_phases(tmp_path):
+    """#28. The half-cell translation swaps the ions, so a band's weight is
+    (1 + 2 Re(c1* c2) / |c|^2) / 2 for its s coefficients c on the two ions."""
+    (tmp_path / "PROCAR").write_text(SPIN_POLARIZED_PHASE_PROCAR)
+    (tmp_path / "POSCAR").write_text(DOUBLED_CUBE_POSCAR)
+    (tmp_path / "OUTCAR").write_text(DOUBLED_CUBE_OUTCAR)
+    ebs = ElectronicBandStructurePath.from_code("vasp", tmp_path)
+
+    ebs.unfold(transformation_matrix=np.diag([2, 1, 1]), structure=ebs.structure)
+
+    weights = np.asarray(ebs.weights.value)
+    assert weights.shape == (1, 2, 2)
+    # spin up: c1 = c2, then c2 = -c1; spin down: c2 = -c1, then c2 = i c1
+    np.testing.assert_allclose(weights[0, :, 0], [1.0, 0.0], atol=1e-12)
+    np.testing.assert_allclose(weights[0, :, 1], [0.0, 0.5], atol=1e-12)
 
 
 class TestUnfoldArguments:
