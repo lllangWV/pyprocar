@@ -398,6 +398,7 @@ def test_conjugate_groups_resolve_to_the_one_that_keeps_the_default_moments():
     printed = VaspParser(dirpath=fixture).ebs
 
     assert stripped is not None and printed is not None
+    assert stripped.bands is not None and printed.bands is not None
     assert stripped.n_kpoints == printed.n_kpoints == 61 * 61
     np.testing.assert_allclose(stripped.kpoints, printed.kpoints)
     np.testing.assert_allclose(stripped.bands.to_array(), printed.bands.to_array())

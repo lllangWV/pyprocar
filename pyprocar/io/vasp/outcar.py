@@ -284,7 +284,7 @@ def _test_points(reduction: _MeshReduction) -> set[int] | None:
     )
     if np.any(reduction.shift):
         point = (reduction.cell[0], np.zeros((1, 3)), np.zeros(1, dtype=int))
-        lattice = spglib.get_symmetry_dataset(point, symprec=reduction.symprec)
+        lattice = spglib.get_symmetry_dataset(point, symprec=reduction.symprec)  # ty: ignore[invalid-argument-type]
         if lattice is None:
             return None
         rotations = _k_rotations(lattice.rotations)
@@ -383,7 +383,9 @@ def _moment_keeping_rotations(
     """The real-space rotations, as ``tobytes`` keys, of the crystal operations that keep the
     initial moments without time reversal. A non-collinear moment is an axial vector."""
     found = spglib.get_magnetic_symmetry(
-        (*cell, moments), symprec=symprec, is_axial=moments.ndim == 2
+        (*cell, moments),  # ty: ignore[invalid-argument-type]
+        symprec=symprec,
+        is_axial=moments.ndim == 2,
     )
     if found is None:
         return set()
