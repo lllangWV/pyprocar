@@ -329,7 +329,7 @@ class TestUnfolder:
         sites = SUPERCELL_2X2X2_SITES[1:]
         eigenvectors = np.ones((len(simple_qpoints), 1, len(sites))) / np.sqrt(len(sites))
 
-        with pytest.raises(ValueError, match=r"basis function \d+ \(s\) has none"):
+        with pytest.raises(ValueError, match=r"basis function \d+ \(s\) has no image"):
             Unfolder(
                 cell=simple_cubic_cell * 2,
                 basis=["s"] * len(sites),

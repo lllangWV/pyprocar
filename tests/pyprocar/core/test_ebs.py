@@ -1136,6 +1136,7 @@ def _s_orbital_chain(x_positions: list[float], phases: list[list[float]]) -> Ele
     [
         pytest.param([0.0], np.diag([2, 1, 1]), 0, r"\(0\.5, 0, 0\)", id="vacancy"),
         pytest.param([0.0, 0.5], np.diag([3, 1, 1]), 0, r"\(0\.333, 0, 0\)", id="wrong-matrix"),
+        pytest.param([0.0, 0.05, 0.5], np.diag([2, 1, 1]), 1, r"\(0\.5, 0, 0\)", id="interstitial"),
     ],
 )
 def test_unfold_refuses_an_atom_with_no_image_under_a_primitive_translation(
