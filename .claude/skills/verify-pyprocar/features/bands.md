@@ -20,6 +20,7 @@ Plot E(k) along a high-symmetry path from a non-SCF bands calculation. Optionall
   - `validate()` unfolds plane-wave states in supercells of a two-atom cell under diag(2,2,2) and three sheared matrices, one of them not normal, to exactly 0 or 1 (error 1.1e-16, tolerance 1e-12). The same states with an exp(-2 pi i k.t) factor miss by at least 0.259.
   - At d6d4aaa7 the reference matches `ebs.unfold` to 8.9e-16 over all 150 x 80 weights, and the `INDEPENDENT_WEIGHTS` literals to 2.1e-6.
   - Against `primitive/EIGENVAL`, the Mg 2p weights sum to between 2.999 and 3.002 at every k. No band with weight above 0.25 lies more than 0.375 eV from a primitive band.
+- A cell the primitive translations do not map one to one onto itself is refused: a vacancy, an interstitial, or a `transformation_matrix` that does not make the supercell. On `bands/unfolding/supercell`, `transformation_matrix=np.diag([4, 2, 1])` raises `ValueError: ... atom 0 (Mg) has no image within tol_radius=0.1 under the translation (0.25, 0, 0) ...`. Before the fix it drew weights up to 0.74 off with no error. An atom's image is the nearest site within `tol_radius` (0.1 in each fractional coordinate), not the last one found, and species may differ, so a substitutional alloy still unfolds. The `diag([2, 2, 2])` weights did not change (bitwise).
   - With the k-phase factor, 806 such bands miss by up to 4.2 eV.
 
 ## How to get to it (user POV)
