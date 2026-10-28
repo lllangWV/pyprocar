@@ -1,7 +1,8 @@
 """DOSCAR.lobster file extractor."""
 
 import logging
-from collections.abc import Iterator, Mapping
+import re
+from collections.abc import Iterable, Iterator, Mapping
 from functools import cached_property
 from pathlib import Path
 from typing import Any
@@ -23,7 +24,42 @@ LOBSTER_ORBITALS = [
     "d_x^2-y^2",
 ]
 
-ORBITAL_INDEX = {orb: i for i, orb in enumerate(LOBSTER_ORBITALS)}
+# m = -3 to 3, the core's f order
+LOBSTER_F_ORBITALS = [
+    "f_y(3x^2-y^2)",
+    "f_xyz",
+    "f_yz^2",
+    "f_z^3",
+    "f_xz^2",
+    "f_z(x^2-y^2)",
+    "f_x(x^2-3y^2)",
+]
+
+ORBITAL_INDEX = {orb: i for i, orb in enumerate(LOBSTER_ORBITALS + LOBSTER_F_ORBITALS)}
+
+_PRINCIPAL_NUMBER = re.compile(r"^\d+")
+
+
+def orbital_index(label: str) -> int:
+    """Orbital slot of a LOBSTER basis-function label such as ``3d_xy``.
+
+    LOBSTER prefixes each label with its principal quantum number, so shells that
+    share (l, m), such as Sr 4s and 5s, share one slot.
+    """
+    try:
+        return ORBITAL_INDEX[_PRINCIPAL_NUMBER.sub("", label)]
+    except KeyError:
+        raise ValueError(
+            f"LOBSTER orbital {label!r} is none of {', '.join(ORBITAL_INDEX)}"
+            " after its principal number"
+        ) from None
+
+
+def orbital_names(indices: Iterable[int]) -> list[str]:
+    """The s, p and d names, and the f names too when any index is an f slot."""
+    if any(i >= len(LOBSTER_ORBITALS) for i in indices):
+        return LOBSTER_ORBITALS + LOBSTER_F_ORBITALS
+    return LOBSTER_ORBITALS.copy()
 
 
 class DoscarLobster(Mapping[str, Any]):
@@ -164,39 +200,42 @@ class DoscarLobster(Mapping[str, Any]):
         """Projected DOS. Shape: (nedos, n_spins, n_atoms, n_orbitals).
 
         Orbitals are mapped to standard Lobster order:
-        [s, p_y, p_z, p_x, d_xy, d_yz, d_z^2, d_xz, d_x^2-y^2]
+        [s, p_y, p_z, p_x, d_xy, d_yz, d_z^2, d_xz, d_x^2-y^2], then the seven f
+        orbitals when the basis has any.
         """
         if self._projected_blocks is None:
             return None
 
         n_atoms = len(self._projected_blocks)
-        n_orbitals = len(LOBSTER_ORBITALS)
+        projected = np.zeros((self.nedos, self.n_spins, n_atoms, len(self.orbital_labels)))
 
-        projected = np.zeros((self.nedos, self.n_spins, n_atoms, n_orbitals))
+        for iatom, ((_, data), slots) in enumerate(
+            zip(self._projected_blocks, self._orbital_slots, strict=True)
+        ):
+            for ilabel, iorb in enumerate(slots):
+                col_offset = 1  # skip energy column
 
-        for iatom, (orbital_info, data) in enumerate(self._projected_blocks):
-            # Parse orbital labels from info string
-            orbital_labels = orbital_info.split()
-
-            for ilabel, label in enumerate(orbital_labels):
-                # Find the standard orbital index
-                if label in ORBITAL_INDEX:
-                    iorb = ORBITAL_INDEX[label]
-                    col_offset = 1  # skip energy column
-
-                    if self.is_spin_polarized:
-                        # Columns: E, orb1_up, orb1_down, orb2_up, orb2_down, ...
-                        projected[:, 0, iatom, iorb] += data[:, col_offset + 2 * ilabel]
-                        projected[:, 1, iatom, iorb] += data[:, col_offset + 2 * ilabel + 1]
-                    else:
-                        projected[:, 0, iatom, iorb] += data[:, col_offset + ilabel]
+                if self.is_spin_polarized:
+                    # Columns: E, orb1_up, orb1_down, orb2_up, orb2_down, ...
+                    projected[:, 0, iatom, iorb] += data[:, col_offset + 2 * ilabel]
+                    projected[:, 1, iatom, iorb] += data[:, col_offset + 2 * ilabel + 1]
+                else:
+                    projected[:, 0, iatom, iorb] += data[:, col_offset + ilabel]
 
         return projected
 
     @cached_property
+    def _orbital_slots(self) -> list[list[int]]:
+        """The orbital slot of each label in each atom's block header."""
+        return [
+            [orbital_index(label) for label in info.split()]
+            for info, _ in self._projected_blocks or []
+        ]
+
+    @cached_property
     def orbital_labels(self) -> list[str]:
         """List of orbital labels in standard order."""
-        return LOBSTER_ORBITALS.copy()
+        return orbital_names(i for slots in self._orbital_slots for i in slots)
 
     # Mapping protocol
     def __getitem__(self, key: str) -> Any:
